@@ -5,11 +5,14 @@ export type Location = {
   supplyCubes: number;
   plagueCubes: number;
   connections: Connection[];
+  characters: Character[];
 };
 
 export type Character = {
   name: string;
   location: Location;
+  supplyCubes: number;
+  remainingActions: number;
 };
 
 export type Connection = {
@@ -38,6 +41,7 @@ export type Game = {
   objectives: Objective[];
   bonusSupplies: number;
   month: Month;
+  outbreaks: number;
   state: "not_started" | "playing" | "lost" | "won";
 };
 
@@ -53,6 +57,7 @@ export const makeGame = (): Game => {
       name: "March",
       supplies: 27,
     },
+    outbreaks: 0,
     state: "not_started",
   };
 };
