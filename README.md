@@ -2,3 +2,17 @@
 
 The game is too hard, simulate the game state to try to find winning strategies.
 
+## Testing
+
+```shell
+pnpm test
+```
+
+## Run
+
+`sim` is a symlink to the cli entrypoint `src/entrypoints/main.ts`. It uses a node shebang and should be able to run 
+directly without compilation if using node >= 23.
+
+```shell
+./sim <args>
+```
