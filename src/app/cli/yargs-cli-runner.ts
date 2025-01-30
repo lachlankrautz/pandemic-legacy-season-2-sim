@@ -1,12 +1,17 @@
-import type { Logger } from "../logging/logger.ts";
 import yargs from "yargs";
-import type { Repository } from "../repository/repository.ts";
 
 export type CliRunner = {
   run(): Promise<void>;
 };
 
-export const makeYargsCliRunner = (logger: Logger, repo: Repository, argv: string[]): CliRunner => {
+export type StartGameCommandLoader = () => (name: string) => void;
+export type TakeTurnCommandLoader = () => (name: string, turnJson: string) => void;
+
+export const makeYargsCliRunner = (
+  startGameCommandLoader: StartGameCommandLoader,
+  takeTurnCommandLoader: TakeTurnCommandLoader,
+  argv: string[],
+): CliRunner => {
   const yargsCli = yargs(argv)
     .command(
       "start-game",
@@ -19,10 +24,7 @@ export const makeYargsCliRunner = (logger: Logger, repo: Repository, argv: strin
           },
         });
       },
-      (args) => {
-        logger.info("starting new game");
-        logger.info(`saving game to file: ${args.fileName}`);
-      },
+      (args) => startGameCommandLoader()(args.fileName),
     )
     .command(
       "take-turn",
@@ -33,16 +35,13 @@ export const makeYargsCliRunner = (logger: Logger, repo: Repository, argv: strin
             type: "string",
             required: true,
           },
-          turn: {
+          turnJson: {
             type: "string",
             required: true,
           },
         });
       },
-      (args) => {
-        logger.info("taking a turn");
-        logger.info(`saving game to file: ${args.fileName}`);
-      },
+      (args) => takeTurnCommandLoader()(args.fileName, args.turnJson),
     )
     .demandCommand();
 
