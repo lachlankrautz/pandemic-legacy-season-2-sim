@@ -5,7 +5,7 @@ export type CliRunner = {
   run(): Promise<void>;
 };
 
-export const makeYargsCliRunner = (logger: Logger, argv: string[]) => {
+export const makeYargsCliRunner = (logger: Logger, argv: string[]): CliRunner => {
   const yargsCli = yargs(argv)
     .command(
       "start-game",
