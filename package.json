@@ -12,6 +12,7 @@
     "fmt": "prettier --log-level warn --cache --write src",
     "lint": "eslint --cache --max-warnings 0",
     "lint:fix": "eslint --cache --max-warnings 0 --fix",
+    "typecheck": "tsc",
     "test": "jest"
   },
   "devDependencies": {
