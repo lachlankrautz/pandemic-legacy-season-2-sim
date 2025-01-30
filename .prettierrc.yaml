@@ -1,5 +1,2 @@
-# Cascade NextGen code formatting standard:
-# https://www.notion.so/cascadestrategy/Typescript-Code-Style-c9b832d8c63248f0915fe66f1bb70415
-#
 # Trailing commas result in fewer changed lines in diffs
 trailingComma: all
