@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ESNext",
     "lib": ["ES2020"],
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "rootDir": "./src/",
     "outDir": "./dist/",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "forceConsistentCasingInFileNames": true,
     "noErrorTruncation": true,
-    "noEmit": true,
 
     // adapted from "strictest"
     // https://www.npmjs.com/package/@tsconfig/strictest

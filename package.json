@@ -4,6 +4,7 @@
   "repository": "git@github.com:lachlankrautz/pandemic-legacy-season-2-sim",
   "license": "UNLICENSED",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=23.0.0 <24.0.0"
   },
@@ -28,5 +29,8 @@
     "ts-jest": "^29.2.5",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.22.0"
+  },
+  "dependencies": {
+    "yargs": "^17.7.2"
   }
 }
