@@ -8,5 +8,5 @@ export type Config = {
 };
 
 export const config: Config = {
-  seed: process.env['SEED'] || randomUUID(),
+  seed: process.env["SEED"] || randomUUID(),
 };
