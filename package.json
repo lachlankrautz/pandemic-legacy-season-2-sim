@@ -8,6 +8,7 @@
     "node": ">=23.0.0 <24.0.0"
   },
   "scripts": {
+    "start": "src/entrypoint/main.ts",
     "fmt": "prettier --log-level warn --cache --write src",
     "lint": "eslint --cache --max-warnings 0",
     "lint:fix": "eslint --cache --max-warnings 0 --fix",

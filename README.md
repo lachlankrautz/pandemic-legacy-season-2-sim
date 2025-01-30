@@ -14,5 +14,12 @@ pnpm test
 directly without compilation if using node >= 23.
 
 ```shell
+# run entrypoint using symlink
 ./sim <args>
+
+# run entrypoint directly
+src/entrypoint/main.ts
+
+# run entrypoint using package.json script
+pnpm start
 ```
