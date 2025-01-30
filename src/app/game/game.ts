@@ -1,3 +1,5 @@
+import { takeTurn, type Turn } from "./actions.ts";
+
 export type Location = {
   name: string;
   isHaven: boolean;
@@ -44,6 +46,16 @@ export type Game = {
   outbreaks: number;
   state: "not_started" | "playing" | "lost" | "won";
 };
+
+export type GameRunner = {
+  startNewGame: () => Game;
+  takeGameTurn: (game: Game, turn: Turn) => void;
+};
+
+export const makeGameRunner = (): GameRunner => ({
+  startNewGame: makeGame,
+  takeGameTurn: (_: Game, turn: Turn) => takeTurn(turn),
+});
 
 export const makeGame = (): Game => {
   return {
