@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["ES2020"],
+    "lib": ["ESNext"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "rootDir": "./src/",
@@ -9,8 +9,10 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "forceConsistentCasingInFileNames": true,
     "noErrorTruncation": true,
+    "noEmit": true,
 
     // adapted from "strictest"
     // https://www.npmjs.com/package/@tsconfig/strictest
