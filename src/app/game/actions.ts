@@ -1,5 +1,7 @@
 import type { Character, Location } from "./game.ts";
 
+// actions/free action is wrong
+// some actions are always free actions, some can be free
 export type Action = { isFree: boolean } & (Move | MakeSupplies | DropSupplies);
 
 export type Move = {

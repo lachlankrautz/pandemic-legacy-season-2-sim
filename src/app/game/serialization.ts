@@ -3,6 +3,40 @@ import type { Character, Game, Location } from "./game.ts";
 import { type Static, Type } from "@sinclair/typebox";
 
 /**
+ * A tree representation of a game action replacing circular
+ * references with string identifiers e.g. locationName.
+ * Enables JSON serialization.
+ */
+const actionTreeSchema = Type.Intersect([
+  Type.Object({
+    isFree: Type.Boolean(),
+  }),
+  Type.Union([
+    Type.Object({
+      type: Type.Literal("move"),
+      toLocationName: Type.String(),
+    }),
+    Type.Object({
+      type: Type.Literal("make_supplies"),
+    }),
+    Type.Object({
+      type: Type.Literal("drop_supplies"),
+      supplyCubes: Type.Number(),
+    }),
+  ]),
+]);
+
+/**
+ * A tree representation of a game turn replacing circular
+ * references with string identifiers e.g. locationName.
+ * Enables JSON serialization.
+ */
+const turnTreeSchema = Type.Object({
+  characterName: Type.String(),
+  actions: Type.Array(actionTreeSchema),
+});
+
+/**
  * A tree representation of the game state replacing circular
  * references with string identifiers e.g. locationName.
  * Enables JSON serialization.
