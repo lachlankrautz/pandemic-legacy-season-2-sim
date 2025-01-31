@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@sinclair/typebox':
+        specifier: ^0.34.15
+        version: 0.34.15
       yargs:
         specifier: ^17.7.2
         version: 17.7.2
@@ -530,6 +533,9 @@ packages:
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
+
+  '@sinclair/typebox@0.34.15':
+    resolution: {integrity: sha512-xeIzl3h1Znn9w/LTITqpiwag0gXjA+ldi2ZkXIBxGEppGCW211Tza+eL6D4pKqs10bj5z2umBWk5WL6spQ2OCQ==}
 
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
@@ -2315,6 +2321,8 @@ snapshots:
       fastq: 1.18.0
 
   '@sinclair/typebox@0.27.8': {}
+
+  '@sinclair/typebox@0.34.15': {}
 
   '@sinonjs/commons@3.0.1':
     dependencies:

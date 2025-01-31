@@ -18,20 +18,20 @@ export const makeYargsCliRunner = (
       "Start a new game.",
       (yargs) => {
         return yargs.options({
-          fileName: {
+          saveName: {
             type: "string",
             required: true,
           },
         });
       },
-      (args) => startGameCommandLoader()(args.fileName),
+      (args) => startGameCommandLoader()(args.saveName),
     )
     .command(
       "take-turn",
       "Take a turn in an existing game.",
       (yargs) => {
         return yargs.options({
-          fileName: {
+          saveName: {
             type: "string",
             required: true,
           },
@@ -41,7 +41,7 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => takeTurnCommandLoader()(args.fileName, args.turnJson),
+      (args) => takeTurnCommandLoader()(args.saveName, args.turnJson),
     )
     .demandCommand();
 
