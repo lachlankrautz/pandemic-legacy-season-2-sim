@@ -42,11 +42,29 @@ const turnTreeSchema = Type.Object({
  * Enables JSON serialization.
  */
 const gameTreeSchema = Type.Object({
+  phase: Type.Union([
+    Type.Object({
+      type: Type.Literal("exposure_check"),
+      characterName: Type.String(),
+    }),
+    Type.Object({
+      type: Type.Literal("take_4_actions"),
+      characterName: Type.String(),
+      remainingActions: Type.Number(),
+    }),
+    Type.Object({
+      type: Type.Literal("draw_2_cards"),
+      characterName: Type.String(),
+    }),
+    Type.Object({
+      type: Type.Literal("infect_cities"),
+      characterName: Type.String(),
+    }),
+  ]),
   locations: Type.Array(
     Type.Object({
       name: Type.String(),
-      isHaven: Type.Boolean(),
-      isPort: Type.Boolean(),
+      type: Type.Union([Type.Literal("haven"), Type.Literal("port"), Type.Literal("inland")]),
       supplyCubes: Type.Number(),
       plagueCubes: Type.Number(),
       connections: Type.Array(
@@ -62,7 +80,6 @@ const gameTreeSchema = Type.Object({
       name: Type.String(),
       locationName: Type.String(),
       supplyCubes: Type.Number(),
-      remainingActions: Type.Number(),
     }),
   ),
   objectives: Type.Array(
@@ -83,11 +100,26 @@ const gameTreeSchema = Type.Object({
 
 export type GameTree = Static<typeof gameTreeSchema>;
 
+const gamePhaseToTree = (phase: Game["phase"]): GameTree["phase"] => {
+  if (phase.type === "take_4_actions") {
+    return {
+      type: phase.type,
+      characterName: phase.character.name,
+      remainingActions: phase.remainingActions,
+    };
+  }
+
+  return {
+    type: phase.type,
+    characterName: phase.character.name,
+  };
+};
+
 const gameToTree = (game: Game): GameTree => ({
+  phase: gamePhaseToTree(game.phase),
   locations: game.map.locations.map((location) => ({
     name: location.name,
-    isHaven: location.isHaven,
-    isPort: location.isPort,
+    type: location.type,
     supplyCubes: location.supplyCubes,
     plagueCubes: location.plagueCubes,
     connections: location.connections.map((connection) => ({
@@ -99,7 +131,6 @@ const gameToTree = (game: Game): GameTree => ({
     name: character.name,
     locationName: character.location.name,
     supplyCubes: character.supplyCubes,
-    remainingActions: character.remainingActions,
   })),
   objectives: game.objectives.map((objective) => ({
     name: objective.name,
@@ -115,13 +146,34 @@ const gameToTree = (game: Game): GameTree => ({
   state: game.state,
 });
 
+const treeToGamePhase = (phase: GameTree["phase"], characterMap: Map<string, Character>): Game["phase"] => {
+  const character = characterMap.get(phase.characterName);
+  if (character === undefined) {
+    throw new Error("Game phase initialisation failed - character not found", {
+      cause: { characterName: phase.characterName },
+    });
+  }
+
+  if (phase.type === "take_4_actions") {
+    return {
+      type: phase.type,
+      character,
+      remainingActions: phase.remainingActions,
+    };
+  }
+
+  return {
+    type: phase.type,
+    character,
+  };
+};
+
 const treeToGame = (tree: GameTree): Game | never => {
   const locationMap: Map<string, Location> = new Map();
   for (const location of tree.locations) {
     locationMap.set(location.name, {
       name: location.name,
-      isHaven: location.isHaven,
-      isPort: location.isPort,
+      type: location.type,
       supplyCubes: location.supplyCubes,
       plagueCubes: location.plagueCubes,
       connections: [],
@@ -140,7 +192,6 @@ const treeToGame = (tree: GameTree): Game | never => {
       name: treeCharacter.name,
       location,
       supplyCubes: treeCharacter.supplyCubes,
-      remainingActions: treeCharacter.remainingActions,
     };
 
     location.characters.push(character);
@@ -149,6 +200,7 @@ const treeToGame = (tree: GameTree): Game | never => {
   }
 
   return {
+    phase: treeToGamePhase(tree.phase, characterMap),
     map: {
       locations: Array.from(locationMap.values()),
     },

@@ -1,4 +1,4 @@
-import type { Character, Location } from "./game.ts";
+import type { Character, Game, Location } from "./game.ts";
 
 // actions/free action is wrong
 // some actions are always free actions, some can be free
@@ -27,13 +27,17 @@ export type Turn = {
 // to remake the entire state 1000 times, but it would mean that
 // on any exception the original unmodified world could be returned.
 
-export const takeTurn = (turn: Turn): void => {
-  turn.actions.forEach((action) => takeAction(turn.character, action));
+export const takeTurn = (game: Game, turn: Turn): void => {
+  turn.actions.forEach((action) => takeAction(game, turn.character, action));
 };
 
-export const takeAction = (character: Character, action: Action): void => {
+export const takeAction = (game: Game, character: Character, action: Action): void => {
+  if (game.phase.type !== "take_4_actions") {
+    throw new Error("Action cannot be taken - wrong game phase", { cause: { phase: game.phase.type } });
+  }
+
   if (!action.isFree) {
-    if (character.remainingActions === 0) {
+    if (game.phase.remainingActions === 0) {
       throw new Error("insufficient remaining action points to perform action", {
         cause: {
           character,
@@ -42,7 +46,7 @@ export const takeAction = (character: Character, action: Action): void => {
       });
     }
 
-    character.remainingActions -= 1;
+    game.phase.remainingActions -= 1;
   }
 
   switch (action.type) {
