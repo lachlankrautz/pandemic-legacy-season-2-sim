@@ -46,12 +46,30 @@ export type Game = {
 };
 
 export const makeGame = (): Game => {
+  const locationMap: Map<string, Location> = new Map();
+
   return {
     map: {
-      locations: [],
+      locations: Array.from(locationMap.values()),
     },
     characters: [],
-    objectives: [],
+    objectives: [
+      {
+        name: "create_3_supply_centres",
+        isCompleted: false,
+        isMandatory: true,
+      },
+      {
+        name: "complete_2_searches",
+        isCompleted: false,
+        isMandatory: false,
+      },
+      {
+        name: "explore_1_region",
+        isCompleted: false,
+        isMandatory: false,
+      },
+    ],
     bonusSupplies: 15,
     month: {
       name: "March",
