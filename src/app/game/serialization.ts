@@ -38,6 +38,24 @@ const rawCharacterActionSchema = Type.Object({
 
 export type RawCharacterAction = Static<typeof rawCharacterActionSchema>;
 
+export const rawCharacterActionToCharacterAction = (
+  rawCharacterAction: RawCharacterAction,
+  getCharacter: GetCharacter,
+  getLocation: GetLocation,
+): CharacterAction => {
+  const character = getCharacter(rawCharacterAction.characterName);
+  if (character === undefined) {
+    throw new Error("Failed to create character action - character not found", {
+      cause: { characterName: rawCharacterAction.characterName },
+    });
+  }
+
+  return {
+    character,
+    action: rawActionToAction(rawCharacterAction.action, getLocation),
+  };
+};
+
 export const rawActionToAction = (rawAction: RawAction, getLocation: GetLocation): Action => {
   let location: Location | undefined;
 

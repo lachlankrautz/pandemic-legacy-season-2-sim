@@ -37,13 +37,23 @@ export type TurnResult = {
 };
 
 export const takeTurn = (game: Game, turn: Turn): TurnResult => {
-  turn.actions.forEach((action) => takeAction(game, turn.character, action));
-  return {
-    summary: [],
-  };
+  return turn.actions.reduce(
+    (turnResult: TurnResult, action) => {
+      const actionResult = takeAction(game, turn.character, action);
+      turnResult.summary.push(actionResult.summary);
+      return turnResult;
+    },
+    {
+      summary: [],
+    },
+  );
 };
 
-export const takeAction = (game: Game, character: Character, action: Action): void => {
+export type ActionResult = {
+  summary: string;
+};
+
+export const takeAction = (game: Game, character: Character, action: Action): ActionResult => {
   if (game.phase.type !== "take_4_actions") {
     throw new Error("Action cannot be taken - wrong game phase", { cause: { phase: game.phase.type } });
   }
@@ -72,6 +82,10 @@ export const takeAction = (game: Game, character: Character, action: Action): vo
       makeSupplies(character);
       break;
   }
+
+  return {
+    summary: `${character.name} performed ${action.type}`,
+  };
 };
 
 export const makeSupplies = (character: Character): void => {
