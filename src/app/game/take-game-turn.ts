@@ -1,16 +1,18 @@
 import type { Logger } from "../logging/logger.ts";
 import type { Repository } from "../repository/repository.ts";
-import { takeTurn } from "./actions.ts";
+import { takeTurn, type Turn } from "./actions.ts";
+import { deserializeTurn } from "./serialization.ts";
+import { type Game, gameCharacterFinder, gameLocationFinder } from "./game.ts";
 
-export const takeGameTurn = (logger: Logger, repo: Repository, fileName: string, turnJson: string) => {
-  logger.info(`loading game from file: ${fileName}`);
-
+export const takeSerializedGameTurn = (logger: Logger, repo: Repository, fileName: string, turnJson: string): void => {
   const game = repo.loadGame(fileName);
-  logger.info("taking a turn");
+  const turn = deserializeTurn(turnJson, gameCharacterFinder(game), gameLocationFinder(game));
 
-  const turn = {} as any;
-  takeTurn(game, turn);
-
-  logger.info(`saving game to file: ${fileName}`);
+  takeGameTurn(logger, game, turn);
   repo.saveGame(fileName, game);
+};
+
+export const takeGameTurn = (logger: Logger, game: Game, turn: Turn): void => {
+  const { summary } = takeTurn(game, turn);
+  logger.info("turn taken", { summary });
 };

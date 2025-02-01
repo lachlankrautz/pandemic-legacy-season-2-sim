@@ -35,6 +35,12 @@ export type Month = {
 
 export const TURN_ACTION_COUNT: number = 4;
 
+export const gameCharacterFinder = (game: Game) => (name: string) =>
+  game.characters.find((character) => character.name === name);
+
+export const gameLocationFinder = (game: Game) => (name: string) =>
+  game.map.locations.find((location) => location.name === name);
+
 export type Game = {
   phase:
     | {
@@ -140,7 +146,7 @@ const makeCharacter = (
   startingLocationName: LocationDisplayName,
   locationMap: Map<LocationDisplayName, Location>,
 ): Character => {
-  const location = locationMap.get(LocationNames.GEIDI_PRIME);
+  const location = locationMap.get(startingLocationName);
   if (location === undefined) {
     throw new Error("Character creation failed - starting location missing", {
       cause: { name, startingLocationName },

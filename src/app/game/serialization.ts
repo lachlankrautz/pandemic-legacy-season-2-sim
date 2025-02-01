@@ -1,13 +1,14 @@
 import { Value } from "@sinclair/typebox/value";
 import type { Character, Game, Location } from "./game.ts";
 import { type Static, Type } from "@sinclair/typebox";
+import type { Action, CharacterAction, Turn } from "./actions.ts";
 
 /**
- * A tree representation of a game action replacing circular
- * references with string identifiers e.g. locationName.
- * Enables JSON serialization.
+ * A representation of a game action using only primitives, replacing
+ * circular references with string identifiers.
+ * e.g. locationName.
  */
-const actionTreeSchema = Type.Intersect([
+const rawActionSchema = Type.Intersect([
   Type.Object({
     isFree: Type.Boolean(),
   }),
@@ -26,22 +27,103 @@ const actionTreeSchema = Type.Intersect([
   ]),
 ]);
 
-/**
- * A tree representation of a game turn replacing circular
- * references with string identifiers e.g. locationName.
- * Enables JSON serialization.
- */
-const turnTreeSchema = Type.Object({
+export type GetLocation = (name: string) => Location | undefined;
+
+export type RawAction = Static<typeof rawActionSchema>;
+
+const rawCharacterActionSchema = Type.Object({
   characterName: Type.String(),
-  actions: Type.Array(actionTreeSchema),
+  action: rawActionSchema,
 });
 
+export type RawCharacterAction = Static<typeof rawCharacterActionSchema>;
+
+export const rawActionToAction = (rawAction: RawAction, getLocation: GetLocation): Action => {
+  let location: Location | undefined;
+
+  switch (rawAction.type) {
+    case "move":
+      location = getLocation(rawAction.toLocationName);
+      if (location === undefined) {
+        throw new Error("Failed to create action - location not found", { cause: { locationName: rawAction.type } });
+      }
+      return {
+        type: rawAction.type,
+        isFree: rawAction.isFree,
+        to: location,
+      };
+    case "drop_supplies":
+      return {
+        type: rawAction.type,
+        isFree: rawAction.isFree,
+        supplyCubes: rawAction.supplyCubes,
+      };
+    case "make_supplies":
+      return {
+        type: rawAction.type,
+        isFree: rawAction.isFree,
+      };
+    default:
+      throw new Error("Unknown action type", { cause: { action: rawAction } });
+  }
+};
+
+export const deserializeCharacterAction = (
+  data: string,
+  getCharacter: GetCharacter,
+  getLocation: GetLocation,
+): CharacterAction | never => {
+  const { characterName, action } = Value.Parse(rawCharacterActionSchema, JSON.parse(data));
+
+  const character = getCharacter(characterName);
+  if (character === undefined) {
+    throw new Error("Character action creation failed - character missing", {
+      cause: { characterName },
+    });
+  }
+
+  return {
+    character,
+    action: rawActionToAction(action, getLocation),
+  };
+};
+
 /**
- * A tree representation of the game state replacing circular
- * references with string identifiers e.g. locationName.
- * Enables JSON serialization.
+ * A representation of a game turn using only primitives, replacing
+ * circular references with string identifiers.
+ * e.g. locationName.
  */
-const gameTreeSchema = Type.Object({
+const rawTurnSchema = Type.Object({
+  characterName: Type.String(),
+  actions: Type.Array(rawActionSchema),
+});
+
+export type RawTurn = Static<typeof rawTurnSchema>;
+
+export type GetCharacter = (name: string) => Character | undefined;
+
+export const rawTurnToTurn = (rawTurn: RawTurn, getCharacter: GetCharacter, getLocation: GetLocation): Turn => {
+  const character = getCharacter(rawTurn.characterName);
+  if (character === undefined) {
+    throw new Error("Create turn failed - specified character not found");
+  }
+
+  return {
+    character,
+    actions: rawTurn.actions.map((action) => rawActionToAction(action, getLocation)),
+  };
+};
+
+export const deserializeTurn = (data: string, getCharacter: GetCharacter, getLocation: GetLocation): Turn | never => {
+  return rawTurnToTurn(Value.Parse(rawTurnSchema, JSON.parse(data)), getCharacter, getLocation);
+};
+
+/**
+ * A representation of a game using only primitives, replacing
+ * circular references with string identifiers.
+ * e.g. locationName.
+ */
+const rawGameSchema = Type.Object({
   phase: Type.Union([
     Type.Object({
       type: Type.Literal("exposure_check"),
@@ -98,9 +180,9 @@ const gameTreeSchema = Type.Object({
   state: Type.Union([Type.Literal("not_started"), Type.Literal("playing"), Type.Literal("lost"), Type.Literal("won")]),
 });
 
-export type GameTree = Static<typeof gameTreeSchema>;
+export type RawGame = Static<typeof rawGameSchema>;
 
-const gamePhaseToTree = (phase: Game["phase"]): GameTree["phase"] => {
+const gamePhaseToRawGamePhase = (phase: Game["phase"]): RawGame["phase"] => {
   if (phase.type === "take_4_actions") {
     return {
       type: phase.type,
@@ -115,8 +197,8 @@ const gamePhaseToTree = (phase: Game["phase"]): GameTree["phase"] => {
   };
 };
 
-const gameToTree = (game: Game): GameTree => ({
-  phase: gamePhaseToTree(game.phase),
+const gameToRawGame = (game: Game): RawGame => ({
+  phase: gamePhaseToRawGamePhase(game.phase),
   locations: game.map.locations.map((location) => ({
     name: location.name,
     type: location.type,
@@ -146,7 +228,7 @@ const gameToTree = (game: Game): GameTree => ({
   state: game.state,
 });
 
-const treeToGamePhase = (phase: GameTree["phase"], characterMap: Map<string, Character>): Game["phase"] => {
+const rawGamePhaseToGamePhase = (phase: RawGame["phase"], characterMap: Map<string, Character>): Game["phase"] => {
   const character = characterMap.get(phase.characterName);
   if (character === undefined) {
     throw new Error("Game phase initialisation failed - character not found", {
@@ -168,9 +250,9 @@ const treeToGamePhase = (phase: GameTree["phase"], characterMap: Map<string, Cha
   };
 };
 
-const treeToGame = (tree: GameTree): Game | never => {
+const rawGameToGame = (rawGame: RawGame): Game | never => {
   const locationMap: Map<string, Location> = new Map();
-  for (const location of tree.locations) {
+  for (const location of rawGame.locations) {
     locationMap.set(location.name, {
       name: location.name,
       type: location.type,
@@ -181,17 +263,38 @@ const treeToGame = (tree: GameTree): Game | never => {
     });
   }
 
-  const characterMap: Map<string, Character> = new Map();
-  for (const treeCharacter of tree.characters) {
-    const location = locationMap.get(treeCharacter.locationName);
+  for (const rawLocation of rawGame.locations) {
+    const location = locationMap.get(rawLocation.name);
     if (location === undefined) {
-      throw new Error("location not found", { cause: { locationName: treeCharacter.locationName } });
+      throw new Error("Failed to create connections - source location not found", {
+        cause: { locationName: rawLocation.name },
+      });
+    }
+    for (const rawConnection of rawLocation.connections) {
+      const connectedLocation = locationMap.get(rawConnection.locationName);
+      if (connectedLocation === undefined) {
+        throw new Error("Failed to create connections - destination location not found", {
+          cause: { locationName: rawConnection.locationName },
+        });
+      }
+      location.connections.push({
+        type: rawConnection.type,
+        location: connectedLocation,
+      });
+    }
+  }
+
+  const characterMap: Map<string, Character> = new Map();
+  for (const rawCharacter of rawGame.characters) {
+    const location = locationMap.get(rawCharacter.locationName);
+    if (location === undefined) {
+      throw new Error("location not found", { cause: { locationName: rawCharacter.locationName } });
     }
 
     const character: Character = {
-      name: treeCharacter.name,
+      name: rawCharacter.name,
       location,
-      supplyCubes: treeCharacter.supplyCubes,
+      supplyCubes: rawCharacter.supplyCubes,
     };
 
     location.characters.push(character);
@@ -200,30 +303,30 @@ const treeToGame = (tree: GameTree): Game | never => {
   }
 
   return {
-    phase: treeToGamePhase(tree.phase, characterMap),
+    phase: rawGamePhaseToGamePhase(rawGame.phase, characterMap),
     map: {
       locations: Array.from(locationMap.values()),
     },
     characters: Array.from(characterMap.values()),
-    objectives: tree.objectives.map((objective) => ({
+    objectives: rawGame.objectives.map((objective) => ({
       name: objective.name,
       isCompleted: objective.isCompleted,
       isMandatory: objective.isMandatory,
     })),
     month: {
-      name: tree.month.name,
-      supplies: tree.month.supplies,
+      name: rawGame.month.name,
+      supplies: rawGame.month.supplies,
     },
-    bonusSupplies: tree.bonusSupplies,
-    outbreaks: tree.outbreaks,
-    state: tree.state,
+    bonusSupplies: rawGame.bonusSupplies,
+    outbreaks: rawGame.outbreaks,
+    state: rawGame.state,
   };
 };
 
 export const serializeGame = (game: Game): string => {
-  return JSON.stringify(gameToTree(game));
+  return JSON.stringify(gameToRawGame(game), null, 2);
 };
 
 export const deserializeGame = (data: string): Game | never => {
-  return treeToGame(Value.Parse(gameTreeSchema, JSON.parse(data)));
+  return rawGameToGame(Value.Parse(rawGameSchema, JSON.parse(data)));
 };

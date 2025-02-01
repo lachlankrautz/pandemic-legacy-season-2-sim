@@ -4,6 +4,11 @@ import type { Character, Game, Location } from "./game.ts";
 // some actions are always free actions, some can be free
 export type Action = { isFree: boolean } & (Move | MakeSupplies | DropSupplies);
 
+export type CharacterAction = {
+  character: Character;
+  action: Action;
+};
+
 export type Move = {
   type: "move";
   to: Location;
@@ -27,8 +32,15 @@ export type Turn = {
 // to remake the entire state 1000 times, but it would mean that
 // on any exception the original unmodified world could be returned.
 
-export const takeTurn = (game: Game, turn: Turn): void => {
+export type TurnResult = {
+  summary: string[];
+};
+
+export const takeTurn = (game: Game, turn: Turn): TurnResult => {
   turn.actions.forEach((action) => takeAction(game, turn.character, action));
+  return {
+    summary: [],
+  };
 };
 
 export const takeAction = (game: Game, character: Character, action: Action): void => {
