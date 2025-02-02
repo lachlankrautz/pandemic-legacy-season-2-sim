@@ -1,22 +1,36 @@
 import yargs from "yargs";
-import type { RawCharacterAction } from "../game/serialization.ts";
-import type { ActionResult, TurnResult } from "../game/actions.ts";
+import type { SerializableStep } from "../serialization/step-serialization.ts";
 
 export type CliRunner = {
   run(): Promise<void>;
 };
 
-export type StartGameCommandLoader = () => (save: string) => void;
-export type TakeTurnCommandLoader = () => (save: string, turnJson: string) => TurnResult;
-export type TakeActionCommandLoader = () => (save: string, rawCharacterAction: RawCharacterAction) => ActionResult;
+// "Lazy" functions delay loading their dependencies until called.
+// Allows the cli to offer all possible operations without the
+// program needing to load every dependency.
+
+export type LazyPlayTuiCommand = () => () => void;
+
+export type LazyStartGameCommand = () => (save: string) => void;
+
+export type LazyTakeStepCommand = () => (save: string, step: SerializableStep) => void;
+
+export type LazyTakeSerializedStepCommand = () => (save: string, stepJson: string) => void;
 
 export const makeYargsCliRunner = (
-  startGameCommandLoader: StartGameCommandLoader,
-  takeTurnCommandLoader: TakeTurnCommandLoader,
-  takeActionCommandLoader: TakeActionCommandLoader,
+  playTui: LazyPlayTuiCommand,
+  startGame: LazyStartGameCommand,
+  takeStep: LazyTakeStepCommand,
+  tepCommandLoader: LazyTakeSerializedStepCommand,
   argv: string[],
 ): CliRunner => {
   const yargsCli = yargs(argv)
+    .command(
+      "play",
+      "Boot up the game TUI",
+      (yargs) => yargs,
+      () => playTui()(),
+    )
     .command(
       "start-game",
       "Start a new game.",
@@ -28,10 +42,10 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => startGameCommandLoader()(args.save),
+      (args) => startGame()(args.save),
     )
     .command(
-      "take-turn",
+      "take-step",
       "Take a turn in an existing game.",
       (yargs) => {
         return yargs.options({
@@ -39,15 +53,14 @@ export const makeYargsCliRunner = (
             type: "string",
             required: true,
           },
-          turnJson: {
+          step: {
             type: "string",
+            description: "JSON step",
             required: true,
           },
         });
       },
-      (args) => {
-        takeTurnCommandLoader()(args.save, args.turnJson);
-      },
+      (args) => tepCommandLoader()(args.save, args.step),
     )
     .command(
       "move",
@@ -58,7 +71,7 @@ export const makeYargsCliRunner = (
             type: "string",
             required: true,
           },
-          character: {
+          player: {
             type: "string",
             required: true,
           },
@@ -68,16 +81,16 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        takeActionCommandLoader()(args.save, {
-          characterName: args.character,
+      (args) =>
+        takeStep()(args.save, {
+          type: "player_action",
+          playerName: args.player,
           action: {
             type: "move",
             isFree: false,
             toLocationName: args.to,
           },
-        });
-      },
+        }),
     )
     .command(
       "make-supplies",
@@ -88,21 +101,21 @@ export const makeYargsCliRunner = (
             type: "string",
             required: true,
           },
-          character: {
+          player: {
             type: "string",
             required: true,
           },
         });
       },
-      (args) => {
-        takeActionCommandLoader()(args.save, {
-          characterName: args.character,
+      (args) =>
+        takeStep()(args.save, {
+          type: "player_action",
+          playerName: args.player,
           action: {
             type: "make_supplies",
             isFree: false,
           },
-        });
-      },
+        }),
     )
     .command(
       "drop-supplies",
@@ -113,7 +126,7 @@ export const makeYargsCliRunner = (
             type: "string",
             required: true,
           },
-          character: {
+          player: {
             type: "string",
             required: true,
           },
@@ -123,16 +136,16 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        takeActionCommandLoader()(args.save, {
-          characterName: args.character,
+      (args) =>
+        takeStep()(args.save, {
+          type: "player_action",
+          playerName: args.player,
           action: {
             type: "drop_supplies",
             isFree: false,
             supplyCubes: args.supplyCubes,
           },
-        });
-      },
+        }),
     )
     .demandCommand();
 

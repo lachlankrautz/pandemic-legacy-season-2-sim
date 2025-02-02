@@ -1,120 +1,138 @@
-import type { Character, Game, Location } from "./game.ts";
+import {
+  type Player,
+  type Game,
+  type GetLocation,
+  getGameLocation,
+  type TakeActionsPhase,
+  type GameFlowTurn,
+} from "./game.ts";
+import type { StepResult } from "./game-steps.ts";
 
 // actions/free action is wrong
 // some actions are always free actions, some can be free
-export type Action = { isFree: boolean } & (Move | MakeSupplies | DropSupplies);
+export type Action = Move<true> | Move<false> | MakeSupplies | DropSupplies;
 
-export type CharacterAction = {
-  character: Character;
-  action: Action;
-};
-
-export type Move = {
+export type Move<T extends boolean> = {
   type: "move";
-  to: Location;
+  isFree: T;
+  toLocationName: string;
 };
 
 export type MakeSupplies = {
   type: "make_supplies";
+  isFree: false;
 };
 
 export type DropSupplies = {
   type: "drop_supplies";
+  isFree: false;
   supplyCubes: number;
-};
-
-export type Turn = {
-  character: Character;
-  actions: Action[];
 };
 
 // Question: Should the game be immutable? might be really costly
 // to remake the entire state 1000 times, but it would mean that
 // on any exception the original unmodified world could be returned.
 
-export type TurnResult = {
-  summary: string[];
-};
-
-export const takeTurn = (game: Game, turn: Turn): TurnResult => {
-  return turn.actions.reduce(
-    (turnResult: TurnResult, action) => {
-      const actionResult = takeAction(game, turn.character, action);
-      turnResult.summary.push(actionResult.summary);
-      return turnResult;
-    },
-    {
-      summary: [],
-    },
-  );
-};
-
-export type ActionResult = {
-  summary: string;
-};
-
-export const takeAction = (game: Game, character: Character, action: Action): ActionResult => {
-  if (game.phase.type !== "take_4_actions") {
-    throw new Error("Action cannot be taken - wrong game phase", { cause: { phase: game.phase.type } });
+export const takeAction = (
+  turn: Readonly<GameFlowTurn<TakeActionsPhase>>,
+  game: Game,
+  playerName: string,
+  action: Action,
+): StepResult => {
+  if (turn.playerName !== playerName) {
+    return {
+      type: "no_effect",
+      cause: `Wrong player, expected "${turn.playerName}" received "${playerName}"`,
+    };
   }
 
   if (!action.isFree) {
-    if (game.phase.remainingActions === 0) {
-      throw new Error("insufficient remaining action points to perform action", {
-        cause: {
-          character,
-          action,
-        },
-      });
+    if (turn.phase.remainingActions < 1) {
+      return {
+        type: "no_effect",
+        cause: "No actions remaining",
+      };
     }
+  }
 
-    game.phase.remainingActions -= 1;
+  const player = game.players.get(playerName);
+  if (player === undefined) {
+    // Should be fairly impossible to reach here; the player turn check
+    // above logically ensures that the player must also exist.
+    // This check is to catch any logical code regression.
+    return {
+      type: "no_effect",
+      cause: `Player "${playerName}" not found`,
+    };
   }
 
   switch (action.type) {
     case "move":
-      move(character, action);
-      break;
+      return move(player, action, getGameLocation(game));
     case "drop_supplies":
-      dropSupplies(character, action);
-      break;
+      return dropSupplies(player, action);
     case "make_supplies":
-      makeSupplies(character);
-      break;
+      return makeSupplies(player);
   }
+};
 
+export const makeSupplies = (player: Player): StepResult => {
+  player.supplyCubes++;
   return {
-    summary: `${character.name} performed ${action.type}`,
+    type: "state_changed",
+    gameLog: [
+      `${player.name} made supplies, they now have ${player.supplyCubes}`,
+      `${player.name} has ${player.supplyCubes} on their card`,
+    ],
   };
 };
 
-export const makeSupplies = (character: Character): void => {
-  character.supplyCubes++;
-};
-
-export const dropSupplies = (character: Character, drop: DropSupplies): void => {
-  if (character.supplyCubes < drop.supplyCubes) {
-    throw new Error("insufficient drop supplies to perform action", {
-      cause: {
-        character,
-        drop,
-      },
-    });
+export const dropSupplies = (player: Player, drop: DropSupplies): StepResult => {
+  if (player.supplyCubes < drop.supplyCubes) {
+    return {
+      type: "no_effect",
+      cause: `${player.name} only has ${player.supplyCubes} cubes and cannot drop ${drop.supplyCubes}`,
+    };
   }
 
-  character.location.supplyCubes += drop.supplyCubes;
-  character.supplyCubes -= drop.supplyCubes;
+  player.location.supplyCubes += drop.supplyCubes;
+  player.supplyCubes -= drop.supplyCubes;
+
+  return {
+    type: "state_changed",
+    gameLog: [
+      `${player.name} dropped ${drop.supplyCubes} cubes at ${player.location.name}`,
+      `${player.name} has ${player.supplyCubes} remaining on their card`,
+    ],
+  };
 };
 
-export const move = (character: Character, move: Move): void => {
-  const canMove = character.location.connections.some((connection) => connection.location.name === move.to.name);
+export const move = <T extends boolean>(player: Player, move: Move<T>, getLocation: GetLocation): StepResult => {
+  const possibleDestinationNames = player.location.connections.map((connection) => connection.location.name).join(", ");
+  const location = getLocation(move.toLocationName);
+  if (location === undefined) {
+    return {
+      type: "no_effect",
+      cause: `Invalid move target "${move.toLocationName}, possible destinations: (${possibleDestinationNames})"`,
+    };
+  }
+
+  const fromLocationName = player.location.name;
+
+  const canMove = player.location.connections.some((connection) => connection.location.name === move.toLocationName);
   if (!canMove) {
-    throw new Error(`cannot move from "${character.location.name}" to "${move.to.name}"`);
+    return {
+      type: "no_effect",
+      cause: `Invalid move target "${move.toLocationName}, possible destinations: (${possibleDestinationNames})"`,
+    };
   }
 
-  character.location.characters = character.location.characters.filter(
-    (characterAtLocation) => characterAtLocation.name !== character.name,
-  );
-  character.location = move.to;
-  character.location.characters.push(character);
+  player.location.players = player.location.players.filter((playerAtLocation) => playerAtLocation.name !== player.name);
+  player.location = location;
+  player.location.players.push(player);
+
+  return {
+    type: "state_changed",
+    gameLog: [`${player.name} moved from ${fromLocationName} to ${player.location.name}`],
+  };
 };

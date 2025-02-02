@@ -1,25 +1,99 @@
+import {
+  type SerializableGame,
+  serializableGameToGame,
+  type SerializableLocation,
+  type SerializablePlayer,
+} from "../serialization/game-serialization.ts";
+import type { Step } from "./game-steps.ts";
+
 export type Location = {
   name: string;
   type: "haven" | "port" | "inland";
   supplyCubes: number;
   plagueCubes: number;
   connections: Connection[];
-  characters: Character[];
+  players: Player[];
 };
 
-export type Character = {
+export const infectionRates = [
+  {
+    position: 1,
+    cards: 2,
+  },
+  {
+    position: 2,
+    cards: 2,
+  },
+  {
+    position: 3,
+    cards: 2,
+  },
+  {
+    position: 4,
+    cards: 3,
+  },
+  {
+    position: 5,
+    cards: 3,
+  },
+  {
+    position: 6,
+    cards: 4,
+  },
+  {
+    position: 7,
+    cards: 4,
+  },
+  {
+    position: 8,
+    cards: 5,
+  },
+] as const satisfies { position: number; cards: number }[];
+
+export type GetPlayer = (name: string) => Player | undefined;
+
+export const getGamePlayer =
+  (game: Game): GetPlayer =>
+  (name: string) =>
+    game.players.get(name);
+
+export type GetLocation = (name: string) => Location | undefined;
+
+export const getGameLocation =
+  (game: Game): GetLocation =>
+  (name: string) =>
+    game.locations.get(name);
+
+export const getIncreasedInfectionRate = (infectionRate: InfectionRate): InfectionRate => {
+  const nextPosition = Math.min(infectionRate.position + 1, 8);
+  const nextRate = infectionRates.find((rate) => rate.position === nextPosition);
+  if (nextRate === undefined) {
+    throw new Error("Missing infection rate", { cause: { position: nextPosition } });
+  }
+  return nextRate;
+};
+
+export const getNextTurnOrder = (turn: TurnOrder): TurnOrder => {
+  // TODO Spend countless hours trying to get typescript to know
+  //      it's still a turn order without replacing the runtime maths
+  //      with exhaustive branching.
+  return ((turn % 4) + 1) as TurnOrder;
+};
+
+export type InfectionRate = (typeof infectionRates)[number];
+
+export type TurnOrder = 1 | 2 | 3 | 4;
+
+export type Player = {
   name: string;
   location: Location;
+  turnOrder: TurnOrder;
   supplyCubes: number;
 };
 
 export type Connection = {
   location: Location;
   type: "land" | "sea";
-};
-
-export type WorldMap = {
-  locations: Location[];
 };
 
 export type Objective = {
@@ -35,38 +109,51 @@ export type Month = {
 
 export const TURN_ACTION_COUNT: number = 4;
 
-export const gameCharacterFinder = (game: Game) => (name: string) =>
-  game.characters.find((character) => character.name === name);
+export type GameFlowWon = { type: "game_won" };
 
-export const gameLocationFinder = (game: Game) => (name: string) =>
-  game.map.locations.find((location) => location.name === name);
+export type GameFlowOver = { type: "game_over"; cause: string };
 
-export type Game = {
-  phase:
-    | {
-        type: "exposure_check";
-        character: Character;
-      }
-    | {
-        type: "take_4_actions";
-        character: Character;
-        remainingActions: number;
-      }
-    | {
-        type: "draw_2_cards";
-        character: Character;
-      }
-    | {
-        type: "infect_cities";
-        character: Character;
-      };
-  map: WorldMap;
-  characters: Character[];
+export type ExposureCheckPhase = {
+  type: "exposure_check";
+};
+
+export type TakeActionsPhase = {
+  type: "take_4_actions";
+  remainingActions: number;
+};
+
+export type DrawCardsPhase = {
+  type: "draw_2_cards";
+  remainingCards: number;
+};
+
+export type InfectCitiesPhase = {
+  type: "infect_cities";
+  remainingCards: number;
+};
+
+export type TurnPhase = ExposureCheckPhase | TakeActionsPhase | DrawCardsPhase | InfectCitiesPhase;
+
+export type GameFlowTurn<TPhase extends TurnPhase = TurnPhase> = {
+  type: "player_turn";
+  playerName: string;
+  phase: TPhase;
+};
+
+export type GameFlow = GameFlowWon | GameFlowOver | GameFlowTurn;
+
+export type Game<TFlow extends GameFlow = GameFlow> = {
+  gameFlow: TFlow;
+  locations: Map<string, Location>;
+  players: Map<string, Player>;
   objectives: Objective[];
   bonusSupplies: number;
   month: Month;
   outbreaks: number;
+  infectionRate: InfectionRate;
   state: "not_started" | "playing" | "lost" | "won";
+  stepHistory: Step[];
+  gameLog: string[];
 };
 
 const LocationNames = {
@@ -126,14 +213,13 @@ const locationEntry = (
   name: LocationDisplayName,
   type: Location["type"],
   options: LocationOptions = {},
-): [LocationDisplayName, Location] => [
+): [LocationDisplayName, SerializableLocation] => [
   name,
   {
     name,
     type,
     supplyCubes: 0,
     plagueCubes: 0,
-    characters: [],
     connections: [],
 
     // Override defaults with any provided options
@@ -141,27 +227,22 @@ const locationEntry = (
   },
 ];
 
-const makeCharacter = (
-  name: string,
-  startingLocationName: LocationDisplayName,
-  locationMap: Map<LocationDisplayName, Location>,
-): Character => {
-  const location = locationMap.get(startingLocationName);
-  if (location === undefined) {
-    throw new Error("Character creation failed - starting location missing", {
-      cause: { name, startingLocationName },
-    });
-  }
-
+const makePlayer = (name: string, locationName: LocationDisplayName, turnOrder: TurnOrder): SerializablePlayer => {
   return {
     name,
-    location,
+    locationName,
+    turnOrder,
     supplyCubes: 0,
   };
 };
 
 export const makeGame = (): Game => {
-  const locationMap: Map<LocationDisplayName, Location> = new Map([
+  const serializableGame = makeSerializableGame();
+  return serializableGameToGame(serializableGame);
+};
+
+export const makeSerializableGame = (): SerializableGame => {
+  const locationMap: Map<LocationDisplayName, SerializableLocation> = new Map([
     // Havens
     locationEntry(LocationNames.OCEAN_GATE, "haven"),
     locationEntry(LocationNames.GEIDI_PRIME, "haven"),
@@ -202,34 +283,35 @@ export const makeGame = (): Game => {
       fromLocation.type === "inland" || toLocation.type === "inland" ? "land" : "sea";
 
     fromLocation.connections.push({
-      location: toLocation,
+      locationName: toLocation.name,
       type: connectionType,
     });
 
     toLocation.connections.push({
-      location: fromLocation,
+      locationName: fromLocation.name,
       type: connectionType,
     });
   }
 
-  const julian = makeCharacter("Hammond", LocationNames.OCEAN_GATE, locationMap);
+  const julian = makePlayer("Hammond", LocationNames.OCEAN_GATE, 1);
 
   return {
-    phase: {
-      type: "take_4_actions",
-      character: julian,
-      remainingActions: TURN_ACTION_COUNT,
+    gameFlow: {
+      type: "player_turn",
+      playerName: julian.name,
+      phase: {
+        type: "take_4_actions",
+        remainingActions: TURN_ACTION_COUNT,
+      },
     },
-    map: {
-      locations: Array.from(locationMap.values()),
-    },
-    characters: [
+    locations: Array.from(locationMap.values()),
+    players: [
       julian,
-      makeCharacter("Denji", LocationNames.GEIDI_PRIME, locationMap),
-      makeCharacter("Robin", LocationNames.OCEAN_GATE, locationMap),
-      makeCharacter("Joel Smasher", LocationNames.GEIDI_PRIME, locationMap),
-      // makeCharacter("Jewel", LocationNames.COLUMBIA, locationMap),
-      // makeCharacter("John RedCorn", LocationNames.BUENOS_AIRES, locationMap),
+      makePlayer("Denji", LocationNames.GEIDI_PRIME, 2),
+      makePlayer("Robin", LocationNames.OCEAN_GATE, 3),
+      makePlayer("Joel Smasher", LocationNames.GEIDI_PRIME, 4),
+      // makePlayer("Jewel", LocationNames.COLUMBIA, ?),
+      // makePlayer("John RedCorn", LocationNames.BUENOS_AIRES, ?),
     ],
     objectives: [
       {
@@ -253,7 +335,13 @@ export const makeGame = (): Game => {
       name: "March",
       supplies: 27,
     },
+    infectionRate: {
+      position: 2,
+      cards: 2,
+    },
     outbreaks: 0,
     state: "not_started",
+    stepHistory: [],
+    gameLog: [],
   };
 };
