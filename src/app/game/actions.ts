@@ -1,11 +1,4 @@
-import {
-  type Player,
-  type Game,
-  type GetLocation,
-  getGameLocation,
-  type TakeActionsPhase,
-  type GameFlowTurn,
-} from "./game.ts";
+import { type Player, type Game, type GetLocation, getGameLocation, type GameFlowTurnTakeActions } from "./game.ts";
 import type { StepResult } from "./game-steps.ts";
 
 // actions/free action is wrong
@@ -33,37 +26,42 @@ export type DropSupplies = {
 // to remake the entire state 1000 times, but it would mean that
 // on any exception the original unmodified world could be returned.
 
+// Question: Game flow control should not be manual
+//           this should return as part of the step result
+//           the change it wants to make to flow control.
+//           Then things like losing the game can override the pending change
+
 export const takeAction = (
-  turn: Readonly<GameFlowTurn<TakeActionsPhase>>,
+  gameFlow: Readonly<GameFlowTurnTakeActions>,
   game: Game,
   playerName: string,
   action: Action,
 ): StepResult => {
-  if (turn.playerName !== playerName) {
+  const player = game.players.get(playerName);
+  if (player === undefined) {
+    const playerNames = Array.from(game.players.values())
+      .map((player) => player.name)
+      .join(", ");
     return {
       type: "no_effect",
-      cause: `Wrong player, expected "${turn.playerName}" received "${playerName}"`,
+      cause: `Invalid player name "${playerName}", available players: ${playerNames}`,
+    };
+  }
+
+  if (gameFlow.playerName !== playerName) {
+    return {
+      type: "no_effect",
+      cause: `Wrong player, expected "${gameFlow.playerName}" received "${playerName}"`,
     };
   }
 
   if (!action.isFree) {
-    if (turn.phase.remainingActions < 1) {
+    if (gameFlow.remainingActions < 1) {
       return {
         type: "no_effect",
         cause: "No actions remaining",
       };
     }
-  }
-
-  const player = game.players.get(playerName);
-  if (player === undefined) {
-    // Should be fairly impossible to reach here; the player turn check
-    // above logically ensures that the player must also exist.
-    // This check is to catch any logical code regression.
-    return {
-      type: "no_effect",
-      cause: `Player "${playerName}" not found`,
-    };
   }
 
   switch (action.type) {

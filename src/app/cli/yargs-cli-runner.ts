@@ -1,5 +1,6 @@
 import yargs from "yargs";
 import type { SerializableStep } from "../serialization/step-serialization.ts";
+import type { Logger } from "../logging/logger.ts";
 
 export type CliRunner = {
   run(): Promise<void>;
@@ -18,12 +19,19 @@ export type LazyTakeStepCommand = () => (save: string, step: SerializableStep) =
 export type LazyTakeSerializedStepCommand = () => (save: string, stepJson: string) => void;
 
 export const makeYargsCliRunner = (
+  logger: Logger,
   playTui: LazyPlayTuiCommand,
   startGame: LazyStartGameCommand,
   takeStep: LazyTakeStepCommand,
   tepCommandLoader: LazyTakeSerializedStepCommand,
   argv: string[],
 ): CliRunner => {
+  const checkDebug = (args: { debug: boolean | undefined }) => {
+    if (args.debug) {
+      logger.level = "debug";
+    }
+  };
+
   const yargsCli = yargs(argv)
     .command(
       "play",
@@ -36,19 +44,30 @@ export const makeYargsCliRunner = (
       "Start a new game.",
       (yargs) => {
         return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
           save: {
             type: "string",
             required: true,
           },
         });
       },
-      (args) => startGame()(args.save),
+      (args) => {
+        checkDebug(args);
+        startGame()(args.save);
+      },
     )
     .command(
       "take-step",
       "Take a turn in an existing game.",
       (yargs) => {
         return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
           save: {
             type: "string",
             required: true,
@@ -60,13 +79,20 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => tepCommandLoader()(args.save, args.step),
+      (args) => {
+        checkDebug(args);
+        tepCommandLoader()(args.save, args.step);
+      },
     )
     .command(
       "move",
       "Take a move action in an existing game.",
       (yargs) => {
         return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
           save: {
             type: "string",
             required: true,
@@ -81,7 +107,8 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) =>
+      (args) => {
+        checkDebug(args);
         takeStep()(args.save, {
           type: "player_action",
           playerName: args.player,
@@ -90,13 +117,18 @@ export const makeYargsCliRunner = (
             isFree: false,
             toLocationName: args.to,
           },
-        }),
+        });
+      },
     )
     .command(
       "make-supplies",
       "Take a make supplies action in an existing game.",
       (yargs) => {
         return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
           save: {
             type: "string",
             required: true,
@@ -107,7 +139,8 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) =>
+      (args) => {
+        checkDebug(args);
         takeStep()(args.save, {
           type: "player_action",
           playerName: args.player,
@@ -115,13 +148,18 @@ export const makeYargsCliRunner = (
             type: "make_supplies",
             isFree: false,
           },
-        }),
+        });
+      },
     )
     .command(
       "drop-supplies",
       "Take a drop supplies action in an existing game.",
       (yargs) => {
         return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
           save: {
             type: "string",
             required: true,
@@ -136,7 +174,8 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) =>
+      (args) => {
+        checkDebug(args);
         takeStep()(args.save, {
           type: "player_action",
           playerName: args.player,
@@ -145,7 +184,89 @@ export const makeYargsCliRunner = (
             isFree: false,
             supplyCubes: args.supplyCubes,
           },
-        }),
+        });
+      },
+    )
+    .command(
+      "exposure",
+      "Check for exposure",
+      (yargs) => {
+        return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
+          save: {
+            type: "string",
+            required: true,
+          },
+          player: {
+            type: "string",
+            required: true,
+          },
+        });
+      },
+      (args) => {
+        checkDebug(args);
+        takeStep()(args.save, {
+          type: "check_for_exposure",
+          playerName: args.player,
+        });
+      },
+    )
+    .command(
+      "draw",
+      "Draw a player card.",
+      (yargs) => {
+        return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
+          save: {
+            type: "string",
+            required: true,
+          },
+          player: {
+            type: "string",
+            required: true,
+          },
+        });
+      },
+      (args) => {
+        checkDebug(args);
+        takeStep()(args.save, {
+          type: "draw_player_card",
+          playerName: args.player,
+        });
+      },
+    )
+    .command(
+      "infect",
+      "Draw an infection card.",
+      (yargs) => {
+        return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
+          save: {
+            type: "string",
+            required: true,
+          },
+          player: {
+            type: "string",
+            required: true,
+          },
+        });
+      },
+      (args) => {
+        checkDebug(args);
+        takeStep()(args.save, {
+          type: "draw_infection_card",
+          playerName: args.player,
+        });
+      },
     )
     .demandCommand();
 

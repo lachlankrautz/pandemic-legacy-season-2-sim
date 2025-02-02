@@ -18,6 +18,7 @@ export const serializableStepSchema = Type.Union([
   }),
   Type.Object({
     type: Type.Literal("draw_infection_card"),
+    playerName: Type.String(),
   }),
   Type.Object({
     type: Type.Literal("play_event_card"),

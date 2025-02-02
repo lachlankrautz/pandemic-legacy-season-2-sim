@@ -113,34 +113,36 @@ export type GameFlowWon = { type: "game_won" };
 
 export type GameFlowOver = { type: "game_over"; cause: string };
 
-export type ExposureCheckPhase = {
-  type: "exposure_check";
+export type GameFlowTurnExposureCheck = {
+  type: "player_turn:exposure_check";
+  playerName: string;
 };
 
-export type TakeActionsPhase = {
-  type: "take_4_actions";
+export type GameFlowTurnTakeActions = {
+  type: "player_turn:take_4_actions";
+  playerName: string;
   remainingActions: number;
 };
 
-export type DrawCardsPhase = {
-  type: "draw_2_cards";
-  remainingCards: number;
-};
-
-export type InfectCitiesPhase = {
-  type: "infect_cities";
-  remainingCards: number;
-};
-
-export type TurnPhase = ExposureCheckPhase | TakeActionsPhase | DrawCardsPhase | InfectCitiesPhase;
-
-export type GameFlowTurn<TPhase extends TurnPhase = TurnPhase> = {
-  type: "player_turn";
+export type GameFlowTurnDrawCards = {
+  type: "player_turn:draw_2_cards";
   playerName: string;
-  phase: TPhase;
+  remainingCards: number;
 };
 
-export type GameFlow = GameFlowWon | GameFlowOver | GameFlowTurn;
+export type GameFlowTurnInfectCities = {
+  type: "player_turn:infect_cities";
+  playerName: string;
+  remainingCards: number;
+};
+
+export type GameFlow =
+  | GameFlowWon
+  | GameFlowOver
+  | GameFlowTurnExposureCheck
+  | GameFlowTurnTakeActions
+  | GameFlowTurnDrawCards
+  | GameFlowTurnInfectCities;
 
 export type Game<TFlow extends GameFlow = GameFlow> = {
   gameFlow: TFlow;
@@ -297,12 +299,9 @@ export const makeSerializableGame = (): SerializableGame => {
 
   return {
     gameFlow: {
-      type: "player_turn",
+      type: "player_turn:take_4_actions",
       playerName: julian.name,
-      phase: {
-        type: "take_4_actions",
-        remainingActions: TURN_ACTION_COUNT,
-      },
+      remainingActions: TURN_ACTION_COUNT,
     },
     locations: Array.from(locationMap.values()),
     players: [

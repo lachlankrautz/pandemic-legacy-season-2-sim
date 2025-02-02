@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@sinclair/typebox": "^0.34.15",
+    "winston": "^3.17.0",
     "yargs": "^17.7.2"
   }
 }

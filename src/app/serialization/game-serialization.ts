@@ -19,25 +19,23 @@ const serializableGameSchema = Type.Object({
       cause: Type.String(),
     }),
     Type.Object({
-      type: Type.Literal("player_turn"),
+      type: Type.Literal("player_turn:exposure_check"),
       playerName: Type.String(),
-      phase: Type.Union([
-        Type.Object({
-          type: Type.Literal("exposure_check"),
-        }),
-        Type.Object({
-          type: Type.Literal("take_4_actions"),
-          remainingActions: Type.Number({ minimum: 1, maximum: 4 }),
-        }),
-        Type.Object({
-          type: Type.Literal("draw_2_cards"),
-          remainingCards: Type.Number({ minimum: 1, maximum: 2 }),
-        }),
-        Type.Object({
-          type: Type.Literal("infect_cities"),
-          remainingCards: Type.Number({ minimum: 2, maximum: 5 }),
-        }),
-      ]),
+    }),
+    Type.Object({
+      type: Type.Literal("player_turn:take_4_actions"),
+      playerName: Type.String(),
+      remainingActions: Type.Number({ minimum: 1, maximum: 4 }),
+    }),
+    Type.Object({
+      type: Type.Literal("player_turn:draw_2_cards"),
+      playerName: Type.String(),
+      remainingCards: Type.Number({ minimum: 1, maximum: 2 }),
+    }),
+    Type.Object({
+      type: Type.Literal("player_turn:infect_cities"),
+      playerName: Type.String(),
+      remainingCards: Type.Number({ minimum: 1, maximum: 5 }),
     }),
   ]),
   locations: Type.Array(

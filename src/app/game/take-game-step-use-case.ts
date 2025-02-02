@@ -27,7 +27,7 @@ export const takeGameStepUseCase = (
   const result = driver.takeStep(step);
   switch (result.type) {
     case "no_effect":
-      logger.error("Invalid step", { step, cause: result.cause });
+      logger.warn(result.cause);
       break;
     case "state_changed":
       result.gameLog.map((log) => logger.info(log));

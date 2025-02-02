@@ -27,7 +27,7 @@ export type Step =
       action: Action;
     }
   | { type: "draw_player_card"; playerName: string }
-  | { type: "draw_infection_card" }
+  | { type: "draw_infection_card"; playerName: string }
   | { type: "play_event_card"; playerName: string; TODO_defineComplexChoices: unknown }
   | { type: "discard_player_cards"; playerName: string; cardNames: string[] };
 
@@ -52,69 +52,76 @@ export const makeGameDriver = (game: Game): GameDriver => {
   };
 };
 
-// TODO Move phase check logic up from takeAction to here
-//      make the current phase something the type system knows once
-//      checked so that functions like "takeAction" can only accept
-//      a game state in that phase.
 export const takeGameStep = (game: Game, step: Step): StepResult => {
   let result: StepResult | undefined = undefined;
 
   const gameFlow = game.gameFlow;
 
-  if (gameFlow.type !== "player_turn") {
+  if (!gameFlow.type.startsWith("player_turn:")) {
     // TODO handle without using exceptions
     throw new Error("game is already over");
   }
 
-  const phase = gameFlow.phase;
-
-  if (phase.type === "exposure_check" && step.type === "check_for_exposure") {
+  if (gameFlow.type === "player_turn:exposure_check" && step.type === "check_for_exposure") {
     result = {
       type: "state_changed",
       gameLog: [`${step.playerName} checked for exposure`],
     };
-    gameFlow.phase = {
-      type: "take_4_actions",
+    game.gameFlow = {
+      type: "player_turn:take_4_actions",
+      playerName: gameFlow.playerName,
       remainingActions: 4,
     };
+    result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
   }
 
-  if (phase.type === "take_4_actions") {
+  if (gameFlow.type === "player_turn:take_4_actions") {
     if (step.type === "player_action") {
-      // TODO Come back an waste loads of time trying to figure out how to
+      // TODO Come back and waste loads of time trying to figure out how to
       //      narrow the type with a nested discriminated union without having
       //      to create a new object.
-      result = takeAction({ ...gameFlow, phase }, game, step.playerName, step.action);
+      result = takeAction(gameFlow, game, step.playerName, step.action);
       if (result.type === "state_changed" && !step.action.isFree) {
-        if (phase.remainingActions <= 1) {
-          gameFlow.phase = {
-            type: "draw_2_cards",
+        if (gameFlow.remainingActions <= 1) {
+          game.gameFlow = {
+            type: "player_turn:draw_2_cards",
+            playerName: gameFlow.playerName,
             remainingCards: 2,
           };
+          result.gameLog.push(`All actions taken`);
+          result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
         } else {
-          phase.remainingActions--;
+          gameFlow.remainingActions--;
+          result.gameLog.push(`${gameFlow.remainingActions} action(s) remaining`);
         }
       }
     }
   }
 
-  if (gameFlow.phase.type === "draw_2_cards" && step.type === "draw_player_card") {
-    if (gameFlow.phase.remainingCards <= 1) {
-      gameFlow.phase = {
-        type: "infect_cities",
-        remainingCards: game.infectionRate.cards,
-      };
-    } else {
-      gameFlow.phase.remainingCards--;
-    }
+  if (gameFlow.type === "player_turn:draw_2_cards" && step.type === "draw_player_card") {
     result = {
       type: "state_changed",
       gameLog: [`${step.playerName} drew a player card`],
     };
+    if (gameFlow.remainingCards <= 1) {
+      game.gameFlow = {
+        type: "player_turn:infect_cities",
+        playerName: gameFlow.playerName,
+        remainingCards: game.infectionRate.cards,
+      };
+      result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
+    } else {
+      gameFlow.remainingCards--;
+      result.gameLog.push(`${gameFlow.remainingCards}  card(s) remaining`);
+    }
   }
 
-  if (gameFlow.phase.type === "infect_cities" && step.type === "draw_infection_card") {
-    if (gameFlow.phase.remainingCards <= 1) {
+  if (gameFlow.type === "player_turn:infect_cities" && step.type === "draw_infection_card") {
+    result = {
+      type: "state_changed",
+      gameLog: [`Drew an infection card`],
+    };
+    if (gameFlow.remainingCards <= 1) {
       // TODO make the "next" player part of the state that can't be stuffed up
       const turnOrder = getGamePlayer(game)(gameFlow.playerName)?.turnOrder;
       if (turnOrder === undefined) {
@@ -127,26 +134,22 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
       }
 
       game.gameFlow = {
-        type: "player_turn",
+        type: "player_turn:exposure_check",
         playerName: nextPlayer.name,
-        phase: {
-          type: "exposure_check",
-        },
       };
+      result.gameLog.push(`Turn passed to: "${game.gameFlow.playerName}"`);
+      result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
     } else {
-      gameFlow.phase.remainingCards--;
+      gameFlow.remainingCards--;
+      result.gameLog.push(`${gameFlow.remainingCards} infection card(s) remaining`);
     }
-
-    result = {
-      type: "state_changed",
-      gameLog: [`Drew an infection card`],
-    };
   }
 
   if (result === undefined) {
-    // TODO need to handle the wrong step at the wrong timing window
-    //      without a harsh error.
-    throw new Error("Probably a timing error", { cause: step });
+    result = {
+      type: "no_effect",
+      cause: `Step "${step.type}" not expected during game flow "${gameFlow.type}".`,
+    };
   }
 
   if (result.type === "state_changed") {

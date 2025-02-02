@@ -5,14 +5,16 @@ import { startGameUseCase } from "../app/game/start-game-use-case.ts";
 import { makeFileRepository } from "../app/repository/file-repository.ts";
 import type { SerializableStep } from "../app/serialization/step-serialization.ts";
 import { takeGameStepUseCase, takeSerializedGameStepUseCase } from "../app/game/take-game-step-use-case.ts";
+import { makeLogger } from "../app/logging/logger.ts";
 
 /**
  * Manage dependencies with minimal coupling to allow easy testing.
  */
 export const boostrapCli = (): CliRunner => {
-  const logger = console;
+  const logger = makeLogger();
   const fileRepository = makeFileRepository(logger);
   return makeYargsCliRunner(
+    logger,
     () => () => undefined,
     () => (fileName: string) => startGameUseCase(logger, fileRepository, fileName),
     () => (fileName: string, inputStep: SerializableStep) =>
