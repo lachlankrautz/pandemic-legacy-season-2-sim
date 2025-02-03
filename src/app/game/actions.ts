@@ -34,27 +34,9 @@ export type DropSupplies = {
 export const takeAction = (
   gameFlow: Readonly<GameFlowTurnTakeActions>,
   game: Game,
-  playerName: string,
+  player: Player,
   action: Action,
 ): StepResult => {
-  const player = game.players.get(playerName);
-  if (player === undefined) {
-    const playerNames = Array.from(game.players.values())
-      .map((player) => player.name)
-      .join(", ");
-    return {
-      type: "no_effect",
-      cause: `Invalid player name "${playerName}", available players: ${playerNames}`,
-    };
-  }
-
-  if (gameFlow.playerName !== playerName) {
-    return {
-      type: "no_effect",
-      cause: `Wrong player, expected "${gameFlow.playerName}" received "${playerName}"`,
-    };
-  }
-
   if (!action.isFree) {
     if (gameFlow.remainingActions < 1) {
       return {

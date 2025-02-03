@@ -1,5 +1,6 @@
 import { type Game, getGamePlayer, getNextTurnOrder } from "./game.ts";
 import { type Action, takeAction } from "./actions.ts";
+import { typeStartsWith } from "../../util/fancy-types.ts";
 
 /**
  * A step is an atomic level of interaction with the game. A step could be
@@ -57,9 +58,29 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
 
   const gameFlow = game.gameFlow;
 
-  if (!gameFlow.type.startsWith("player_turn:")) {
+  if (!typeStartsWith(gameFlow, "player_turn:")) {
     // TODO handle without using exceptions
     throw new Error("game is already over");
+  }
+
+  // Is the player name taking the step valid for this game
+  const player = game.players.get(step.playerName);
+  if (player === undefined) {
+    const playerNames = Array.from(game.players.values())
+      .map((player) => player.name)
+      .join(", ");
+    return {
+      type: "no_effect",
+      cause: `Invalid player name "${step.playerName}", available players: ${playerNames}`,
+    };
+  }
+
+  // Is it this player's turn
+  if (gameFlow.playerName !== step.playerName) {
+    return {
+      type: "no_effect",
+      cause: `Wrong player, expected "${gameFlow.playerName}" received "${step.playerName}"`,
+    };
   }
 
   if (gameFlow.type === "player_turn:exposure_check" && step.type === "check_for_exposure") {
@@ -80,7 +101,7 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
       // TODO Come back and waste loads of time trying to figure out how to
       //      narrow the type with a nested discriminated union without having
       //      to create a new object.
-      result = takeAction(gameFlow, game, step.playerName, step.action);
+      result = takeAction(gameFlow, game, player, step.action);
       if (result.type === "state_changed" && !step.action.isFree) {
         if (gameFlow.remainingActions <= 1) {
           game.gameFlow = {
@@ -92,7 +113,7 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
           result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
         } else {
           gameFlow.remainingActions--;
-          result.gameLog.push(`${gameFlow.remainingActions} action(s) remaining`);
+          result.gameLog.push(`${player.name} has ${gameFlow.remainingActions} action(s) remaining`);
         }
       }
     }
@@ -112,7 +133,7 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
       result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
     } else {
       gameFlow.remainingCards--;
-      result.gameLog.push(`${gameFlow.remainingCards}  card(s) remaining`);
+      result.gameLog.push(`${player.name} has ${gameFlow.remainingCards} player card(s) remaining`);
     }
   }
 
@@ -137,11 +158,11 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
         type: "player_turn:exposure_check",
         playerName: nextPlayer.name,
       };
-      result.gameLog.push(`Turn passed to: "${game.gameFlow.playerName}"`);
+      result.gameLog.push(`Turn passed to ${game.gameFlow.playerName}`);
       result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
     } else {
       gameFlow.remainingCards--;
-      result.gameLog.push(`${gameFlow.remainingCards} infection card(s) remaining`);
+      result.gameLog.push(`${player.name} has ${gameFlow.remainingCards} infection card(s) remaining`);
     }
   }
 

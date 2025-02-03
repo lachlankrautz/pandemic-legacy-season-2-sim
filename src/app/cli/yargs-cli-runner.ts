@@ -272,7 +272,15 @@ export const makeYargsCliRunner = (
 
   return {
     async run() {
-      await yargsCli.parseAsync();
+      try {
+        await yargsCli.parseAsync();
+      } catch (error: unknown) {
+        if (logger.isDebugEnabled()) {
+          throw error;
+        }
+
+        logger.error(error);
+      }
     },
   };
 };
