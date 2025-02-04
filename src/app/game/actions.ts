@@ -1,4 +1,11 @@
-import { type Player, type Game, type GetLocation, getGameLocation, type GameFlowTurnTakeActions } from "./game.ts";
+import {
+  type Player,
+  type Game,
+  type GetLocation,
+  getGameLocation,
+  type GameFlowTurnTakeActions,
+  type GameLog,
+} from "./game.ts";
 import type { StepResult } from "./game-steps.ts";
 
 // actions/free action is wrong
@@ -36,6 +43,7 @@ export const takeAction = (
   game: Game,
   player: Player,
   action: Action,
+  gameLog: GameLog,
 ): StepResult => {
   if (!action.isFree) {
     if (gameFlow.remainingActions < 1) {
@@ -48,26 +56,24 @@ export const takeAction = (
 
   switch (action.type) {
     case "move":
-      return move(player, action, getGameLocation(game));
+      return move(player, action, getGameLocation(game), gameLog);
     case "drop_supplies":
-      return dropSupplies(player, action);
+      return dropSupplies(player, action, gameLog);
     case "make_supplies":
-      return makeSupplies(player);
+      return makeSupplies(player, gameLog);
   }
 };
 
-export const makeSupplies = (player: Player): StepResult => {
+export const makeSupplies = (player: Player, gameLog: GameLog): StepResult => {
   player.supplyCubes++;
+  gameLog(`${player.name} made supplies, they now have ${player.supplyCubes}`);
+  gameLog(`${player.name} has ${player.supplyCubes} on their card`);
   return {
     type: "state_changed",
-    gameLog: [
-      `${player.name} made supplies, they now have ${player.supplyCubes}`,
-      `${player.name} has ${player.supplyCubes} on their card`,
-    ],
   };
 };
 
-export const dropSupplies = (player: Player, drop: DropSupplies): StepResult => {
+export const dropSupplies = (player: Player, drop: DropSupplies, gameLog: GameLog): StepResult => {
   if (player.supplyCubes < drop.supplyCubes) {
     return {
       type: "no_effect",
@@ -78,16 +84,19 @@ export const dropSupplies = (player: Player, drop: DropSupplies): StepResult => 
   player.location.supplyCubes += drop.supplyCubes;
   player.supplyCubes -= drop.supplyCubes;
 
+  gameLog(`${player.name} dropped ${drop.supplyCubes} cubes at ${player.location.name}`);
+  gameLog(`${player.name} has ${player.supplyCubes} remaining on their card`);
   return {
     type: "state_changed",
-    gameLog: [
-      `${player.name} dropped ${drop.supplyCubes} cubes at ${player.location.name}`,
-      `${player.name} has ${player.supplyCubes} remaining on their card`,
-    ],
   };
 };
 
-export const move = <T extends boolean>(player: Player, move: Move<T>, getLocation: GetLocation): StepResult => {
+export const move = <T extends boolean>(
+  player: Player,
+  move: Move<T>,
+  getLocation: GetLocation,
+  gameLog: GameLog,
+): StepResult => {
   const possibleDestinationNames = player.location.connections.map((connection) => connection.location.name).join(", ");
   const location = getLocation(move.toLocationName);
   if (location === undefined) {
@@ -111,8 +120,8 @@ export const move = <T extends boolean>(player: Player, move: Move<T>, getLocati
   player.location = location;
   player.location.players.push(player);
 
+  gameLog(`${player.name} moved from ${fromLocationName} to ${player.location.name}`);
   return {
     type: "state_changed",
-    gameLog: [`${player.name} moved from ${fromLocationName} to ${player.location.name}`],
   };
 };

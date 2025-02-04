@@ -1,6 +1,7 @@
-import { type Game, getGamePlayer, getNextTurnOrder } from "./game.ts";
+import { type Game, type GameLog, getGamePlayer, getNextTurnOrder } from "./game.ts";
 import { type Action, takeAction } from "./actions.ts";
 import { typeStartsWith } from "../../util/fancy-types.ts";
+import { drawInfectionCard } from "./infect-cities.ts";
 
 /**
  * A step is an atomic level of interaction with the game. A step could be
@@ -36,8 +37,8 @@ export type StepResult =
   | { type: "no_effect"; cause: string }
   | {
       type: "state_changed";
-      gameLog: string[];
-    };
+    }
+  | { type: "game_end" };
 
 export type GameDriver = {
   takeStep: (step: Step) => StepResult;
@@ -45,15 +46,15 @@ export type GameDriver = {
   getGame: () => Game;
 };
 
-export const makeGameDriver = (game: Game): GameDriver => {
+export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
   return {
-    takeStep: (step) => takeGameStep(game, step),
+    takeStep: (step) => takeGameStep(game, step, gameLog),
     getNextSteps: () => [],
     getGame: () => game,
   };
 };
 
-export const takeGameStep = (game: Game, step: Step): StepResult => {
+export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResult => {
   let result: StepResult | undefined = undefined;
 
   const gameFlow = game.gameFlow;
@@ -84,16 +85,16 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
   }
 
   if (gameFlow.type === "player_turn:exposure_check" && step.type === "check_for_exposure") {
+    gameLog(`${step.playerName} checked for exposure`);
     result = {
       type: "state_changed",
-      gameLog: [`${step.playerName} checked for exposure`],
     };
     game.gameFlow = {
       type: "player_turn:take_4_actions",
       playerName: gameFlow.playerName,
       remainingActions: 4,
     };
-    result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
+    gameLog(`Game flow moved to: "${game.gameFlow.type}"`);
   }
 
   if (gameFlow.type === "player_turn:take_4_actions") {
@@ -101,7 +102,7 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
       // TODO Come back and waste loads of time trying to figure out how to
       //      narrow the type with a nested discriminated union without having
       //      to create a new object.
-      result = takeAction(gameFlow, game, player, step.action);
+      result = takeAction(gameFlow, game, player, step.action, gameLog);
       if (result.type === "state_changed" && !step.action.isFree) {
         if (gameFlow.remainingActions <= 1) {
           game.gameFlow = {
@@ -109,20 +110,20 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
             playerName: gameFlow.playerName,
             remainingCards: 2,
           };
-          result.gameLog.push(`All actions taken`);
-          result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
+          gameLog(`All actions taken`);
+          gameLog(`Game flow moved to: "${game.gameFlow.type}"`);
         } else {
           gameFlow.remainingActions--;
-          result.gameLog.push(`${player.name} has ${gameFlow.remainingActions} action(s) remaining`);
+          gameLog(`${player.name} has ${gameFlow.remainingActions} action(s) remaining`);
         }
       }
     }
   }
 
   if (gameFlow.type === "player_turn:draw_2_cards" && step.type === "draw_player_card") {
+    gameLog(`${step.playerName} drew a player card`);
     result = {
       type: "state_changed",
-      gameLog: [`${step.playerName} drew a player card`],
     };
     if (gameFlow.remainingCards <= 1) {
       game.gameFlow = {
@@ -130,18 +131,27 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
         playerName: gameFlow.playerName,
         remainingCards: game.infectionRate.cards,
       };
-      result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
+      gameLog(`Game flow moved to: "${game.gameFlow.type}"`);
     } else {
       gameFlow.remainingCards--;
-      result.gameLog.push(`${player.name} has ${gameFlow.remainingCards} player card(s) remaining`);
+      gameLog(`${player.name} has ${gameFlow.remainingCards} player card(s) remaining`);
     }
   }
 
   if (gameFlow.type === "player_turn:infect_cities" && step.type === "draw_infection_card") {
+    gameLog(`Drew an infection card`);
+
+    // TODO check if we really need result types from steps
+    drawInfectionCard(game, gameLog);
+
+    if (game.gameFlow.type === "game_over") {
+      return { type: "game_end" };
+    }
+
     result = {
       type: "state_changed",
-      gameLog: [`Drew an infection card`],
     };
+
     if (gameFlow.remainingCards <= 1) {
       // TODO make the "next" player part of the state that can't be stuffed up
       const turnOrder = getGamePlayer(game)(gameFlow.playerName)?.turnOrder;
@@ -158,11 +168,11 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
         type: "player_turn:exposure_check",
         playerName: nextPlayer.name,
       };
-      result.gameLog.push(`Turn passed to ${game.gameFlow.playerName}`);
-      result.gameLog.push(`Game flow moved to: "${game.gameFlow.type}"`);
+      gameLog(`Turn passed to ${game.gameFlow.playerName}`);
+      gameLog(`Game flow moved to: "${game.gameFlow.type}"`);
     } else {
       gameFlow.remainingCards--;
-      result.gameLog.push(`${player.name} has ${gameFlow.remainingCards} infection card(s) remaining`);
+      gameLog(`${player.name} has ${gameFlow.remainingCards} infection card(s) remaining`);
     }
   }
 
@@ -175,7 +185,6 @@ export const takeGameStep = (game: Game, step: Step): StepResult => {
 
   if (result.type === "state_changed") {
     game.stepHistory.push(step);
-    game.gameLog.push(...result.gameLog);
   }
 
   return result;

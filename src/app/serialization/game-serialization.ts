@@ -1,7 +1,28 @@
-import type { Game, Location, Player } from "../game/game.ts";
+import {
+  type Deck,
+  type Game,
+  type GetRequiredLocation,
+  type InfectionCard,
+  type Location,
+  type Player,
+  type PlayerCard,
+} from "../game/game.ts";
 import { Value } from "@sinclair/typebox/value";
 import { type Static, Type } from "@sinclair/typebox";
 import { serializableStepSchema, serializableStepToStep, stepToStepSerializableStep } from "./step-serialization.ts";
+
+export const serializablePlayerCardSchema = Type.Object({
+  type: Type.Union([Type.Literal("city")]),
+  locationName: Type.String(),
+});
+
+export type SerializablePlayerCard = Static<typeof serializablePlayerCardSchema>;
+
+export const serializableInfectionCardSchema = Type.Object({
+  locationName: Type.String(),
+});
+
+export type SerializableInfectionCard = Static<typeof serializableInfectionCardSchema>;
 
 /**
  * A serializable representation of a game where references to other objects are
@@ -71,6 +92,15 @@ const serializableGameSchema = Type.Object({
     name: Type.String(),
     supplies: Type.Number(),
   }),
+  bonusSupplies: Type.Number(),
+  playerDeck: Type.Object({
+    drawPile: Type.Array(serializablePlayerCardSchema),
+    discardPile: Type.Array(serializablePlayerCardSchema),
+  }),
+  infectionDeck: Type.Object({
+    drawPile: Type.Array(serializableInfectionCardSchema),
+    discardPile: Type.Array(serializableInfectionCardSchema),
+  }),
   infectionRate: Type.Union([
     Type.Object({
       position: Type.Literal(1),
@@ -105,8 +135,7 @@ const serializableGameSchema = Type.Object({
       cards: Type.Literal(5),
     }),
   ]),
-  bonusSupplies: Type.Number(),
-  outbreaks: Type.Number(),
+  incidents: Type.Number(),
   state: Type.Union([Type.Literal("not_started"), Type.Literal("playing"), Type.Literal("lost"), Type.Literal("won")]),
   stepHistory: Type.Array(serializableStepSchema),
   gameLog: Type.Array(Type.String()),
@@ -122,40 +151,96 @@ const gameFlowToSerializableGameFlow = (gameFlow: Game["gameFlow"]): Serializabl
   return gameFlow;
 };
 
-const gameToSerializableGame = (game: Game): SerializableGame => ({
-  gameFlow: gameFlowToSerializableGameFlow(game.gameFlow),
-  locations: Array.from(game.locations.values()).map((location) => ({
-    name: location.name,
-    type: location.type,
-    supplyCubes: location.supplyCubes,
-    plagueCubes: location.plagueCubes,
-    connections: location.connections.map((connection) => ({
-      type: connection.type,
-      locationName: connection.location.name,
+const gameToSerializableGame = (game: Game): SerializableGame => {
+  const getRequiredLocation = getRequiredMapLocation(game.locations);
+
+  return {
+    gameFlow: gameFlowToSerializableGameFlow(game.gameFlow),
+    locations: Array.from(game.locations.values()).map((location) => ({
+      name: location.name,
+      type: location.type,
+      supplyCubes: location.supplyCubes,
+      plagueCubes: location.plagueCubes,
+      connections: location.connections.map((connection) => ({
+        type: connection.type,
+        locationName: connection.location.name,
+      })),
     })),
-  })),
-  players: Array.from(game.players.values()).map((player) => ({
-    name: player.name,
-    locationName: player.location.name,
-    supplyCubes: player.supplyCubes,
-    turnOrder: player.turnOrder,
-  })),
-  objectives: game.objectives.map((objective) => ({
-    name: objective.name,
-    isCompleted: objective.isCompleted,
-    isMandatory: objective.isMandatory,
-  })),
-  month: {
-    name: game.month.name,
-    supplies: game.month.supplies,
-  },
-  bonusSupplies: game.bonusSupplies,
-  infectionRate: game.infectionRate,
-  outbreaks: game.outbreaks,
-  state: game.state,
-  stepHistory: game.stepHistory.map(stepToStepSerializableStep),
-  gameLog: game.gameLog,
+    players: Array.from(game.players.values()).map((player) => ({
+      name: player.name,
+      locationName: player.location.name,
+      supplyCubes: player.supplyCubes,
+      turnOrder: player.turnOrder,
+    })),
+    objectives: game.objectives.map((objective) => ({
+      name: objective.name,
+      isCompleted: objective.isCompleted,
+      isMandatory: objective.isMandatory,
+    })),
+    month: {
+      name: game.month.name,
+      supplies: game.month.supplies,
+    },
+    bonusSupplies: game.bonusSupplies,
+    playerDeck: deckMapper(makePlayerCardMapper(getRequiredLocation)).toSerializable(game.playerDeck),
+    infectionDeck: deckMapper(makeInfectionCardMapper(getRequiredLocation)).toSerializable(game.infectionDeck),
+    infectionRate: game.infectionRate,
+    incidents: game.incidents,
+    state: game.state,
+    stepHistory: game.stepHistory.map(stepToStepSerializableStep),
+    gameLog: game.gameLog,
+  };
+};
+
+export type Mapper<TActual extends object, TSerializable extends object> = {
+  toSerializable: (actual: TActual) => TSerializable;
+  toActual: (actual: TSerializable) => TActual;
+};
+
+export const deckMapper = <TActual extends object, TSerializable extends object>(
+  cardMapper: Mapper<TActual, TSerializable>,
+): Mapper<Deck<TActual>, Deck<TSerializable>> => ({
+  toActual: (serializable) => ({
+    drawPile: serializable.drawPile.map((card) => cardMapper.toActual(card)),
+    discardPile: serializable.discardPile.map((card) => cardMapper.toActual(card)),
+  }),
+  toSerializable: (actual) => ({
+    drawPile: actual.drawPile.map((card) => cardMapper.toSerializable(card)),
+    discardPile: actual.discardPile.map((card) => cardMapper.toSerializable(card)),
+  }),
 });
+
+export const makePlayerCardMapper = (getLocation: GetRequiredLocation): Mapper<PlayerCard, SerializablePlayerCard> => ({
+  toSerializable: (actual) => ({
+    type: actual.type,
+    locationName: actual.location.name,
+  }),
+  toActual: (serializable) => ({
+    type: serializable.type,
+    location: getLocation(serializable.locationName),
+  }),
+});
+
+export const makeInfectionCardMapper = (
+  getLocation: GetRequiredLocation,
+): Mapper<InfectionCard, SerializableInfectionCard> => ({
+  toSerializable: (actual) => ({
+    locationName: actual.location.name,
+  }),
+  toActual: (serializable) => ({
+    location: getLocation(serializable.locationName),
+  }),
+});
+
+export const getRequiredMapLocation =
+  (map: Map<string, Location>): GetRequiredLocation =>
+  (name: string): Location | never => {
+    const location = map.get(name);
+    if (location === undefined) {
+      throw new Error("Location not found", { cause: { locationName: name } });
+    }
+    return location;
+  };
 
 const serializableGamePhaseToGamePhase = (phase: SerializableGame["gameFlow"]): Game["gameFlow"] => {
   return phase;
@@ -214,6 +299,8 @@ export const serializableGameToGame = (serializableGame: SerializableGame): Game
     playerMap.set(player.name, player);
   }
 
+  const getRequiredLocation = getRequiredMapLocation(locationMap);
+
   return {
     gameFlow: serializableGamePhaseToGamePhase(serializableGame.gameFlow),
     locations: locationMap,
@@ -227,9 +314,11 @@ export const serializableGameToGame = (serializableGame: SerializableGame): Game
       name: serializableGame.month.name,
       supplies: serializableGame.month.supplies,
     },
-    infectionRate: serializableGame.infectionRate,
     bonusSupplies: serializableGame.bonusSupplies,
-    outbreaks: serializableGame.outbreaks,
+    infectionRate: serializableGame.infectionRate,
+    incidents: serializableGame.incidents,
+    playerDeck: deckMapper(makePlayerCardMapper(getRequiredLocation)).toActual(serializableGame.playerDeck),
+    infectionDeck: deckMapper(makeInfectionCardMapper(getRequiredLocation)).toActual(serializableGame.infectionDeck),
     state: serializableGame.state,
     stepHistory: serializableGame.stepHistory.map(serializableStepToStep),
     gameLog: serializableGame.gameLog,

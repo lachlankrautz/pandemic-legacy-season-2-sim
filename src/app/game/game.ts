@@ -5,6 +5,23 @@ import {
   type SerializablePlayer,
 } from "../serialization/game-serialization.ts";
 import type { Step } from "./game-steps.ts";
+import type { Logger } from "../logging/logger.ts";
+
+/**
+ * GameLog can only log strings but saves the logs
+ * to the game state as well as passing to the
+ * system logger.
+ */
+export type GameLog = (log: string) => void;
+
+export const makeGameLog =
+  (game: Game, logger: Logger): GameLog =>
+  (message: string) => {
+    game.gameLog.push(message);
+    logger.info(message);
+  };
+
+export const GAME_MAX_INCIDENTS = 8;
 
 export type Location = {
   name: string;
@@ -13,6 +30,22 @@ export type Location = {
   plagueCubes: number;
   connections: Connection[];
   players: Player[];
+};
+
+export type Deck<T> = {
+  drawPile: T[];
+  discardPile: T[];
+};
+
+export type PlayerCard = CityPlayerCard;
+
+export type CityPlayerCard = {
+  type: "city";
+  location: Location;
+};
+
+export type InfectionCard = {
+  location: Location;
 };
 
 export const infectionRates = [
@@ -54,15 +87,17 @@ export type GetPlayer = (name: string) => Player | undefined;
 
 export const getGamePlayer =
   (game: Game): GetPlayer =>
-  (name: string) =>
+  (name: string): Player | undefined =>
     game.players.get(name);
 
 export type GetLocation = (name: string) => Location | undefined;
 
 export const getGameLocation =
   (game: Game): GetLocation =>
-  (name: string) =>
+  (name: string): Location | undefined =>
     game.locations.get(name);
+
+export type GetRequiredLocation = (name: string) => Location | never;
 
 export const getIncreasedInfectionRate = (infectionRate: InfectionRate): InfectionRate => {
   const nextPosition = Math.min(infectionRate.position + 1, 8);
@@ -149,10 +184,12 @@ export type Game<TFlow extends GameFlow = GameFlow> = {
   locations: Map<string, Location>;
   players: Map<string, Player>;
   objectives: Objective[];
-  bonusSupplies: number;
   month: Month;
-  outbreaks: number;
+  bonusSupplies: number;
+  playerDeck: Deck<PlayerCard>;
+  infectionDeck: Deck<InfectionCard>;
   infectionRate: InfectionRate;
+  incidents: number;
   state: "not_started" | "playing" | "lost" | "won";
   stepHistory: Step[];
   gameLog: string[];
@@ -329,18 +366,38 @@ export const makeSerializableGame = (): SerializableGame => {
         isMandatory: false,
       },
     ],
-    bonusSupplies: 15,
     month: {
       name: "March",
       supplies: 27,
+    },
+    bonusSupplies: 15,
+    playerDeck: {
+      drawPile: [],
+      discardPile: [],
+    },
+    infectionDeck: {
+      drawPile: [],
+      discardPile: [],
     },
     infectionRate: {
       position: 2,
       cards: 2,
     },
-    outbreaks: 0,
+    incidents: 0,
     state: "not_started",
     stepHistory: [],
     gameLog: [],
   };
+};
+
+export const recordGameIncident = (game: Game, location: Location, gameLog: GameLog): void => {
+  game.incidents = Math.min(GAME_MAX_INCIDENTS, game.incidents + 1);
+  gameLog(`Infection at ${location.name} added a plague cube, it now has ${location.plagueCubes}`);
+  if (game.incidents >= GAME_MAX_INCIDENTS) {
+    game.gameFlow = {
+      type: "game_over",
+      cause: "Too many incidents",
+    };
+    gameLog("Game Over: Too many incidents.");
+  }
 };

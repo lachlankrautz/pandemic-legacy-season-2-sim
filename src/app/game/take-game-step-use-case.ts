@@ -1,6 +1,6 @@
 import type { Logger } from "../logging/logger.ts";
 import type { Repository } from "../repository/repository.ts";
-import type { Game } from "./game.ts";
+import { type Game, type GameLog, makeGameLog } from "./game.ts";
 import { makeGameDriver } from "./game-steps.ts";
 import {
   type SerializableStep,
@@ -21,7 +21,8 @@ export const takeGameStepUseCase = (
   inputStep: SerializableStep,
 ) => {
   const game: Game = repo.loadGame(fileName);
-  const driver = makeGameDriver(game);
+  const gameLog: GameLog = makeGameLog(game, logger);
+  const driver = makeGameDriver(game, gameLog);
   const step = serializableStepToStep(inputStep);
 
   const result = driver.takeStep(step);
@@ -30,7 +31,6 @@ export const takeGameStepUseCase = (
       logger.warn(result.cause);
       break;
     case "state_changed":
-      result.gameLog.map((log) => logger.info(log));
       break;
   }
 
