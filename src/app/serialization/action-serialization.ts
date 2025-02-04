@@ -15,4 +15,8 @@ export const serializableActionSchema = Type.Union([
     isFree: Type.Literal(false),
     supplyCubes: Type.Number(),
   }),
+  Type.Object({
+    type: Type.Literal("make_supply_centre"),
+    isFree: Type.Literal(false),
+  }),
 ]);

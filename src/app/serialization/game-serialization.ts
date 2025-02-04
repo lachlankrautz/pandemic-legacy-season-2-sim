@@ -9,7 +9,7 @@ import {
 } from "../game/game.ts";
 import { Value } from "@sinclair/typebox/value";
 import { type Static, Type } from "@sinclair/typebox";
-import { serializableStepSchema, serializableStepToStep, stepToStepSerializableStep } from "./step-serialization.ts";
+import { makeStepMapper, serializableStepSchema } from "./step-serialization.ts";
 
 export const serializablePlayerCardSchema = Type.Union([
   Type.Object({
@@ -72,6 +72,7 @@ const serializableGameSchema = Type.Object({
     Type.Object({
       name: Type.String(),
       type: Type.Union([Type.Literal("haven"), Type.Literal("port"), Type.Literal("inland")]),
+      colour: Type.Union([Type.Literal("blue"), Type.Literal("yellow"), Type.Literal("black"), Type.Literal("none")]),
       supplyCubes: Type.Number(),
       plagueCubes: Type.Number(),
       connections: Type.Array(
@@ -164,12 +165,14 @@ const gameFlowToSerializableGameFlow = (gameFlow: Game["gameFlow"]): Serializabl
 const gameToSerializableGame = (game: Game): SerializableGame => {
   const getRequiredLocation = getRequiredMapLocation(game.locations);
   const playerCardMapper = makePlayerCardMapper(getRequiredLocation);
+  const stepMapper = makeStepMapper();
 
   return {
     gameFlow: gameFlowToSerializableGameFlow(game.gameFlow),
     locations: Array.from(game.locations.values()).map((location) => ({
       name: location.name,
       type: location.type,
+      colour: location.colour,
       supplyCubes: location.supplyCubes,
       plagueCubes: location.plagueCubes,
       connections: location.connections.map((connection) => ({
@@ -199,7 +202,7 @@ const gameToSerializableGame = (game: Game): SerializableGame => {
     infectionRate: game.infectionRate,
     incidents: game.incidents,
     state: game.state,
-    stepHistory: game.stepHistory.map(stepToStepSerializableStep),
+    stepHistory: game.stepHistory.map((step) => stepMapper.toSerializable(step)),
     gameLog: game.gameLog,
   };
 };
@@ -278,8 +281,10 @@ export const serializableGameToGame = (serializableGame: SerializableGame): Game
     locationMap.set(location.name, {
       name: location.name,
       type: location.type,
+      colour: location.colour,
       supplyCubes: location.supplyCubes,
       plagueCubes: location.plagueCubes,
+      supplyCentre: false,
       connections: [],
       players: [],
     });
@@ -326,6 +331,8 @@ export const serializableGameToGame = (serializableGame: SerializableGame): Game
     playerMap.set(player.name, player);
   }
 
+  const stepMapper = makeStepMapper();
+
   const game: Game = {
     gameFlow: serializableGamePhaseToGamePhase(serializableGame.gameFlow),
     locations: locationMap,
@@ -345,7 +352,7 @@ export const serializableGameToGame = (serializableGame: SerializableGame): Game
     playerDeck: deckMapper(playerCardMapper).toActual(serializableGame.playerDeck),
     infectionDeck: deckMapper(makeInfectionCardMapper(getRequiredLocation)).toActual(serializableGame.infectionDeck),
     state: serializableGame.state,
-    stepHistory: serializableGame.stepHistory.map(serializableStepToStep),
+    stepHistory: serializableGame.stepHistory.map((step) => stepMapper.toActual(step)),
     gameLog: serializableGame.gameLog,
   };
 

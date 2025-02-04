@@ -232,6 +232,38 @@ export const makeYargsCliRunner = (
       },
     )
     .command(
+      "make-supply-centre",
+      "Make a supply centre at current location.",
+      (yargs) => {
+        return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
+          save: {
+            type: "string",
+            required: true,
+          },
+          player: {
+            type: "string",
+            required: true,
+          },
+          // TODO specify which cards to use
+        });
+      },
+      (args) => {
+        checkDebug(args);
+        takeStep()(args.save, {
+          type: "player_action",
+          playerName: args.player,
+          action: {
+            type: "make_supply_centre",
+            isFree: false,
+          },
+        });
+      },
+    )
+    .command(
       "exposure",
       "Check for exposure",
       (yargs) => {

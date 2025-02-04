@@ -7,10 +7,11 @@ import {
   type GameLog,
 } from "./game.ts";
 import type { StepResult } from "./game-steps.ts";
+import { partition, partitionOne } from "../../util/arrays.ts";
 
 // actions/free action is wrong
 // some actions are always free actions, some can be free
-export type Action = Move<true> | Move<false> | MakeSupplies | DropSupplies;
+export type Action = Move<true> | Move<false> | MakeSupplies | DropSupplies | MakeSupplyCentre;
 
 export type Move<T extends boolean> = {
   type: "move";
@@ -27,6 +28,11 @@ export type DropSupplies = {
   type: "drop_supplies";
   isFree: false;
   supplyCubes: number;
+};
+
+export type MakeSupplyCentre = {
+  type: "make_supply_centre";
+  isFree: false;
 };
 
 // Question: Should the game be immutable? might be really costly
@@ -61,6 +67,8 @@ export const takeAction = (
       return dropSupplies(player, action, gameLog);
     case "make_supplies":
       return makeSupplies(player, gameLog);
+    case "make_supply_centre":
+      return makeSupplyCentre(player, gameLog);
   }
 };
 
@@ -70,6 +78,37 @@ export const makeSupplies = (player: Player, gameLog: GameLog): StepResult => {
   gameLog(`${player.name} has ${player.supplyCubes} on their card`);
   return {
     type: "state_changed",
+  };
+};
+
+export const makeSupplyCentre = (player: Player, gameLog: GameLog): StepResult => {
+  if (player.location.supplyCentre) {
+    return {
+      type: "no_effect",
+      cause: `${player.location.name} already has a supply centre.`,
+    };
+  }
+
+  const [currentCityCard, remainingCards] = partitionOne(player.cards, (card) =>
+    card.type === "city" ? card.location.name === player.location.name : false,
+  );
+
+  if (currentCityCard === undefined) {
+    return {
+      type: "no_effect",
+      cause: `${player.name} does not have a matching city card for their current location ${player.location.name}`,
+    };
+  }
+
+  // TODO this is bad, the function needs to be something like "take(list, predicate, count)"
+  //      so it takes matches up to a limit
+  const [otherColourCards, unusedCards] = partition(remainingCards, (card) =>
+    card.type === "city" ? card.location.colour === player.location.colour : false,
+  );
+
+  return {
+    type: "no_effect",
+    cause: "not implemented",
   };
 };
 

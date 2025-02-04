@@ -1,6 +1,7 @@
 import { type Static, Type } from "@sinclair/typebox";
 import { serializableActionSchema } from "./action-serialization.ts";
 import type { Step } from "../game/game-steps.ts";
+import type { Mapper } from "./game-serialization.js";
 
 export const serializableStepSchema = Type.Union([
   Type.Object({
@@ -34,10 +35,7 @@ export const serializableStepSchema = Type.Union([
 
 export type SerializableStep = Static<typeof serializableStepSchema>;
 
-export const serializableStepToStep = (serializableStep: SerializableStep): Step => {
-  return serializableStep;
-};
-
-export const stepToStepSerializableStep = (step: Step): SerializableStep => {
-  return step;
-};
+export const makeStepMapper = (): Mapper<Step, SerializableStep> => ({
+  toSerializable: (actual) => actual,
+  toActual: (serializable) => serializable,
+});

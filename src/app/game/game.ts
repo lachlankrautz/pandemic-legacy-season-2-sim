@@ -27,11 +27,15 @@ export const makeGameLog =
 
 export const GAME_MAX_INCIDENTS = 8;
 
+export type CityColour = "blue" | "yellow" | "black" | "none";
+
 export type Location = {
   name: string;
   type: "haven" | "port" | "inland";
+  colour: CityColour;
   supplyCubes: number;
   plagueCubes: number;
+  supplyCentre: boolean;
   connections: Connection[];
   players: Player[];
 };
@@ -294,12 +298,14 @@ type LocationOptions = Partial<Pick<Location, "supplyCubes" | "plagueCubes">>;
 const locationEntry = (
   name: LocationDisplayName,
   type: Location["type"],
+  colour: CityColour,
   options: LocationOptions = {},
 ): [LocationDisplayName, SerializableLocation] => [
   name,
   {
     name,
     type,
+    colour,
     supplyCubes: 0,
     plagueCubes: 0,
     connections: [],
@@ -327,31 +333,31 @@ export const makeGame = (): Game => {
 export const makeSerializableGame = (): SerializableGame => {
   const locationMap: Map<string, SerializableLocation> = new Map([
     // Havens
-    locationEntry(LocationNames.OCEAN_GATE, "haven"),
-    locationEntry(LocationNames.GEIDI_PRIME, "haven"),
-    locationEntry(LocationNames.HARDHOME, "haven"),
-    locationEntry(LocationNames.COLUMBIA, "haven"),
+    locationEntry(LocationNames.OCEAN_GATE, "haven", "none"),
+    locationEntry(LocationNames.GEIDI_PRIME, "haven", "none"),
+    locationEntry(LocationNames.HARDHOME, "haven", "none"),
+    locationEntry(LocationNames.COLUMBIA, "haven", "none"),
 
     // Ports
-    locationEntry(LocationNames.SAN_FRANCISCO, "port"),
-    locationEntry(LocationNames.WASHINGTON, "port"),
-    locationEntry(LocationNames.NEW_YORK, "port"),
-    locationEntry(LocationNames.JACKSONVILLE, "port"),
-    locationEntry(LocationNames.LONDON, "port"),
-    locationEntry(LocationNames.TRIPOLI, "port"),
-    locationEntry(LocationNames.CAIRO, "port"),
-    locationEntry(LocationNames.ISTANBUL, "port"),
-    locationEntry(LocationNames.LIMA, "port"),
-    locationEntry(LocationNames.BUENOS_AIRES, "port"),
-    locationEntry(LocationNames.SAO_PAULO, "port"),
-    locationEntry(LocationNames.LAGOS, "port"),
+    locationEntry(LocationNames.SAN_FRANCISCO, "port", "blue"),
+    locationEntry(LocationNames.WASHINGTON, "port", "blue"),
+    locationEntry(LocationNames.NEW_YORK, "port", "blue"),
+    locationEntry(LocationNames.JACKSONVILLE, "port", "blue"),
+    locationEntry(LocationNames.LONDON, "port", "blue"),
+    locationEntry(LocationNames.TRIPOLI, "port", "black"),
+    locationEntry(LocationNames.CAIRO, "port", "black"),
+    locationEntry(LocationNames.ISTANBUL, "port", "black"),
+    locationEntry(LocationNames.LIMA, "port", "yellow"),
+    locationEntry(LocationNames.BUENOS_AIRES, "port", "yellow"),
+    locationEntry(LocationNames.SAO_PAULO, "port", "yellow"),
+    locationEntry(LocationNames.LAGOS, "port", "yellow"),
 
     // Inland cities
-    locationEntry(LocationNames.CHICAGO, "inland"),
-    locationEntry(LocationNames.ATLANTA, "inland"),
-    locationEntry(LocationNames.BOGOTA, "inland"),
-    locationEntry(LocationNames.SANTIAGO, "inland"),
-    locationEntry(LocationNames.KINSHASA, "inland"),
+    locationEntry(LocationNames.CHICAGO, "inland", "blue"),
+    locationEntry(LocationNames.ATLANTA, "inland", "blue"),
+    locationEntry(LocationNames.BOGOTA, "inland", "yellow"),
+    locationEntry(LocationNames.SANTIAGO, "inland", "yellow"),
+    locationEntry(LocationNames.KINSHASA, "inland", "yellow"),
   ]);
 
   const getLocation = (locationName: string): SerializableLocation => {
