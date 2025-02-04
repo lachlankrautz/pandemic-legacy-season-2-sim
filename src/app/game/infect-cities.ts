@@ -1,11 +1,4 @@
-import {
-  type Game,
-  type GameLog,
-  getIncreasedInfectionRate,
-  type InfectionCard,
-  type Location,
-  recordGameIncident,
-} from "./game.ts";
+import { type Game, type GameLog, increaseGameInjectionRate, type Location, recordGameIncident } from "./game.ts";
 import { shuffleArray } from "./random.ts";
 
 const MAX_PLAGUE_CUBES = 3;
@@ -13,14 +6,13 @@ const MAX_PLAGUE_CUBES = 3;
 /**
  * If empty shuffle and up the infection rate.
  */
-export const nextInfectionCard = (game: Game, gameLog: GameLog): InfectionCard => {
-  if (game.infectionDeck.discardPile.length === 0) {
+export const nextInfectionCardLocation = (game: Game, gameLog: GameLog): Location => {
+  if (game.infectionDeck.drawPile.length === 0) {
     game.infectionDeck.drawPile = shuffleArray(game.infectionDeck.discardPile);
     game.infectionDeck.discardPile = [];
     gameLog("Reshuffled empty infection deck");
 
-    game.infectionRate = getIncreasedInfectionRate(game.infectionRate);
-    gameLog(`Moved infection rate to position ${game.infectionRate.position}, ${game.infectionRate.cards} cards`);
+    increaseGameInjectionRate(game, gameLog);
   }
 
   const card = game.infectionDeck.drawPile.pop();
@@ -29,7 +21,9 @@ export const nextInfectionCard = (game: Game, gameLog: GameLog): InfectionCard =
     throw new Error("Infection deck cannot be empty!");
   }
 
-  return card;
+  game.infectionDeck.discardPile.push(card);
+
+  return card.location;
 };
 
 export type InfectedCity = {
@@ -47,19 +41,19 @@ export const newInfectedCity = (location: Location): InfectedCity => ({
 });
 
 export type DrawInfectionCardResult = {
-  card: InfectionCard;
+  infectionCardLocation: Location;
   cities: Record<string, InfectedCity | undefined>;
 };
 
 export const drawInfectionCard = (game: Game, gameLog: GameLog): DrawInfectionCardResult => {
-  const card = nextInfectionCard(game, gameLog);
+  const infectionCardLocation = nextInfectionCardLocation(game, gameLog);
 
   const result: DrawInfectionCardResult = {
-    card,
+    infectionCardLocation,
     cities: {},
   };
 
-  infectCity(game, card.location, result, gameLog);
+  infectCity(game, infectionCardLocation, result, gameLog);
 
   return result;
 };

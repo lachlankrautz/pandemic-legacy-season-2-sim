@@ -6,6 +6,7 @@ import { makeFileRepository } from "../app/repository/file-repository.ts";
 import type { SerializableStep } from "../app/serialization/step-serialization.ts";
 import { takeGameStepUseCase, takeSerializedGameStepUseCase } from "../app/game/take-game-step-use-case.ts";
 import { makeLogger } from "../app/logging/logger.ts";
+import { type ShowInfo, showInfoUseCase } from "../app/game/show-info-use-case.ts";
 
 /**
  * Manage dependencies with minimal coupling to allow easy testing.
@@ -21,6 +22,7 @@ export const boostrapCli = (): CliRunner => {
       takeGameStepUseCase(logger, fileRepository, fileName, inputStep),
     () => (fileName: string, stepJson: string) =>
       takeSerializedGameStepUseCase(logger, fileRepository, fileName, stepJson),
+    () => (fileName: string, showInfo: ShowInfo) => showInfoUseCase(logger, fileRepository, fileName, showInfo),
     hideBin(process.argv),
   );
 };

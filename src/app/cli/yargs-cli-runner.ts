@@ -1,6 +1,7 @@
 import yargs from "yargs";
 import type { SerializableStep } from "../serialization/step-serialization.ts";
 import type { Logger } from "../logging/logger.ts";
+import type { ShowInfo } from "../game/show-info-use-case.js";
 
 export type CliRunner = {
   run(): Promise<void>;
@@ -18,12 +19,15 @@ export type LazyTakeStepCommand = () => (save: string, step: SerializableStep) =
 
 export type LazyTakeSerializedStepCommand = () => (save: string, stepJson: string) => void;
 
+export type LazyShowInfoCommand = () => (save: string, showInfo: ShowInfo) => void;
+
 export const makeYargsCliRunner = (
   logger: Logger,
   playTui: LazyPlayTuiCommand,
   startGame: LazyStartGameCommand,
   takeStep: LazyTakeStepCommand,
-  tepCommandLoader: LazyTakeSerializedStepCommand,
+  stepCommandLoader: LazyTakeSerializedStepCommand,
+  showInfoCommandLoader: LazyShowInfoCommand,
   argv: string[],
 ): CliRunner => {
   const checkDebug = (args: { debug: boolean | undefined }) => {
@@ -60,6 +64,46 @@ export const makeYargsCliRunner = (
       },
     )
     .command(
+      "show-locations",
+      "Show info on locations.",
+      (yargs) => {
+        return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
+          save: {
+            type: "string",
+            required: true,
+          },
+        });
+      },
+      (args) => {
+        checkDebug(args);
+        showInfoCommandLoader()(args.save, "locations");
+      },
+    )
+    .command(
+      "show-players",
+      "Show info on players.",
+      (yargs) => {
+        return yargs.options({
+          debug: {
+            type: "boolean",
+            description: "Set log level to debug.",
+          },
+          save: {
+            type: "string",
+            required: true,
+          },
+        });
+      },
+      (args) => {
+        checkDebug(args);
+        showInfoCommandLoader()(args.save, "players");
+      },
+    )
+    .command(
       "take-step",
       "Take a turn in an existing game.",
       (yargs) => {
@@ -81,7 +125,7 @@ export const makeYargsCliRunner = (
       },
       (args) => {
         checkDebug(args);
-        tepCommandLoader()(args.save, args.step);
+        stepCommandLoader()(args.save, args.step);
       },
     )
     .command(

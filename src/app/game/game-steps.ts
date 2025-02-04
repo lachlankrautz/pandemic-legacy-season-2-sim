@@ -1,7 +1,8 @@
-import { type Game, type GameLog, getGamePlayer, getNextTurnOrder } from "./game.ts";
+import { cardDisplayName, type Game, type GameLog, getGamePlayer, getNextTurnOrder } from "./game.ts";
 import { type Action, takeAction } from "./actions.ts";
 import { typeStartsWith } from "../../util/fancy-types.ts";
 import { drawInfectionCard } from "./infect-cities.ts";
+import { epidemic } from "./epidemic.ts";
 
 /**
  * A step is an atomic level of interaction with the game. A step could be
@@ -122,9 +123,33 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
 
   if (gameFlow.type === "player_turn:draw_2_cards" && step.type === "draw_player_card") {
     gameLog(`${step.playerName} drew a player card`);
+
+    const playerCard = game.playerDeck.drawPile.pop();
+
+    // Players ran out of time.
+    if (playerCard === undefined) {
+      gameLog("Unable to draw card, player deck is empty.");
+      game.gameFlow = {
+        type: "game_over",
+        cause: "Player deck empty.",
+      };
+      return {
+        type: "game_end",
+      };
+    }
+
+    gameLog(`${player.name} received ${cardDisplayName(playerCard)} card`);
+
+    if (playerCard.type === "epidemic") {
+      epidemic(game, gameLog);
+    } else {
+      player.cards.push(playerCard);
+    }
+
     result = {
       type: "state_changed",
     };
+
     if (gameFlow.remainingCards <= 1) {
       game.gameFlow = {
         type: "player_turn:infect_cities",

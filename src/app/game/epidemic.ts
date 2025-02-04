@@ -1,5 +1,5 @@
-import type { Game, InfectionCard } from "./game.ts";
-import { shuffleArray } from "./random.js";
+import { type Game, type GameLog, increaseGameInjectionRate, type InfectionCard } from "./game.ts";
+import { shuffleArray } from "./random.ts";
 
 export type EpidemicResult = {
   infectCard: InfectionCard;
@@ -7,7 +7,10 @@ export type EpidemicResult = {
   previousDiscardPile: InfectionCard[];
 };
 
-export const epidemic = (game: Game): EpidemicResult => {
+export const epidemic = (game: Game, gameLog: GameLog): EpidemicResult => {
+  // Increase
+  increaseGameInjectionRate(game, gameLog);
+
   // Draw a card from the bottom
   const infectCard = game.infectionDeck.drawPile.shift();
   if (infectCard === undefined) {
@@ -17,6 +20,7 @@ export const epidemic = (game: Game): EpidemicResult => {
   // Remove all cubes at that location
   const cubesRemoved = infectCard.location.supplyCubes;
   infectCard.location.supplyCubes = 0;
+  gameLog(`Epidemic at ${infectCard.location.name} removed ${cubesRemoved} supply cubes, 0 cubes remain.`);
 
   // Discard it
   game.infectionDeck.discardPile.push(infectCard);
@@ -28,6 +32,8 @@ export const epidemic = (game: Game): EpidemicResult => {
   const shuffledDiscard = shuffleArray(game.infectionDeck.discardPile);
   game.infectionDeck.discardPile = [];
   game.infectionDeck.drawPile.push(...shuffledDiscard);
+
+  gameLog(`Intensified the infection deck, ${previousDiscardPile.length} card(s) added on top of the draw deck`);
 
   return {
     infectCard,
