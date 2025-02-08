@@ -2,6 +2,7 @@ import yargs from "yargs";
 import type { SerializableStep } from "../serialization/step-serialization.ts";
 import type { Logger } from "../logging/logger.ts";
 import type { ShowInfo } from "../game/show-info-use-case.ts";
+import type { TuiRunner } from "../ink-tui/main-menu.js";
 
 export type CliRunner = {
   run(): Promise<void>;
@@ -11,7 +12,7 @@ export type CliRunner = {
 // Allows the cli to offer all possible operations without the
 // program needing to load every dependency.
 
-export type LazyPlayTuiCommand = () => () => void;
+export type LazyPlayTuiCommand = () => TuiRunner;
 
 export type LazyStartGameCommand = () => (save: string) => void;
 
@@ -41,7 +42,7 @@ export const makeYargsCliRunner = (
       "play",
       "Boot up the game TUI",
       (yargs) => yargs,
-      () => playTui()(),
+      () => playTui().run(),
     )
     .command(
       "start-game",

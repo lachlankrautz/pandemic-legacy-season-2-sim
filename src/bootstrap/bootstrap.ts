@@ -7,6 +7,7 @@ import type { SerializableStep } from "../app/serialization/step-serialization.t
 import { takeGameStepUseCase, takeSerializedGameStepUseCase } from "../app/game/take-game-step-use-case.ts";
 import { makeLogger } from "../app/logging/logger.ts";
 import { type ShowInfo, showInfoUseCase } from "../app/game/show-info-use-case.ts";
+import { makeTuiRunner } from "../app/ink-tui/main-menu.ts";
 
 /**
  * Manage dependencies with minimal coupling to allow easy testing.
@@ -16,7 +17,7 @@ export const boostrapCli = (): CliRunner => {
   const fileRepository = makeFileRepository(logger);
   return makeYargsCliRunner(
     logger,
-    () => () => undefined,
+    () => makeTuiRunner(),
     () => (fileName: string) => startGameUseCase(logger, fileRepository, fileName),
     () => (fileName: string, inputStep: SerializableStep) =>
       takeGameStepUseCase(logger, fileRepository, fileName, inputStep),
