@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import type { SerializableStep } from "../serialization/step-serialization.ts";
 import type { Logger } from "../logging/logger.ts";
-import type { ShowInfo } from "../game/show-info-use-case.js";
+import type { ShowInfo } from "../game/show-info-use-case.ts";
 
 export type CliRunner = {
   run(): Promise<void>;
@@ -259,6 +259,8 @@ export const makeYargsCliRunner = (
           action: {
             type: "make_supply_centre",
             isFree: false,
+            // TODO this will fail
+            cardSelection: [],
           },
         });
       },

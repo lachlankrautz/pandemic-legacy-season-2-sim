@@ -10,6 +10,14 @@ import type { Step } from "./game-steps.ts";
 import type { Logger } from "../logging/logger.ts";
 import { shuffleArray } from "./random.ts";
 import { chunkArray } from "../../util/arrays.ts";
+import type { MaybeGameEnd } from "./infect-cities.ts";
+
+export const inGameFlow = <TPrefix extends string>(
+  game: Game,
+  prefix: TPrefix,
+): game is Game<Extract<GameFlow, { type: `${TPrefix}${string}` }>> => {
+  return game.gameFlow.type.startsWith(prefix);
+};
 
 /**
  * GameLog can only log strings but saves the logs
@@ -29,10 +37,10 @@ export const GAME_MAX_INCIDENTS = 8;
 
 export type CityColour = "blue" | "yellow" | "black" | "none";
 
-export type Location = {
+export type Location<TColour extends CityColour = CityColour> = {
   name: string;
   type: "haven" | "port" | "inland";
-  colour: CityColour;
+  colour: TColour;
   supplyCubes: number;
   plagueCubes: number;
   supplyCentre: boolean;
@@ -52,26 +60,31 @@ export type PlayerCard =
   | EventPlayerCard
   | ProduceSuppliesPlayerCard;
 
-export type CityPlayerCard = {
+export type CityPlayerCard<TColour extends CityColour = CityColour> = {
   type: "city";
-  location: Location;
+  displayName: string;
+  location: Location<TColour>;
 };
 
 export type ProduceSuppliesPlayerCard = {
   type: "produce_supplies";
+  displayName: string;
 };
 
 export type PortableAntiviralLabPlayerCard = {
   type: "portable_antiviral_lab";
+  displayName: string;
 };
 
 export type EpidemicPlayerCard = {
   type: "epidemic";
+  displayName: string;
 };
 
 export type EventPlayerCard = {
   type: "event";
   name: string;
+  displayName: string;
 };
 
 export type InfectionCard = {
@@ -120,6 +133,16 @@ export const getGamePlayer =
   (name: string): Player | undefined =>
     game.players.get(name);
 
+export type GetRequiredPlayer = (name: string) => Player | never;
+
+export const getMappedPlayer = (map: Map<string, Player>) => (name: string) => {
+  const player = map.get(name);
+  if (player === undefined) {
+    throw new Error(`Player not found: ${name}`);
+  }
+  return player;
+};
+
 export type GetLocation = (name: string) => Location | undefined;
 
 export const getGameLocation =
@@ -165,6 +188,14 @@ export type InfectionRate = (typeof infectionRates)[number];
 
 export type TurnOrder = 1 | 2 | 3 | 4;
 
+/**
+ * Hand limit of 7 applies at all times so playing cards
+ * will always use index 0-6.
+ */
+export type HandCardNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type PlayerCardSelection = Set<HandCardNumber>;
+
 export type Player = {
   name: string;
   location: Location;
@@ -197,34 +228,34 @@ export type GameFlowOver = { type: "game_over"; cause: string };
 
 export type GameFlowTurnExposureCheck = {
   type: "player_turn:exposure_check";
-  playerName: string;
+  player: Player;
 };
 
 export type GameFlowTurnTakeActions = {
   type: "player_turn:take_4_actions";
-  playerName: string;
+  player: Player;
   remainingActions: number;
 };
 
 export type GameFlowTurnDrawCards = {
   type: "player_turn:draw_2_cards";
-  playerName: string;
+  player: Player;
   remainingCards: number;
 };
 
 export type GameFlowTurnInfectCities = {
   type: "player_turn:infect_cities";
-  playerName: string;
+  player: Player;
   remainingCards: number;
 };
 
-export type GameFlow =
-  | GameFlowWon
-  | GameFlowOver
+export type GameFlowTurn =
   | GameFlowTurnExposureCheck
   | GameFlowTurnTakeActions
   | GameFlowTurnDrawCards
   | GameFlowTurnInfectCities;
+
+export type GameFlow = GameFlowWon | GameFlowOver | GameFlowTurn;
 
 export type Game<TFlow extends GameFlow = GameFlow> = {
   gameFlow: TFlow;
@@ -330,6 +361,14 @@ export const makeGame = (): Game => {
   return serializableGameToGame(serializableGame);
 };
 
+const newCityCard = (locationName: string): SerializablePlayerCard => {
+  return {
+    type: "city",
+    locationName,
+    displayName: `City: ${locationName}}`,
+  };
+};
+
 export const makeSerializableGame = (): SerializableGame => {
   const locationMap: Map<string, SerializableLocation> = new Map([
     // Havens
@@ -407,75 +446,89 @@ export const makeSerializableGame = (): SerializableGame => {
   };
 
   // Cities
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.ATLANTA });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.BOGOTA });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.BOGOTA });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.BUENOS_AIRES });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.BUENOS_AIRES });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.CAIRO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.CAIRO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.CAIRO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.CAIRO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.CHICAGO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.CHICAGO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.ISTANBUL });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.ISTANBUL });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.ISTANBUL });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.ISTANBUL });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.JACKSONVILLE });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.JACKSONVILLE });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.JACKSONVILLE });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.JACKSONVILLE });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.KINSHASA });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.NEW_YORK });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.NEW_YORK });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.NEW_YORK });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.NEW_YORK });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LAGOS });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LAGOS });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LAGOS });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LAGOS });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LIMA });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LONDON });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LONDON });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LONDON });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.LONDON });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.SAO_PAULO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.SAO_PAULO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.SAO_PAULO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.SAO_PAULO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.SANTIAGO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.SAN_FRANCISCO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.SAN_FRANCISCO });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.TRIPOLI });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.TRIPOLI });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.TRIPOLI });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.TRIPOLI });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.WASHINGTON });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.WASHINGTON });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.WASHINGTON });
-  playerDeck.drawPile.push({ type: "city", locationName: LocationNames.WASHINGTON });
+  playerDeck.drawPile.push(newCityCard(LocationNames.ATLANTA));
+  playerDeck.drawPile.push(newCityCard(LocationNames.BOGOTA));
+  playerDeck.drawPile.push(newCityCard(LocationNames.BOGOTA));
+  playerDeck.drawPile.push(newCityCard(LocationNames.BUENOS_AIRES));
+  playerDeck.drawPile.push(newCityCard(LocationNames.BUENOS_AIRES));
+  playerDeck.drawPile.push(newCityCard(LocationNames.CAIRO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.CAIRO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.CAIRO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.CAIRO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.CHICAGO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.CHICAGO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.ISTANBUL));
+  playerDeck.drawPile.push(newCityCard(LocationNames.ISTANBUL));
+  playerDeck.drawPile.push(newCityCard(LocationNames.ISTANBUL));
+  playerDeck.drawPile.push(newCityCard(LocationNames.ISTANBUL));
+  playerDeck.drawPile.push(newCityCard(LocationNames.JACKSONVILLE));
+  playerDeck.drawPile.push(newCityCard(LocationNames.JACKSONVILLE));
+  playerDeck.drawPile.push(newCityCard(LocationNames.JACKSONVILLE));
+  playerDeck.drawPile.push(newCityCard(LocationNames.JACKSONVILLE));
+  playerDeck.drawPile.push(newCityCard(LocationNames.KINSHASA));
+  playerDeck.drawPile.push(newCityCard(LocationNames.NEW_YORK));
+  playerDeck.drawPile.push(newCityCard(LocationNames.NEW_YORK));
+  playerDeck.drawPile.push(newCityCard(LocationNames.NEW_YORK));
+  playerDeck.drawPile.push(newCityCard(LocationNames.NEW_YORK));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LAGOS));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LAGOS));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LAGOS));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LAGOS));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LIMA));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LONDON));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LONDON));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LONDON));
+  playerDeck.drawPile.push(newCityCard(LocationNames.LONDON));
+  playerDeck.drawPile.push(newCityCard(LocationNames.SAO_PAULO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.SAO_PAULO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.SAO_PAULO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.SAO_PAULO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.SANTIAGO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.SAN_FRANCISCO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.SAN_FRANCISCO));
+  playerDeck.drawPile.push(newCityCard(LocationNames.TRIPOLI));
+  playerDeck.drawPile.push(newCityCard(LocationNames.TRIPOLI));
+  playerDeck.drawPile.push(newCityCard(LocationNames.TRIPOLI));
+  playerDeck.drawPile.push(newCityCard(LocationNames.TRIPOLI));
+  playerDeck.drawPile.push(newCityCard(LocationNames.WASHINGTON));
+  playerDeck.drawPile.push(newCityCard(LocationNames.WASHINGTON));
+  playerDeck.drawPile.push(newCityCard(LocationNames.WASHINGTON));
+  playerDeck.drawPile.push(newCityCard(LocationNames.WASHINGTON));
   const cityCardCount = playerDeck.drawPile.length;
 
   // Portable antiviral labs
-  Array.from({ length: 3 }).forEach(() => playerDeck.drawPile.push({ type: "portable_antiviral_lab" }));
+  Array.from({ length: 3 }).forEach(() =>
+    playerDeck.drawPile.push({
+      type: "portable_antiviral_lab",
+      displayName: "Portable antiviral Lab",
+    }),
+  );
 
   // Produce supplies
-  Array.from({ length: 7 }).forEach(() => playerDeck.drawPile.push({ type: "produce_supplies" }));
+  Array.from({ length: 7 }).forEach(() =>
+    playerDeck.drawPile.push({
+      type: "produce_supplies",
+      displayName: "Produce Supplies",
+    }),
+  );
 
   // Unrationed event
-  playerDeck.drawPile.push({ type: "event", name: "Strategic Reserves" });
-  playerDeck.drawPile.push({ type: "event", name: "Topaz Experimental Vaccine" });
+  playerDeck.drawPile.push({ type: "event", name: "Strategic Reserves", displayName: "Strategic Reserves" });
+  playerDeck.drawPile.push({
+    type: "event",
+    name: "Topaz Experimental Vaccine",
+    displayName: "Topaz Experimental Vaccine",
+  });
 
   // Random events
-  playerDeck.drawPile.push({ type: "event", name: "Extended Forecast" });
-  playerDeck.drawPile.push({ type: "event", name: "Extended Time" });
-  playerDeck.drawPile.push({ type: "event", name: "One Quiet Night" });
-  playerDeck.drawPile.push({ type: "event", name: "Resilient Population" });
-  playerDeck.drawPile.push({ type: "event", name: "Dispersal" });
-  playerDeck.drawPile.push({ type: "event", name: "Drastic Measures" });
-  playerDeck.drawPile.push({ type: "event", name: "Team Bravo" });
-  playerDeck.drawPile.push({ type: "event", name: "Data Transfer" });
+  playerDeck.drawPile.push({ type: "event", name: "Extended Forecast", displayName: "Extended Forecast" });
+  playerDeck.drawPile.push({ type: "event", name: "Extended Time", displayName: "Extended Time" });
+  playerDeck.drawPile.push({ type: "event", name: "One Quiet Night", displayName: "One Quiet Night" });
+  playerDeck.drawPile.push({ type: "event", name: "Resilient Population", displayName: "Resilient Population" });
+  playerDeck.drawPile.push({ type: "event", name: "Dispersal", displayName: "Dispersal" });
+  playerDeck.drawPile.push({ type: "event", name: "Drastic Measures", displayName: "Drastic Measures" });
+  playerDeck.drawPile.push({ type: "event", name: "Team Bravo", displayName: "Team Bravo" });
+  playerDeck.drawPile.push({ type: "event", name: "Data Transfer", displayName: "Data Transfer" });
   // playerDeck.drawPile.push({ type: "event", name: "It Worked The First Time" });
   // playerDeck.drawPile.push({ type: "event", name: "Airlift" });
   // playerDeck.drawPile.push({ type: "event", name: "Hidden Stockpile" });
@@ -499,7 +552,7 @@ export const makeSerializableGame = (): SerializableGame => {
   const epidemicCount = getEpidemicCardCount(cityCardCount);
   playerDeck.drawPile = chunkArray(playerDeck.drawPile, playerDeck.drawPile.length / epidemicCount)
     .map((chunk) => {
-      chunk.push({ type: "epidemic" });
+      chunk.push({ type: "epidemic", displayName: "Epidemic" });
       return shuffleArray(chunk);
     })
     .flat();
@@ -595,17 +648,18 @@ export const makeSerializableGame = (): SerializableGame => {
   };
 };
 
-export const recordGameIncident = (game: Game, location: Location, gameLog: GameLog): void => {
+export const recordGameIncident = (game: Game, location: Location, gameLog: GameLog): MaybeGameEnd => {
   game.incidents = Math.min(GAME_MAX_INCIDENTS, game.incidents + 1);
   gameLog(`Infection at ${location.name} added a plague cube, it now has ${location.plagueCubes}`);
   gameLog(`Incident count at ${game.incidents}`);
   if (game.incidents >= GAME_MAX_INCIDENTS) {
-    game.gameFlow = {
+    return {
       type: "game_over",
-      cause: "Too many incidents",
+      cause: "Too many incidents.",
     };
-    gameLog("Game Over: Too many incidents.");
   }
+
+  return { type: "game_continues" };
 };
 
 export const getEpidemicCardCount = (cityCardCount: number): number => {

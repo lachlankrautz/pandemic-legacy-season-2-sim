@@ -43,20 +43,32 @@ export const newInfectedCity = (location: Location): InfectedCity => ({
 export type DrawInfectionCardResult = {
   infectionCardLocation: Location;
   cities: Record<string, InfectedCity | undefined>;
+  maybeEnd: MaybeGameEnd;
 };
 
 export const drawInfectionCard = (game: Game, gameLog: GameLog): DrawInfectionCardResult => {
   const infectionCardLocation = nextInfectionCardLocation(game, gameLog);
+  gameLog(`Drew an infection card: ${infectionCardLocation.name}`);
 
   const result: DrawInfectionCardResult = {
     infectionCardLocation,
     cities: {},
+    maybeEnd: { type: "game_continues" },
   };
 
   infectCity(game, infectionCardLocation, result, gameLog);
 
   return result;
 };
+
+export type MaybeGameEnd =
+  | {
+      type: "game_over";
+      cause: string;
+    }
+  | {
+      type: "game_continues";
+    };
 
 export const infectCity = (game: Game, location: Location, result: DrawInfectionCardResult, gameLog: GameLog): void => {
   const cityResult = (result.cities[location.name] ??= newInfectedCity(location));
@@ -78,7 +90,7 @@ export const infectCity = (game: Game, location: Location, result: DrawInfection
   if (location.plagueCubes < MAX_PLAGUE_CUBES) {
     location.plagueCubes++;
     cityResult.plagueCubesAdded++;
-    recordGameIncident(game, location, gameLog);
+    result.maybeEnd = recordGameIncident(game, location, gameLog);
     return;
   }
 
@@ -86,9 +98,8 @@ export const infectCity = (game: Game, location: Location, result: DrawInfection
   cityResult.outbreak = true;
   for (const connection of location.connections) {
     infectCity(game, connection.location, result, gameLog);
-
     // Don't infect more cities if the game has already ended.
-    if (game.gameFlow.type === "game_over") {
+    if (result.maybeEnd.type === "game_over") {
       return;
     }
   }

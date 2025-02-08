@@ -1,9 +1,10 @@
 import type { Logger } from "../logging/logger.ts";
 import type { Repository } from "../repository/repository.ts";
-import { type Game, type GameLog, makeGameLog } from "./game.ts";
+import { type Game, type GameLog, getMappedPlayer, makeGameLog } from "./game.ts";
 import { makeGameDriver } from "./game-steps.ts";
 import { makeStepMapper, type SerializableStep, serializableStepSchema } from "../serialization/step-serialization.ts";
 import { Value } from "@sinclair/typebox/value";
+import { makeActionMapper } from "../serialization/action-serialization.ts";
 
 export const takeSerializedGameStepUseCase = (logger: Logger, repo: Repository, fileName: string, stepJson: string) => {
   const inputStep = Value.Parse(serializableStepSchema, JSON.parse(stepJson));
@@ -19,7 +20,7 @@ export const takeGameStepUseCase = (
   const game: Game = repo.loadGame(fileName);
   const gameLog: GameLog = makeGameLog(game, logger);
   const driver = makeGameDriver(game, gameLog);
-  const step = makeStepMapper().toActual(inputStep);
+  const step = makeStepMapper(getMappedPlayer(game.players), makeActionMapper()).toActual(inputStep);
 
   const result = driver.takeStep(step);
   switch (result.type) {

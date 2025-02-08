@@ -1,6 +1,7 @@
 import {
   type Deck,
   type Game,
+  getMappedPlayer,
   type GetRequiredLocation,
   type InfectionCard,
   type Location,
@@ -10,19 +11,32 @@ import {
 import { Value } from "@sinclair/typebox/value";
 import { type Static, Type } from "@sinclair/typebox";
 import { makeStepMapper, serializableStepSchema } from "./step-serialization.ts";
+import { makeActionMapper } from "./action-serialization.ts";
+import { makeGameFlowMapper, serializableGameFlowSchema } from "./game-flow-serialization.ts";
 
 export const serializablePlayerCardSchema = Type.Union([
   Type.Object({
     type: Type.Literal("city"),
+    displayName: Type.String(),
     locationName: Type.String(),
   }),
-  Type.Object({ type: Type.Literal("portable_antiviral_lab") }),
-  Type.Object({ type: Type.Literal("produce_supplies") }),
+  Type.Object({
+    type: Type.Literal("portable_antiviral_lab"),
+    displayName: Type.String(),
+  }),
+  Type.Object({
+    type: Type.Literal("produce_supplies"),
+    displayName: Type.String(),
+  }),
   Type.Object({
     type: Type.Literal("event"),
     name: Type.String(),
+    displayName: Type.String(),
   }),
-  Type.Object({ type: Type.Literal("epidemic") }),
+  Type.Object({
+    type: Type.Literal("epidemic"),
+    displayName: Type.String(),
+  }),
 ]);
 
 export type SerializablePlayerCard = Static<typeof serializablePlayerCardSchema>;
@@ -39,35 +53,8 @@ export type SerializableInfectionCard = Static<typeof serializableInfectionCardS
  * e.g. { "location": Location } -> { "locationName": string }
  */
 const serializableGameSchema = Type.Object({
-  gameFlow: Type.Union([
-    // TODO game setup steps should probably be modelled here
-    Type.Object({
-      type: Type.Literal("game_won"),
-    }),
-    Type.Object({
-      type: Type.Literal("game_over"),
-      cause: Type.String(),
-    }),
-    Type.Object({
-      type: Type.Literal("player_turn:exposure_check"),
-      playerName: Type.String(),
-    }),
-    Type.Object({
-      type: Type.Literal("player_turn:take_4_actions"),
-      playerName: Type.String(),
-      remainingActions: Type.Number({ minimum: 1, maximum: 4 }),
-    }),
-    Type.Object({
-      type: Type.Literal("player_turn:draw_2_cards"),
-      playerName: Type.String(),
-      remainingCards: Type.Number({ minimum: 1, maximum: 2 }),
-    }),
-    Type.Object({
-      type: Type.Literal("player_turn:infect_cities"),
-      playerName: Type.String(),
-      remainingCards: Type.Number({ minimum: 1, maximum: 5 }),
-    }),
-  ]),
+  // TODO game setup steps should probably be modelled here
+  gameFlow: serializableGameFlowSchema,
   locations: Type.Array(
     Type.Object({
       name: Type.String(),
@@ -158,17 +145,19 @@ export type SerializableLocation = SerializableGame["locations"][number];
 
 export type SerializablePlayer = SerializableGame["players"][number];
 
-const gameFlowToSerializableGameFlow = (gameFlow: Game["gameFlow"]): SerializableGame["gameFlow"] => {
-  return gameFlow;
-};
-
 const gameToSerializableGame = (game: Game): SerializableGame => {
   const getRequiredLocation = getRequiredMapLocation(game.locations);
   const playerCardMapper = makePlayerCardMapper(getRequiredLocation);
-  const stepMapper = makeStepMapper();
+
+  // TODO this seems bad, shouldn't really need the maps when
+  //      going the other way
+  const fakePlayerMap: Map<string, Player> = new Map();
+
+  const stepMapper = makeStepMapper(getMappedPlayer(fakePlayerMap), makeActionMapper());
+  const flowMapper = makeGameFlowMapper(getMappedPlayer(game.players));
 
   return {
-    gameFlow: gameFlowToSerializableGameFlow(game.gameFlow),
+    gameFlow: flowMapper.toSerializable(game.gameFlow),
     locations: Array.from(game.locations.values()).map((location) => ({
       name: location.name,
       type: location.type,
@@ -226,23 +215,27 @@ export const deckMapper = <TActual extends object, TSerializable extends object>
 });
 
 export const makePlayerCardMapper = (getLocation: GetRequiredLocation): Mapper<PlayerCard, SerializablePlayerCard> => ({
-  toSerializable: (actual) => {
+  toSerializable: (actual): SerializablePlayerCard => {
     switch (actual.type) {
       case "city":
         return {
           type: actual.type,
           locationName: actual.location.name,
+          displayName: actual.displayName,
         };
       default:
         return actual;
     }
   },
-  toActual: (serializable) => {
+  toActual: (serializable): PlayerCard => {
+    let location: Location;
     switch (serializable.type) {
       case "city":
+        location = getLocation(serializable.locationName);
         return {
           type: serializable.type,
-          location: getLocation(serializable.locationName),
+          displayName: serializable.displayName,
+          location,
         };
       default:
         return serializable;
@@ -270,10 +263,6 @@ export const getRequiredMapLocation =
     }
     return location;
   };
-
-const serializableGamePhaseToGamePhase = (phase: SerializableGame["gameFlow"]): Game["gameFlow"] => {
-  return phase;
-};
 
 export const serializableGameToGame = (serializableGame: SerializableGame): Game | never => {
   const locationMap: Map<string, Location> = new Map();
@@ -331,10 +320,12 @@ export const serializableGameToGame = (serializableGame: SerializableGame): Game
     playerMap.set(player.name, player);
   }
 
-  const stepMapper = makeStepMapper();
+  const getPlayer = getMappedPlayer(playerMap);
+  const stepMapper = makeStepMapper(getPlayer, makeActionMapper());
+  const gameFlowMapper = makeGameFlowMapper(getPlayer);
 
   const game: Game = {
-    gameFlow: serializableGamePhaseToGamePhase(serializableGame.gameFlow),
+    gameFlow: gameFlowMapper.toActual(serializableGame.gameFlow),
     locations: locationMap,
     players: playerMap,
     objectives: serializableGame.objectives.map((objective) => ({

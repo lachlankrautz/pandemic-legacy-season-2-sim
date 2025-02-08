@@ -11,6 +11,6 @@ export const startGameUseCase = (logger: Logger, repo: Repository, fileName: str
     throw new Error("Game started in unexpected state", { cause: { gameFlow: game.gameFlow } });
   }
 
-  logger.info(`Starting player: ${game.gameFlow.playerName}`);
+  logger.info(`Starting player: ${game.gameFlow.player.name}`);
   logger.info(`Game flow at "${game.gameFlow.type}"`);
 };

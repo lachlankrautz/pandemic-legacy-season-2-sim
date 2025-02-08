@@ -5,9 +5,11 @@ import {
   getGameLocation,
   type GameFlowTurnTakeActions,
   type GameLog,
+  type PlayerCardSelection,
+  type GameFlowTurn,
 } from "./game.ts";
 import type { StepResult } from "./game-steps.ts";
-import { partition, partitionOne } from "../../util/arrays.ts";
+import { useHandCards } from "./cards.ts";
 
 // actions/free action is wrong
 // some actions are always free actions, some can be free
@@ -33,6 +35,7 @@ export type DropSupplies = {
 export type MakeSupplyCentre = {
   type: "make_supply_centre";
   isFree: false;
+  cardSelection: PlayerCardSelection;
 };
 
 // Question: Should the game be immutable? might be really costly
@@ -44,21 +47,17 @@ export type MakeSupplyCentre = {
 //           the change it wants to make to flow control.
 //           Then things like losing the game can override the pending change
 
-export const takeAction = (
-  gameFlow: Readonly<GameFlowTurnTakeActions>,
-  game: Game,
-  player: Player,
-  action: Action,
-  gameLog: GameLog,
-): StepResult => {
+export const takeAction = (game: Game<GameFlowTurnTakeActions>, action: Action, gameLog: GameLog): StepResult => {
   if (!action.isFree) {
-    if (gameFlow.remainingActions < 1) {
+    if (game.gameFlow.remainingActions < 1) {
       return {
         type: "no_effect",
         cause: "No actions remaining",
       };
     }
   }
+
+  const player = game.gameFlow.player;
 
   switch (action.type) {
     case "move":
@@ -68,7 +67,7 @@ export const takeAction = (
     case "make_supplies":
       return makeSupplies(player, gameLog);
     case "make_supply_centre":
-      return makeSupplyCentre(player, gameLog);
+      return makeSupplyCentre(game, action.cardSelection);
   }
 };
 
@@ -81,7 +80,9 @@ export const makeSupplies = (player: Player, gameLog: GameLog): StepResult => {
   };
 };
 
-export const makeSupplyCentre = (player: Player, gameLog: GameLog): StepResult => {
+export const makeSupplyCentre = (game: Game<GameFlowTurn>, cardSelection: PlayerCardSelection): StepResult => {
+  const player = game.gameFlow.player;
+
   if (player.location.supplyCentre) {
     return {
       type: "no_effect",
@@ -89,26 +90,41 @@ export const makeSupplyCentre = (player: Player, gameLog: GameLog): StepResult =
     };
   }
 
-  const [currentCityCard, remainingCards] = partitionOne(player.cards, (card) =>
-    card.type === "city" ? card.location.name === player.location.name : false,
-  );
-
-  if (currentCityCard === undefined) {
+  if (player.location.colour === "none") {
     return {
       type: "no_effect",
-      cause: `${player.name} does not have a matching city card for their current location ${player.location.name}`,
+      cause: `${player.location.name} is not a valid location for a supply centre`,
     };
   }
 
-  // TODO this is bad, the function needs to be something like "take(list, predicate, count)"
-  //      so it takes matches up to a limit
-  const [otherColourCards, unusedCards] = partition(remainingCards, (card) =>
-    card.type === "city" ? card.location.colour === player.location.colour : false,
-  );
+  const { selected, discardUsed } = useHandCards(game, cardSelection);
+
+  const validCards = selected
+    .filter((card) => card.type === "city")
+    .filter((card) => card.location.colour === player.location.colour);
+
+  if (validCards.length < 5) {
+    return {
+      type: "no_effect",
+      cause: `Not enough cards (${validCards.length}) of matching colour (${player.location.colour}) to make a supply centre.`,
+    };
+  }
+
+  const hasCurrentLocation = validCards.some((card) => card.location.name === player.location.name);
+  if (!hasCurrentLocation) {
+    return {
+      type: "no_effect",
+      cause: `One of the select cards must match the curren location ${player.location.name}`,
+    };
+  }
+
+  // Create a supply centre
+  player.location.supplyCentre = true;
+  game.gameLog.push(`${player.name} created a supply center at ${player.location.name}`);
+  discardUsed();
 
   return {
-    type: "no_effect",
-    cause: "not implemented",
+    type: "state_changed",
   };
 };
 
