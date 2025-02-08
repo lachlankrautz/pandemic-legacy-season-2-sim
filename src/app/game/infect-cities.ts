@@ -79,7 +79,7 @@ export const infectCity = (game: Game, location: Location, result: DrawInfection
   }
 
   // Use supply cubes
-  if (location.supplyCubes < 0) {
+  if (location.supplyCubes > 0) {
     location.supplyCubes--;
     cityResult.supplyCubesRemoved++;
     gameLog(`Infection at ${location.name} removed a supply cube, ${location.supplyCubes} cube(s) remain.`);

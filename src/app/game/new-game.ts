@@ -293,9 +293,10 @@ export const makeSerializableGame = (): SerializableGame => {
   for (let i = 0; i < totalSupplies; i++) {
     const nameIndex = i % infectionCities.length;
     const city = infectionCities[nameIndex];
-    if (city !== undefined) {
-      city.supplyCubes++;
+    if (city === undefined) {
+      throw new Error(`Failed to find city to place supply cubes, index: ${nameIndex}`);
     }
+    city.supplyCubes++;
   }
 
   return {
