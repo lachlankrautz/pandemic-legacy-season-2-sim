@@ -19,7 +19,7 @@ export type LazyTakeStepCommand = () => (save: string, step: SerializableStep) =
 
 export type LazyTakeSerializedStepCommand = () => (save: string, stepJson: string) => void;
 
-export type LazyShowInfoCommand = () => (save: string, showInfo: ShowInfo) => void;
+export type LazyShowInfoCommand = () => (save: string, showInfo: ShowInfo) => string;
 
 export const makeYargsCliRunner = (
   logger: Logger,
@@ -64,27 +64,7 @@ export const makeYargsCliRunner = (
       },
     )
     .command(
-      "show-locations",
-      "Show info on locations.",
-      (yargs) => {
-        return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
-          save: {
-            type: "string",
-            required: true,
-          },
-        });
-      },
-      (args) => {
-        checkDebug(args);
-        showInfoCommandLoader()(args.save, "locations");
-      },
-    )
-    .command(
-      "show-players",
+      "show",
       "Show info on players.",
       (yargs) => {
         return yargs.options({
@@ -92,6 +72,11 @@ export const makeYargsCliRunner = (
             type: "boolean",
             description: "Set log level to debug.",
           },
+          filter: {
+            type: "string",
+            description: "show only players or locations",
+            default: "all",
+          },
           save: {
             type: "string",
             required: true,
@@ -100,7 +85,12 @@ export const makeYargsCliRunner = (
       },
       (args) => {
         checkDebug(args);
-        showInfoCommandLoader()(args.save, "players");
+        const filter = args.filter;
+        if (filter !== "all" && filter !== "players" && filter !== "locations") {
+          throw new Error(`Invalid filter: ${filter}`);
+        }
+
+        process.stdout.write(showInfoCommandLoader()(args.save, filter));
       },
     )
     .command(

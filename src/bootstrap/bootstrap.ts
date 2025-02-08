@@ -22,7 +22,7 @@ export const boostrapCli = (): CliRunner => {
       takeGameStepUseCase(logger, fileRepository, fileName, inputStep),
     () => (fileName: string, stepJson: string) =>
       takeSerializedGameStepUseCase(logger, fileRepository, fileName, stepJson),
-    () => (fileName: string, showInfo: ShowInfo) => showInfoUseCase(logger, fileRepository, fileName, showInfo),
+    () => (fileName: string, showInfo: ShowInfo) => showInfoUseCase(fileRepository, fileName, showInfo),
     hideBin(process.argv),
   );
 };

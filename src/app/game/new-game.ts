@@ -58,7 +58,7 @@ const newCityCard = (locationName: string): SerializablePlayerCard => {
   return {
     type: "city",
     locationName,
-    displayName: `City: ${locationName}}`,
+    displayName: `City: ${locationName}`,
   };
 };
 
