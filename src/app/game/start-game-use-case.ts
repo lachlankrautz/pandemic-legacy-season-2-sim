@@ -1,6 +1,6 @@
 import type { Logger } from "../logging/logger.ts";
 import type { Repository } from "../repository/repository.ts";
-import { makeGame } from "./game.ts";
+import { makeGame } from "./new-game.ts";
 
 export const startGameUseCase = (logger: Logger, repo: Repository, fileName: string) => {
   logger.info("Starting new game");
