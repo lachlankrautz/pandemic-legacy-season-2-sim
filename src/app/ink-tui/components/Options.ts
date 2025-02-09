@@ -7,7 +7,7 @@ export type OptionsProps = {
 
 const Options = (props: OptionsProps): ReactNode => {
   useInput((input, key) => {
-    if (key.escape || key.backspace || input === "q") {
+    if (key.escape || input === "q") {
       props.navigateBack();
     }
   });

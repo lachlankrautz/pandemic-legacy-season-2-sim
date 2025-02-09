@@ -7,7 +7,7 @@ export type GamePlayerProps = {
 
 const GamePlayer = (props: GamePlayerProps): ReactNode => {
   useInput((input, key) => {
-    if (key.escape || key.backspace || input === "q") {
+    if (key.escape || input === "q") {
       props.navigateBack();
     }
   });

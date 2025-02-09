@@ -37,7 +37,7 @@ const MainMenu = (props: MainMenuProps): ReactNode => {
   const selectedItem = items.find((_, index) => index === selectedIndex);
 
   useInput((input, key) => {
-    if (key.escape || key.backspace || input === "q") {
+    if (key.escape || input === "q") {
       exit();
     }
 
@@ -56,7 +56,7 @@ const MainMenu = (props: MainMenuProps): ReactNode => {
 
   return createElement(
     Box,
-    {},
+    { flexDirection: "column", width: 50 },
     items.map((item, index) => {
       return createElement(
         Box,
@@ -64,6 +64,7 @@ const MainMenu = (props: MainMenuProps): ReactNode => {
           key: item.key,
           borderStyle: "round",
           borderColor: selectedIndex === index ? "green" : "black",
+          justifyContent: "center",
         },
         createElement(Text, {}, item.text),
       );
