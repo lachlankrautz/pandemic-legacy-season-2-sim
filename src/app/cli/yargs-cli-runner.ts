@@ -1,11 +1,12 @@
 import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import type { SerializableStep } from "../serialization/step-serialization.ts";
 import type { Logger } from "../logging/logger.ts";
 import type { ShowInfo } from "../game/show-info-use-case.ts";
 import type { TuiRunner } from "../ink-tui/root.ts";
 
 export type CliRunner = {
-  run(): Promise<void>;
+  run(args: string[]): Promise<void>;
 };
 
 // "Lazy" functions delay loading their dependencies until called.
@@ -29,7 +30,6 @@ export const makeYargsCliRunner = (
   takeStep: LazyTakeStepCommand,
   stepCommandLoader: LazyTakeSerializedStepCommand,
   showInfoCommandLoader: LazyShowInfoCommand,
-  argv: string[],
 ): CliRunner => {
   const checkDebug = (args: { debug: boolean | undefined }) => {
     if (args.debug) {
@@ -37,7 +37,16 @@ export const makeYargsCliRunner = (
     }
   };
 
-  const yargsCli = yargs(argv)
+  const yargsCli = yargs()
+    .options({
+      debug: {
+        type: "boolean",
+        description: "Set log level to debug",
+      },
+    })
+    .middleware((args) => {
+      checkDebug(args);
+    }, true)
     .command(
       "play",
       "Boot up the game TUI",
@@ -46,33 +55,22 @@ export const makeYargsCliRunner = (
     )
     .command(
       "start-game",
-      "Start a new game.",
+      "Start a new game",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
           },
         });
       },
-      (args) => {
-        checkDebug(args);
-        startGame()(args.save);
-      },
+      (args) => startGame()(args.save),
     )
     .command(
       "show",
-      "Show info on players.",
+      "Show info on players",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           filter: {
             type: "string",
             description: "show only players or locations",
@@ -85,7 +83,6 @@ export const makeYargsCliRunner = (
         });
       },
       (args) => {
-        checkDebug(args);
         const filter = args.filter;
         if (filter !== "all" && filter !== "players" && filter !== "locations") {
           throw new Error(`Invalid filter: ${filter}`);
@@ -96,13 +93,9 @@ export const makeYargsCliRunner = (
     )
     .command(
       "take-step",
-      "Take a turn in an existing game.",
+      "Take a turn in an existing game",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -114,20 +107,13 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        checkDebug(args);
-        stepCommandLoader()(args.save, args.step);
-      },
+      (args) => stepCommandLoader()(args.save, args.step),
     )
     .command(
       "move",
-      "Take a move action in an existing game.",
+      "Take a move action in an existing game",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -142,8 +128,7 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        checkDebug(args);
+      (args) =>
         takeStep()(args.save, {
           type: "player_action",
           playerName: args.player,
@@ -152,18 +137,13 @@ export const makeYargsCliRunner = (
             isFree: false,
             toLocationName: args.to,
           },
-        });
-      },
+        }),
     )
     .command(
       "make-supplies",
-      "Take a make supplies action in an existing game.",
+      "Take a make supplies action in an existing game",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -174,8 +154,7 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        checkDebug(args);
+      (args) =>
         takeStep()(args.save, {
           type: "player_action",
           playerName: args.player,
@@ -183,18 +162,13 @@ export const makeYargsCliRunner = (
             type: "make_supplies",
             isFree: false,
           },
-        });
-      },
+        }),
     )
     .command(
       "drop-supplies",
-      "Take a drop supplies action in an existing game.",
+      "Take a drop supplies action in an existing game",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -209,8 +183,7 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        checkDebug(args);
+      (args) =>
         takeStep()(args.save, {
           type: "player_action",
           playerName: args.player,
@@ -219,18 +192,13 @@ export const makeYargsCliRunner = (
             isFree: false,
             supplyCubes: args.supplyCubes,
           },
-        });
-      },
+        }),
     )
     .command(
       "make-supply-centre",
-      "Make a supply centre at current location.",
+      "Make a supply centre at current location",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -242,8 +210,7 @@ export const makeYargsCliRunner = (
           // TODO specify which cards to use
         });
       },
-      (args) => {
-        checkDebug(args);
+      (args) =>
         takeStep()(args.save, {
           type: "player_action",
           playerName: args.player,
@@ -253,18 +220,13 @@ export const makeYargsCliRunner = (
             // TODO this will fail
             cardSelection: [],
           },
-        });
-      },
+        }),
     )
     .command(
       "exposure",
       "Check for exposure",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -275,23 +237,17 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        checkDebug(args);
+      (args) =>
         takeStep()(args.save, {
           type: "check_for_exposure",
           playerName: args.player,
-        });
-      },
+        }),
     )
     .command(
       "draw",
-      "Draw a player card.",
+      "Draw a player card",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -302,23 +258,17 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        checkDebug(args);
+      (args) =>
         takeStep()(args.save, {
           type: "draw_player_card",
           playerName: args.player,
-        });
-      },
+        }),
     )
     .command(
       "infect",
-      "Draw an infection card.",
+      "Draw an infection card",
       (yargs) => {
         return yargs.options({
-          debug: {
-            type: "boolean",
-            description: "Set log level to debug.",
-          },
           save: {
             type: "string",
             required: true,
@@ -329,26 +279,25 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => {
-        checkDebug(args);
+      (args) =>
         takeStep()(args.save, {
           type: "draw_infection_card",
           playerName: args.player,
-        });
-      },
+        }),
     )
     .demandCommand();
 
   return {
-    async run() {
+    async run(args: string[]): Promise<void> {
       try {
-        await yargsCli.parseAsync();
+        await yargsCli.parseAsync(hideBin(args));
       } catch (error: unknown) {
         if (logger.isDebugEnabled()) {
           throw error;
         }
 
         logger.error(error);
+        process.exit(1);
       }
     },
   };

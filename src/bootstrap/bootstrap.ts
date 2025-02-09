@@ -1,6 +1,5 @@
 import type { CliRunner } from "../app/cli/yargs-cli-runner.ts";
 import { makeYargsCliRunner } from "../app/cli/yargs-cli-runner.ts";
-import { hideBin } from "yargs/helpers";
 import { startGameUseCase } from "../app/game/start-game-use-case.ts";
 import { makeFileRepository } from "../app/repository/file-repository.ts";
 import type { SerializableStep } from "../app/serialization/step-serialization.ts";
@@ -24,6 +23,5 @@ export const boostrapCli = (): CliRunner => {
     () => (fileName: string, stepJson: string) =>
       takeSerializedGameStepUseCase(logger, fileRepository, fileName, stepJson),
     () => (fileName: string, showInfo: ShowInfo) => showInfoUseCase(fileRepository, fileName, showInfo),
-    hideBin(process.argv),
   );
 };

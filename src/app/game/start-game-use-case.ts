@@ -3,6 +3,7 @@ import type { Repository } from "../repository/repository.ts";
 import { makeGame } from "./new-game.ts";
 
 export const startGameUseCase = (logger: Logger, repo: Repository, fileName: string) => {
+  throw new Error("lol no");
   logger.info("Starting new game");
   const game = makeGame();
   repo.saveGame(fileName, game);
