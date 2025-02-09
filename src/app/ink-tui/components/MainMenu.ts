@@ -1,6 +1,6 @@
 import { type ReactNode, useState, createElement } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import type { Page } from "./App.js";
+import type { Page } from "./App.ts";
 
 type ItemProps = {
   key: string;

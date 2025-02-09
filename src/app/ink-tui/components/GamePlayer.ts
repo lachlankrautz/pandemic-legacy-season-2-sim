@@ -12,7 +12,7 @@ const GamePlayer = (props: GamePlayerProps): ReactNode => {
     }
   });
 
-  return createElement(Text, {}, "game");
+  return createElement(Text, {}, "game (q: back)");
 };
 
 export default GamePlayer;

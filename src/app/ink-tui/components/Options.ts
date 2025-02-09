@@ -12,7 +12,7 @@ const Options = (props: OptionsProps): ReactNode => {
     }
   });
 
-  return createElement(Text, {}, "Options");
+  return createElement(Text, {}, "Options (q: back)");
 };
 
 export default Options;
