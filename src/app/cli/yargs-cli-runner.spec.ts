@@ -28,7 +28,7 @@ describe("yargs cli runner", () => {
   });
 
   it("missing command exits process", async () => {
-    const spyConsoleError = vi.spyOn(console, "error").mockImplementation(() => true);
+    const spyConsoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     await expect(act([])).rejects.toThrow(processExitPattern);
 
@@ -43,7 +43,7 @@ describe("yargs cli runner", () => {
   });
 
   it("starting new game requires a save name", async () => {
-    const spyConsoleError = vi.spyOn(console, "error").mockImplementation(() => true);
+    const spyConsoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     await expect(act(["start-game"])).rejects.toThrow(processExitPattern);
 

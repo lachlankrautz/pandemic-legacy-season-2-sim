@@ -1,6 +1,10 @@
 import { type Logger as WinstonLogger, createLogger, format, transports } from "winston";
 
-export type Logger = WinstonLogger;
+export type Logger = {
+  [K in keyof Pick<WinstonLogger, "info" | "error" | "debug" | "warn">]: (
+    ...args: Parameters<WinstonLogger[K]>
+  ) => void;
+};
 
 export const makeLogger = (): Logger => {
   return createLogger({
