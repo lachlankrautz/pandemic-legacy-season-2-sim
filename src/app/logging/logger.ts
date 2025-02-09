@@ -1,9 +1,10 @@
-import { type Logger as WinstonLogger, createLogger, format, transports } from "winston";
+import { Logger as WinstonLogger, createLogger, format, transports } from "winston";
 
-export type Logger = {
-  [K in keyof Pick<WinstonLogger, "info" | "error" | "debug" | "warn">]: (
-    ...args: Parameters<WinstonLogger[K]>
-  ) => void;
+export type Logger = Omit<WinstonLogger, "info" | "warn" | "debug" | "error"> & {
+  info: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+  debug: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
 };
 
 export const makeLogger = (): Logger => {
