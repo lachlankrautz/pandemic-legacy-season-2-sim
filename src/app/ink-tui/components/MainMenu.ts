@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { type ReactNode, useState, createElement } from "react";
 import { Box, Text, useApp, useInput } from "ink";
+import type { Page } from "./App.js";
 
 type ItemProps = {
   key: string;
@@ -7,19 +8,23 @@ type ItemProps = {
   handler: () => void;
 };
 
-const MainMenu = () => {
+export type MainMenuProps = {
+  navigate: (page: Page) => void;
+};
+
+const MainMenu = (props: MainMenuProps): ReactNode => {
   const { exit } = useApp();
 
   const items: ItemProps[] = [
     {
       key: "start",
       text: "Start Game",
-      handler: () => undefined,
+      handler: () => props.navigate("game"),
     },
     {
       key: "options",
       text: "Options",
-      handler: () => undefined,
+      handler: () => props.navigate("options"),
     },
     {
       key: "exit",
@@ -27,14 +32,12 @@ const MainMenu = () => {
       handler: exit,
     },
   ];
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selectedItem = items.find((_, index) => index === selectedIndex);
-  if (selectedItem === undefined) {
-    throw new Error("Unable to determine selected item", { cause: { index: selectedItem } });
-  }
 
   useInput((input, key) => {
-    if (input === "q") {
+    if (key.escape || key.backspace || input === "q") {
       exit();
     }
 
@@ -47,22 +50,22 @@ const MainMenu = () => {
     }
 
     if (key.return) {
-      selectedItem.handler();
+      selectedItem?.handler();
     }
   });
 
-  return React.createElement(
+  return createElement(
     Box,
     {},
     items.map((item, index) => {
-      return React.createElement(
+      return createElement(
         Box,
         {
           key: item.key,
           borderStyle: "round",
           borderColor: selectedIndex === index ? "green" : "black",
         },
-        React.createElement(Text, {}, item.text),
+        createElement(Text, {}, item.text),
       );
     }),
   );

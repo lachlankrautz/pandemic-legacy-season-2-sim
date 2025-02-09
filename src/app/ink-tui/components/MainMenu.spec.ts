@@ -5,9 +5,9 @@ import MainMenu from "./MainMenu.ts";
 
 describe("main menu", () => {
   it("displays menu items", () => {
-    const { lastFrame } = render(React.createElement(MainMenu, {}, null));
+    const { lastFrame } = render(React.createElement(MainMenu, { navigate: () => undefined }, null));
 
-    expect(lastFrame()).toContain("* Start Game *");
+    expect(lastFrame()).toContain("Start Game");
     expect(lastFrame()).toContain("Options");
     expect(lastFrame()).toContain("Exit");
   });

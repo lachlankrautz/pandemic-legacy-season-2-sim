@@ -1,6 +1,6 @@
-import React from "react";
+import { createElement } from "react";
 import { render } from "ink";
-import MainMenu from "./components/MainMenu.ts";
+import App from "./components/App.ts";
 
 export type TuiRunner = {
   run: () => void;
@@ -8,6 +8,6 @@ export type TuiRunner = {
 
 export const makeTuiRunner = (): TuiRunner => ({
   run: (): void => {
-    render(React.createElement(MainMenu, {}));
+    render(createElement(App, {}));
   },
 });
