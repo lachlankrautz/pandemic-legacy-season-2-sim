@@ -33,7 +33,7 @@ export const makeYargsCliRunner = (
 ): CliRunner => {
   const checkDebug = (args: { debug: boolean | undefined }) => {
     if (args.debug) {
-      logger.level = "debug";
+      logger.setLevel("debug");
     }
   };
 

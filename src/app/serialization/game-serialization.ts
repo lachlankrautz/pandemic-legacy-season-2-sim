@@ -52,7 +52,7 @@ export type SerializableInfectionCard = Static<typeof serializableInfectionCardS
  * replaced with flat identifiers.
  * e.g. { "location": Location } -> { "locationName": string }
  */
-const serializableGameSchema = Type.Object({
+export const serializableGameSchema = Type.Object({
   // TODO game setup steps should probably be modelled here
   gameFlow: serializableGameFlowSchema,
   locations: Type.Array(

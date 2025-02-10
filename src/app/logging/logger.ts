@@ -1,14 +1,31 @@
 import { Logger as WinstonLogger, createLogger, format, transports } from "winston";
 
-export type Logger = Omit<WinstonLogger, "info" | "warn" | "debug" | "error"> & {
-  info: (...args: unknown[]) => void;
-  warn: (...args: unknown[]) => void;
-  debug: (...args: unknown[]) => void;
-  error: (...args: unknown[]) => void;
+/**
+ * Overriding the winston type to remove the return type
+ */
+interface LeveledLogMethodNoReturn {
+  // It is actually any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (message: string, ...meta: any[]): void;
+
+  // It is actually any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (message: any): void;
+
+  (infoObject: object): void;
+}
+
+export type Logger = {
+  setLevel: (level: WinstonLogger["level"]) => void;
+  isDebugEnabled: () => boolean;
+  info: LeveledLogMethodNoReturn;
+  warn: LeveledLogMethodNoReturn;
+  debug: LeveledLogMethodNoReturn;
+  error: LeveledLogMethodNoReturn;
 };
 
 export const makeLogger = (): Logger => {
-  return createLogger({
+  const logger: WinstonLogger = createLogger({
     level: "info",
     format: format.combine(
       format.colorize(),
@@ -17,4 +34,23 @@ export const makeLogger = (): Logger => {
     ),
     transports: [new transports.Console()],
   });
+
+  return {
+    setLevel: (level) => {
+      logger.level = level;
+    },
+    isDebugEnabled: () => logger.isDebugEnabled(),
+    info: (...args) => {
+      logger.info(...args);
+    },
+    warn: (...args) => {
+      logger.warn(...args);
+    },
+    debug: (...args) => {
+      logger.debug(...args);
+    },
+    error: (...args) => {
+      logger.error(...args);
+    },
+  };
 };
