@@ -1,5 +1,5 @@
 import { type Game, type GameLog, increaseGameInjectionRate, type InfectionCard } from "./game.ts";
-import { shuffleArray } from "./random.ts";
+import { shuffleArray } from "../random/random.ts";
 
 export type EpidemicResult = {
   infectCard: InfectionCard;

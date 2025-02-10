@@ -12,3 +12,11 @@ export const shuffleArray = <T>(array: T[]): T[] => {
   }
   return shuffled;
 };
+
+export const getRandomItem = <T>(array: T[]): T => {
+  const randomIndex = Math.floor(Math.random() * array.length);
+  // Array length was checked, the index exists
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return array[randomIndex];
+};

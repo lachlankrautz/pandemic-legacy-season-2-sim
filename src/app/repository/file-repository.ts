@@ -6,7 +6,7 @@ import path from "node:path";
 import type { Logger } from "../logging/logger.ts";
 import { deserializeGame, serializeGame } from "../serialization/game-serialization.ts";
 
-const getSaveFilePath = (name: string): string => {
+export const getSaveFilePath = (name: string): string => {
   return path.resolve(getConfig().saveDir, `${name}.sav.json`);
 };
 

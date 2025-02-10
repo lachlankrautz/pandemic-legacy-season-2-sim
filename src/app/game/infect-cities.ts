@@ -1,5 +1,5 @@
 import { type Game, type GameLog, increaseGameInjectionRate, type Location, recordGameIncident } from "./game.ts";
-import { shuffleArray } from "./random.ts";
+import { shuffleArray } from "../random/random.ts";
 
 const MAX_PLAGUE_CUBES = 3;
 

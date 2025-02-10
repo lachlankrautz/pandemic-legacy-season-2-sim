@@ -19,8 +19,15 @@ import {
   TURN_ACTION_COUNT,
   type TurnOrder,
 } from "./game.ts";
-import { shuffleArray } from "./random.ts";
+import { shuffleArray } from "../random/random.ts";
 import { chunkArray } from "../../util/arrays.ts";
+
+export const PlayerNames = {
+  HAMMOND: "Hammond",
+  DENJI: "Denji",
+  ROBIN: "Robin",
+  JOEL_SMASHER: "John Smasher",
+} as const satisfies Record<string, string | undefined>;
 
 type LocationOptions = Partial<Pick<Location, "supplyCubes" | "plagueCubes">>;
 
@@ -122,13 +129,13 @@ export const makeSerializableGame = (): SerializableGame => {
     });
   }
 
-  const julian = makePlayer("Hammond", LocationNames.OCEAN_GATE, 1);
+  const julian = makePlayer(PlayerNames.HAMMOND, LocationNames.OCEAN_GATE, 1);
 
   const players = [
     julian,
-    makePlayer("Denji", LocationNames.GEIDI_PRIME, 2),
-    makePlayer("Robin", LocationNames.OCEAN_GATE, 3),
-    makePlayer("Joel Smasher", LocationNames.GEIDI_PRIME, 4),
+    makePlayer(PlayerNames.DENJI, LocationNames.GEIDI_PRIME, 2),
+    makePlayer(PlayerNames.ROBIN, LocationNames.OCEAN_GATE, 3),
+    makePlayer(PlayerNames.JOEL_SMASHER, LocationNames.GEIDI_PRIME, 4),
     // makePlayer("Jewel", LocationNames.COLUMBIA, ?),
     // makePlayer("John RedCorn", LocationNames.BUENOS_AIRES, ?),
   ];
