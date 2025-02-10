@@ -1,6 +1,8 @@
-import type { Repository } from "../repository/repository.ts";
-import { type Game, type Location, type Player } from "./game.ts";
+import type { Repository } from "../../repository/repository.ts";
+import { type Game } from "../game.ts";
 import Table from "cli-table";
+import type { Player } from "../player/player.ts";
+import type { Location } from "../location/location.ts";
 
 export type ShowInfo = "all" | "locations" | "players";
 

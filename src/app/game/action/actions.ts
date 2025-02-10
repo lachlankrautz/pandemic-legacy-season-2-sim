@@ -1,15 +1,10 @@
-import {
-  type Player,
-  type Game,
-  type GetLocation,
-  getGameLocation,
-  type GameFlowTurnTakeActions,
-  type GameLog,
-  type PlayerCardSelection,
-  type GameFlowTurn,
-} from "./game.ts";
-import type { StepResult } from "./game-steps.ts";
-import { useHandCards } from "./cards.ts";
+import { type Game } from "../game.ts";
+import type { StepResult } from "../step/game-steps.ts";
+import { type PlayerCardSelection, useHandCards } from "../cards/cards.ts";
+import type { Player } from "../player/player.ts";
+import type { GameFlowTurn, GameFlowTurnTakeActions } from "../game-flow/game-flow.ts";
+import { getGameLocation, type GetLocation } from "../location/location.ts";
+import type { GameLog } from "../game-log/game-log.ts";
 
 // actions/free action is wrong
 // some actions are always free actions, some can be free

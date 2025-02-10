@@ -1,18 +1,12 @@
-import {
-  type Deck,
-  type Game,
-  getMappedPlayer,
-  type GetRequiredLocation,
-  type InfectionCard,
-  type Location,
-  type Player,
-  type PlayerCard,
-} from "../game/game.ts";
+import { type Game } from "../game/game.ts";
 import { Value } from "@sinclair/typebox/value";
 import { type Static, Type } from "@sinclair/typebox";
 import { makeStepMapper, serializableStepSchema } from "./step-serialization.ts";
 import { makeActionMapper } from "./action-serialization.ts";
 import { makeGameFlowMapper, serializableGameFlowSchema } from "./game-flow-serialization.ts";
+import { getMappedPlayer, type Player } from "../game/player/player.ts";
+import type { GetRequiredLocation, Location } from "../game/location/location.ts";
+import type { Deck, InfectionCard, PlayerCard } from "../game/cards/cards.ts";
 
 export const serializablePlayerCardSchema = Type.Union([
   Type.Object({

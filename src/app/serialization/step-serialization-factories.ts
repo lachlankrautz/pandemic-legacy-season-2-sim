@@ -1,8 +1,8 @@
 import { Factory } from "fishery";
 import type { SerializableStep } from "./step-serialization.ts";
 import { getRandomItem } from "../random/random.ts";
-import { PlayerNames } from "../game/new-game.ts";
-import { serializableActionFactory } from "./action-serialization-factories.js";
+import { PlayerNames } from "../game/start/new-game.ts";
+import { serializableActionFactory } from "./action-serialization-factories.ts";
 
 const stepTypes: SerializableStep["type"][] = [
   "player_action",

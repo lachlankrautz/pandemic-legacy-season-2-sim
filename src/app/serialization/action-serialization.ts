@@ -1,5 +1,5 @@
 import { type Static, Type } from "@sinclair/typebox";
-import type { Action } from "../game/actions.ts";
+import type { Action } from "../game/action/actions.ts";
 import type { Mapper } from "./game-serialization.ts";
 
 export const serializableActionSchema = Type.Union([

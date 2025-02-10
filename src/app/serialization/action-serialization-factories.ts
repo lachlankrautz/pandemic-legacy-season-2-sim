@@ -1,8 +1,8 @@
 import { Factory } from "fishery";
 import type { SerializableAction } from "./action-serialization.ts";
-import { LocationNames } from "../game/game.ts";
 import { getRandomItem } from "../random/random.ts";
 import { faker } from "@faker-js/faker/locale/en";
+import { LocationNames } from "../game/location/location.ts";
 
 export type SerializableActionParams = {
   type: SerializableAction["type"];

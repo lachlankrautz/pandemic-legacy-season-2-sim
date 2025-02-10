@@ -1,8 +1,8 @@
 import { Factory } from "fishery";
-import { getRandomItem } from "../random/random.ts";
+import { getRandomItem } from "../../random/random.ts";
 import { faker } from "@faker-js/faker/locale/en";
 import { Action } from "./actions.ts";
-import { LocationNames } from "./game.ts";
+import { LocationNames } from "../location/location.ts";
 
 export type ActionParams = {
   type: Action["type"];

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { boostrapCli } from "./bootstrap.js";
+import { boostrapCli } from "./bootstrap.ts";
 
 describe("boostrap", () => {
   it("builds with no arguments", () => {

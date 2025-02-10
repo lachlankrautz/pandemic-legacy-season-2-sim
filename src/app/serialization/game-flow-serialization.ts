@@ -1,6 +1,7 @@
 import type { Mapper } from "./game-serialization.ts";
-import type { GameFlow, GetRequiredPlayer } from "../game/game.ts";
 import { type Static, Type } from "@sinclair/typebox";
+import type { GetRequiredPlayer } from "../game/player/player.ts";
+import type { GameFlow } from "../game/game-flow/game-flow.ts";
 
 export const serializableGameFlowSchema = Type.Union([
   Type.Object({

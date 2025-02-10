@@ -5,22 +5,18 @@ import {
   type SerializableLocation,
   type SerializablePlayer,
   type SerializablePlayerCard,
-} from "../serialization/game-serialization.ts";
+} from "../../serialization/game-serialization.ts";
+import { type Connection, type Game, getEpidemicCardCount, TURN_ACTION_COUNT, type TurnOrder } from "../game.ts";
+import { shuffleArray } from "../../random/random.ts";
+import { chunkArray } from "../../../util/arrays.ts";
 import {
   type CityColour,
-  type Connection,
-  type Deck,
-  type Game,
-  getEpidemicCardCount,
   links,
   type Location,
   type LocationDisplayName,
   LocationNames,
-  TURN_ACTION_COUNT,
-  type TurnOrder,
-} from "./game.ts";
-import { shuffleArray } from "../random/random.ts";
-import { chunkArray } from "../../util/arrays.ts";
+} from "../location/location.ts";
+import type { Deck } from "../cards/cards.ts";
 
 export const PlayerNames = {
   HAMMOND: "Hammond",

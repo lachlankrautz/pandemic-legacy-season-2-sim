@@ -1,9 +1,10 @@
 import { Factory } from "fishery";
-import { getRandomItem } from "../random/random.ts";
+import { getRandomItem } from "../../random/random.ts";
 import type { Step } from "./game-steps.ts";
-import { actionFactory } from "./action-factories.ts";
-import { PlayerNames } from "./new-game.ts";
-import { LocationNames, type Player } from "./game.ts";
+import { actionFactory } from "../action/action-factories.ts";
+import { PlayerNames } from "../start/new-game.ts";
+import type { Player } from "../player/player.ts";
+import { LocationNames } from "../location/location.ts";
 
 const stepTypes: Step["type"][] = [
   "player_action",

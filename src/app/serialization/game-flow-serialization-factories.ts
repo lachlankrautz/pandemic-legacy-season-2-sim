@@ -1,7 +1,7 @@
 import { Factory } from "fishery";
 import type { SerializableGameFlow } from "./game-flow-serialization.ts";
 import { getRandomItem } from "../random/random.ts";
-import { PlayerNames } from "../game/new-game.ts";
+import { PlayerNames } from "../game/start/new-game.ts";
 
 const flowTypes: SerializableGameFlow["type"][] = [
   "game_over",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { makeLogger } from "./logger.js";
+import { makeLogger } from "./logger.ts";
 
 describe("logger", () => {
   it("can make separate logger instances", () => {

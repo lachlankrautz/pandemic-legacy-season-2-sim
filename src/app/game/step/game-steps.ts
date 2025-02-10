@@ -1,17 +1,11 @@
-import {
-  cardDisplayName,
-  type Game,
-  type GameFlow,
-  type GameFlowOver,
-  type GameFlowWon,
-  type GameLog,
-  getNextTurnOrder,
-  inGameFlow,
-  type Player,
-} from "./game.ts";
-import { type Action, takeAction } from "./actions.ts";
-import { drawInfectionCard } from "./infect-cities.ts";
-import { epidemic } from "./epidemic.ts";
+import { type Game, getNextTurnOrder } from "../game.ts";
+import { type Action, takeAction } from "../action/actions.ts";
+import { drawInfectionCard } from "../infection/infect-cities.ts";
+import { epidemic } from "../infection/epidemic.ts";
+import type { Player } from "../player/player.ts";
+import { type GameFlow, type GameFlowOver, type GameFlowWon, inGameFlow } from "../game-flow/game-flow.ts";
+import { cardDisplayName } from "../location/location.ts";
+import type { GameLog } from "../game-log/game-log.ts";
 
 /**
  * A step is an atomic level of interaction with the game. A step could be

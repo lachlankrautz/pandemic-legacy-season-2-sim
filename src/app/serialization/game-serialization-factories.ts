@@ -1,7 +1,7 @@
 import { Factory } from "fishery";
 import type { SerializableGame } from "./game-serialization.ts";
 import type { SerializableGameFlow } from "./game-flow-serialization.ts";
-import { serializableGameFlowFactory } from "./game-flow-serialization-factories.js";
+import { serializableGameFlowFactory } from "./game-flow-serialization-factories.ts";
 
 export type SerializableGameParams = {
   flowType: SerializableGameFlow["type"];

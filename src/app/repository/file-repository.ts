@@ -7,7 +7,7 @@ import type { Logger } from "../logging/logger.ts";
 import { deserializeGame, serializeGame } from "../serialization/game-serialization.ts";
 
 export const getSaveFilePath = (name: string): string => {
-  return path.resolve(getConfig().saveDir, `${name}.sav.json`);
+  return path.resolve(getConfig().saveDir, `${name}.sav.tson`);
 };
 
 export const makeFileRepository = (logger: Logger): Repository => ({

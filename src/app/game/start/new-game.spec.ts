@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { makeSerializableGame } from "./new-game.js";
-import { type SerializableGame, serializableGameSchema } from "../serialization/game-serialization.js";
+import { makeSerializableGame } from "./new-game.ts";
+import { type SerializableGame, serializableGameSchema } from "../../serialization/game-serialization.ts";
 import { Value } from "@sinclair/typebox/value";
 
 describe("new game", () => {

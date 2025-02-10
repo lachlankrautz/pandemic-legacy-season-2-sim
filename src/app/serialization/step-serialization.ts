@@ -1,9 +1,10 @@
 import { type Static, Type } from "@sinclair/typebox";
 import { type SerializableAction, serializableActionSchema } from "./action-serialization.ts";
-import type { Step } from "../game/game-steps.ts";
+import type { Step } from "../game/step/game-steps.ts";
 import type { Mapper } from "./game-serialization.ts";
-import type { Action } from "../game/actions.ts";
-import type { GetRequiredPlayer } from "../game/game.ts";
+import type { Action } from "../game/action/actions.ts";
+
+import type { GetRequiredPlayer } from "../game/player/player.ts";
 
 export const serializableStepSchema = Type.Union([
   Type.Object({

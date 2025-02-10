@@ -2,7 +2,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import type { SerializableStep } from "../serialization/step-serialization.ts";
 import type { Logger } from "../logging/logger.ts";
-import type { ShowInfo } from "../game/show-info-use-case.ts";
+import type { ShowInfo } from "../game/view/show-info-use-case.ts";
 import type { TuiRunner } from "../ink-tui/root.ts";
 
 export type CliRunner = {
