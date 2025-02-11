@@ -4,6 +4,116 @@ import type { PlayerCard } from "../cards/cards.ts";
 
 export type CityColour = "blue" | "yellow" | "black" | "none";
 
+export type StaticLocation = Pick<Location, "name" | "type" | "colour">;
+
+export const StaticLocations = {
+  SAN_FRANCISCO: {
+    name: "San Francisco",
+    type: "inland",
+    colour: "yellow",
+  },
+  CHICAGO: {
+    name: "Chicago",
+    type: "inland",
+    colour: "yellow",
+  },
+  ATLANTA: {
+    name: "Atlanta",
+    type: "inland",
+    colour: "yellow",
+  },
+  WASHINGTON: {
+    name: "Washington",
+    type: "inland",
+    colour: "yellow",
+  },
+  NEW_YORK: {
+    name: "New York",
+    type: "inland",
+    colour: "yellow",
+  },
+  JACKSONVILLE: {
+    name: "Jacksonville",
+    type: "inland",
+    colour: "yellow",
+  },
+  HARDHOME: {
+    name: "Hardhome",
+    type: "inland",
+    colour: "yellow",
+  },
+  LIMA: {
+    name: "Lima",
+    type: "inland",
+    colour: "yellow",
+  },
+  BOGOTA: {
+    name: "Bogota",
+    type: "inland",
+    colour: "yellow",
+  },
+  SANTIAGO: {
+    name: "Santiago",
+    type: "inland",
+    colour: "yellow",
+  },
+  BUENOS_AIRES: {
+    name: "Buenos Aires",
+    type: "inland",
+    colour: "yellow",
+  },
+  OCEAN_GATE: {
+    name: "Ocean Gate",
+    type: "inland",
+    colour: "yellow",
+  },
+  COLUMBIA: {
+    name: "Columbia",
+    type: "inland",
+    colour: "yellow",
+  },
+  SAO_PAULO: {
+    name: "Sao Paulo",
+    type: "inland",
+    colour: "yellow",
+  },
+  GEIDI_PRIME: {
+    name: "Geidi Prime",
+    type: "inland",
+    colour: "yellow",
+  },
+  LONDON: {
+    name: "London",
+    type: "inland",
+    colour: "yellow",
+  },
+  TRIPOLI: {
+    name: "Tripoli",
+    type: "inland",
+    colour: "yellow",
+  },
+  LAGOS: {
+    name: "Lagos",
+    type: "inland",
+    colour: "yellow",
+  },
+  KINSHASA: {
+    name: "Kinshasa",
+    type: "inland",
+    colour: "yellow",
+  },
+  CAIRO: {
+    name: "Cairo",
+    type: "inland",
+    colour: "yellow",
+  },
+  ISTANBUL: {
+    name: "Istanbul",
+    type: "inland",
+    colour: "yellow",
+  },
+} as const satisfies Record<string, StaticLocation>;
+
 export type Location<TColour extends CityColour = CityColour> = {
   name: string;
   type: "haven" | "port" | "inland";

@@ -18,9 +18,16 @@ export const makeFileRepository = (logger: Logger): Repository => ({
     let save;
     try {
       save = fs.readFileSync(fileName, "utf-8");
-      return deserializeGame(save);
     } catch (error: unknown) {
       throw new Error(`Failed to load game from file: ${path.basename(fileName)}`, { cause: error });
+    }
+
+    try {
+      return deserializeGame(save);
+    } catch (error: unknown) {
+      const message = `Failed to deserialize game: ${path.basename(fileName)}`;
+      logger.error(message, error);
+      throw new Error(message, { cause: error });
     }
   },
   saveGame: (name: string, game: Game): void => {

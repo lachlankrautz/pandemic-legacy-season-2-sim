@@ -1,6 +1,6 @@
 import {
+  makeGameMapper,
   type SerializableGame,
-  serializableGameToGame,
   type SerializableInfectionCard,
   type SerializableLocation,
   type SerializablePlayer,
@@ -344,7 +344,9 @@ export const makeSerializableGame = (): SerializableGame => {
     gameLog: [],
   };
 };
+
 export const makeGame = (): Game => {
   const serializableGame = makeSerializableGame();
-  return serializableGameToGame(serializableGame);
+  const mapper = makeGameMapper();
+  return mapper.toActual(serializableGame);
 };

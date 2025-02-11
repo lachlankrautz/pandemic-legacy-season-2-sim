@@ -1,7 +1,7 @@
 import { Factory } from "fishery";
 import { getRandomItem } from "../../random/random.ts";
 import type { GameFlow } from "./game-flow.ts";
-import { playerFactory } from "../player/player-factories.js";
+import { playerFactory } from "../player/player-factories.ts";
 
 const flowTypes: GameFlow["type"][] = [
   "game_over",

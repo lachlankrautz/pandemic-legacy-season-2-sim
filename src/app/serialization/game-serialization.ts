@@ -139,60 +139,9 @@ export type SerializableLocation = SerializableGame["locations"][number];
 
 export type SerializablePlayer = SerializableGame["players"][number];
 
-const gameToSerializableGame = (game: Game): SerializableGame => {
-  const getRequiredLocation = getRequiredMapLocation(game.locations);
-  const playerCardMapper = makePlayerCardMapper(getRequiredLocation);
-
-  // TODO this seems bad, shouldn't really need the maps when
-  //      going the other way
-  const fakePlayerMap: Map<string, Player> = new Map();
-
-  const stepMapper = makeStepMapper(getMappedPlayer(fakePlayerMap), makeActionMapper());
-  const flowMapper = makeGameFlowMapper(getMappedPlayer(game.players));
-
-  return {
-    gameFlow: flowMapper.toSerializable(game.gameFlow),
-    locations: Array.from(game.locations.values()).map((location) => ({
-      name: location.name,
-      type: location.type,
-      colour: location.colour,
-      supplyCubes: location.supplyCubes,
-      plagueCubes: location.plagueCubes,
-      connections: location.connections.map((connection) => ({
-        type: connection.type,
-        locationName: connection.location.name,
-      })),
-    })),
-    players: Array.from(game.players.values()).map((player) => ({
-      name: player.name,
-      locationName: player.location.name,
-      supplyCubes: player.supplyCubes,
-      turnOrder: player.turnOrder,
-      cards: player.cards.map((card) => playerCardMapper.toSerializable(card)),
-    })),
-    objectives: game.objectives.map((objective) => ({
-      name: objective.name,
-      isCompleted: objective.isCompleted,
-      isMandatory: objective.isMandatory,
-    })),
-    month: {
-      name: game.month.name,
-      supplies: game.month.supplies,
-    },
-    bonusSupplies: game.bonusSupplies,
-    playerDeck: deckMapper(playerCardMapper).toSerializable(game.playerDeck),
-    infectionDeck: deckMapper(makeInfectionCardMapper(getRequiredLocation)).toSerializable(game.infectionDeck),
-    infectionRate: game.infectionRate,
-    incidents: game.incidents,
-    state: game.state,
-    stepHistory: game.stepHistory.map((step) => stepMapper.toSerializable(step)),
-    gameLog: game.gameLog,
-  };
-};
-
 export type Mapper<TActual extends object, TSerializable extends object> = {
   toSerializable: (actual: TActual) => TSerializable;
-  toActual: (actual: TSerializable) => TActual;
+  toActual: (serializable: TSerializable) => TActual;
 };
 
 export const deckMapper = <TActual extends object, TSerializable extends object>(
@@ -258,98 +207,10 @@ export const getRequiredMapLocation =
     return location;
   };
 
-export const serializableGameToGame = (serializableGame: SerializableGame): Game | never => {
-  const locationMap: Map<string, Location> = new Map();
-  for (const location of serializableGame.locations) {
-    locationMap.set(location.name, {
-      name: location.name,
-      type: location.type,
-      colour: location.colour,
-      supplyCubes: location.supplyCubes,
-      plagueCubes: location.plagueCubes,
-      supplyCentre: false,
-      connections: [],
-      players: [],
-    });
-  }
-
-  for (const rawLocation of serializableGame.locations) {
-    const location = locationMap.get(rawLocation.name);
-    if (location === undefined) {
-      throw new Error("Failed to create connections - source location not found", {
-        cause: { locationName: rawLocation.name },
-      });
-    }
-    for (const rawConnection of rawLocation.connections) {
-      const connectedLocation = locationMap.get(rawConnection.locationName);
-      if (connectedLocation === undefined) {
-        throw new Error("Failed to create connections - destination location not found", {
-          cause: { locationName: rawConnection.locationName },
-        });
-      }
-      location.connections.push({
-        type: rawConnection.type,
-        location: connectedLocation,
-      });
-    }
-  }
-
-  const getRequiredLocation = getRequiredMapLocation(locationMap);
-  const playerCardMapper = makePlayerCardMapper(getRequiredLocation);
-
-  const playerMap: Map<string, Player> = new Map();
-  for (const serializablePlayer of serializableGame.players) {
-    const location = getRequiredLocation(serializablePlayer.locationName);
-
-    const player: Player = {
-      name: serializablePlayer.name,
-      location,
-      supplyCubes: serializablePlayer.supplyCubes,
-      turnOrder: serializablePlayer.turnOrder,
-      cards: serializablePlayer.cards.map((card) => playerCardMapper.toActual(card)),
-    };
-
-    location.players.push(player);
-
-    playerMap.set(player.name, player);
-  }
-
-  const getPlayer = getMappedPlayer(playerMap);
-  const stepMapper = makeStepMapper(getPlayer, makeActionMapper());
-  const gameFlowMapper = makeGameFlowMapper(getPlayer);
-
-  const game: Game = {
-    gameFlow: gameFlowMapper.toActual(serializableGame.gameFlow),
-    locations: locationMap,
-    players: playerMap,
-    objectives: serializableGame.objectives.map((objective) => ({
-      name: objective.name,
-      isCompleted: objective.isCompleted,
-      isMandatory: objective.isMandatory,
-    })),
-    month: {
-      name: serializableGame.month.name,
-      supplies: serializableGame.month.supplies,
-    },
-    bonusSupplies: serializableGame.bonusSupplies,
-    infectionRate: serializableGame.infectionRate,
-    incidents: serializableGame.incidents,
-    playerDeck: deckMapper(playerCardMapper).toActual(serializableGame.playerDeck),
-    infectionDeck: deckMapper(makeInfectionCardMapper(getRequiredLocation)).toActual(serializableGame.infectionDeck),
-    state: serializableGame.state,
-    stepHistory: serializableGame.stepHistory.map((step) => stepMapper.toActual(step)),
-    gameLog: serializableGame.gameLog,
-  };
-
-  if (game.infectionDeck.drawPile.length === 0) {
-    throw new Error("Infection deck cannot be empty");
-  }
-
-  return game;
-};
-
 export const serializeGame = (game: Game): string => {
-  const serializableGame = gameToSerializableGame(game);
+  const mapper = makeGameMapper();
+  const serializableGame = mapper.toSerializable(game);
+
   let serializedGame;
   try {
     serializedGame = Value.Parse(serializableGameSchema, serializableGame);
@@ -379,5 +240,147 @@ export const deserializeGame = (json: string): Game | never => {
     throw new Error("Failed to parse game data", { cause: error });
   }
 
-  return serializableGameToGame(parsedData);
+  const mapper = makeGameMapper();
+  return mapper.toActual(parsedData);
+};
+
+export const makeGameMapper = (
+  locationMap: Map<string, Location> = new Map(),
+  playerMap: Map<string, Player> = new Map(),
+): Mapper<Game, SerializableGame> => {
+  return {
+    toActual: (serializable): Game => {
+      for (const location of serializable.locations) {
+        locationMap.set(location.name, {
+          name: location.name,
+          type: location.type,
+          colour: location.colour,
+          supplyCubes: location.supplyCubes,
+          plagueCubes: location.plagueCubes,
+          supplyCentre: false,
+          connections: [],
+          players: [],
+        });
+      }
+
+      for (const rawLocation of serializable.locations) {
+        const location = locationMap.get(rawLocation.name);
+        if (location === undefined) {
+          throw new Error("Failed to create connections - source location not found", {
+            cause: { locationName: rawLocation.name },
+          });
+        }
+        for (const rawConnection of rawLocation.connections) {
+          const connectedLocation = locationMap.get(rawConnection.locationName);
+          if (connectedLocation === undefined) {
+            throw new Error("Failed to create connections - destination location not found", {
+              cause: { locationName: rawConnection.locationName },
+            });
+          }
+          location.connections.push({
+            type: rawConnection.type,
+            location: connectedLocation,
+          });
+        }
+      }
+
+      const getRequiredLocation = getRequiredMapLocation(locationMap);
+      const playerCardMapper = makePlayerCardMapper(getRequiredLocation);
+
+      for (const serializablePlayer of serializable.players) {
+        const location = getRequiredLocation(serializablePlayer.locationName);
+
+        const player: Player = {
+          name: serializablePlayer.name,
+          location,
+          supplyCubes: serializablePlayer.supplyCubes,
+          turnOrder: serializablePlayer.turnOrder,
+          cards: serializablePlayer.cards.map((card) => playerCardMapper.toActual(card)),
+        };
+
+        location.players.push(player);
+
+        playerMap.set(player.name, player);
+      }
+
+      const getPlayer = getMappedPlayer(playerMap);
+      const stepMapper = makeStepMapper(getPlayer, makeActionMapper());
+      const gameFlowMapper = makeGameFlowMapper(getPlayer);
+
+      const game: Game = {
+        gameFlow: gameFlowMapper.toActual(serializable.gameFlow),
+        locations: locationMap,
+        players: playerMap,
+        objectives: serializable.objectives.map((objective) => ({
+          name: objective.name,
+          isCompleted: objective.isCompleted,
+          isMandatory: objective.isMandatory,
+        })),
+        month: {
+          name: serializable.month.name,
+          supplies: serializable.month.supplies,
+        },
+        bonusSupplies: serializable.bonusSupplies,
+        infectionRate: serializable.infectionRate,
+        incidents: serializable.incidents,
+        playerDeck: deckMapper(playerCardMapper).toActual(serializable.playerDeck),
+        infectionDeck: deckMapper(makeInfectionCardMapper(getRequiredLocation)).toActual(serializable.infectionDeck),
+        state: serializable.state,
+        stepHistory: serializable.stepHistory.map((step) => stepMapper.toActual(step)),
+        gameLog: serializable.gameLog,
+      };
+
+      if (game.infectionDeck.drawPile.length === 0) {
+        throw new Error("Infection deck cannot be empty");
+      }
+
+      return game;
+    },
+    toSerializable: (actual): SerializableGame => {
+      const getRequiredLocation = getRequiredMapLocation(actual.locations);
+      const playerCardMapper = makePlayerCardMapper(getRequiredLocation);
+
+      const stepMapper = makeStepMapper(getMappedPlayer(playerMap), makeActionMapper());
+      const flowMapper = makeGameFlowMapper(getMappedPlayer(actual.players));
+
+      return {
+        gameFlow: flowMapper.toSerializable(actual.gameFlow),
+        locations: Array.from(actual.locations.values()).map((location) => ({
+          name: location.name,
+          type: location.type,
+          colour: location.colour,
+          supplyCubes: location.supplyCubes,
+          plagueCubes: location.plagueCubes,
+          connections: location.connections.map((connection) => ({
+            type: connection.type,
+            locationName: connection.location.name,
+          })),
+        })),
+        players: Array.from(actual.players.values()).map((player) => ({
+          name: player.name,
+          locationName: player.location.name,
+          supplyCubes: player.supplyCubes,
+          turnOrder: player.turnOrder,
+          cards: player.cards.map((card) => playerCardMapper.toSerializable(card)),
+        })),
+        objectives: actual.objectives.map((objective) => ({
+          name: objective.name,
+          isCompleted: objective.isCompleted,
+          isMandatory: objective.isMandatory,
+        })),
+        month: {
+          name: actual.month.name,
+          supplies: actual.month.supplies,
+        },
+        bonusSupplies: actual.bonusSupplies,
+        playerDeck: deckMapper(playerCardMapper).toSerializable(actual.playerDeck),
+        infectionDeck: deckMapper(makeInfectionCardMapper(getRequiredLocation)).toSerializable(actual.infectionDeck),
+        infectionRate: actual.infectionRate,
+        incidents: actual.incidents,
+        state: actual.state,
+        stepHistory: actual.stepHistory.map((step) => stepMapper.toSerializable(step)),
+        gameLog: actual.gameLog,
+      };
+    },
+  };
 };

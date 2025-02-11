@@ -6,6 +6,7 @@ import { getSaveFilePath, makeFileRepository } from "./file-repository.ts";
 import { serializableGameFactory } from "../serialization/game-serialization-factories.ts";
 import { getConfig } from "../../config/config.ts";
 import path from "path";
+import { gameFactory } from "../game/game-factories.js";
 
 describe("file repository", () => {
   const logger = makeLogger();
@@ -34,7 +35,7 @@ describe("file repository", () => {
   it("saves a valid game object", () => {
     const fileRepo = makeFileRepository(logger);
     const save = `test-${randomUUID()}`;
-    const game = {} as any; //gameFactory.build();
+    const game = gameFactory.build();
 
     expect(() => fileRepo.saveGame(save, game)).not.toThrow();
   });

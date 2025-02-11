@@ -2,6 +2,7 @@ import { Factory } from "fishery";
 import type { SerializableGameFlow } from "./game-flow-serialization.ts";
 import { getRandomItem } from "../random/random.ts";
 import { PlayerNames } from "../game/start/new-game.ts";
+import type { Player } from "../game/player/player.js";
 
 const flowTypes: SerializableGameFlow["type"][] = [
   "game_over",
@@ -16,11 +17,16 @@ const causes: string[] = ["player deck exhausted", "too many incidents"];
 
 export type SerializableGameFlowParams = {
   type: SerializableGameFlow["type"];
+  playerMap: Map<string, Player>;
 };
 
 export const serializableGameFlowFactory = Factory.define<SerializableGameFlow, SerializableGameFlowParams>(
-  ({ transientParams: { type } }) => {
+  ({ transientParams: { type, playerMap } }) => {
     type ??= getRandomItem(flowTypes);
+
+    // Use names from players available in map
+    const playerNames: string[] = playerMap ? playerMap.keys().toArray() : Object.values(PlayerNames);
+
     switch (type) {
       case "game_won":
         return {
@@ -34,24 +40,24 @@ export const serializableGameFlowFactory = Factory.define<SerializableGameFlow, 
       case "player_turn:exposure_check":
         return {
           type,
-          playerName: getRandomItem(Object.values(PlayerNames)),
+          playerName: getRandomItem(playerNames),
         };
       case "player_turn:take_4_actions":
         return {
           type,
-          playerName: getRandomItem(Object.values(PlayerNames)),
+          playerName: getRandomItem(playerNames),
           remainingActions: 4,
         };
       case "player_turn:draw_2_cards":
         return {
           type,
-          playerName: getRandomItem(Object.values(PlayerNames)),
+          playerName: getRandomItem(playerNames),
           remainingCards: 2,
         };
       case "player_turn:infect_cities":
         return {
           type,
-          playerName: getRandomItem(Object.values(PlayerNames)),
+          playerName: getRandomItem(playerNames),
           remainingCards: 2,
         };
     }
