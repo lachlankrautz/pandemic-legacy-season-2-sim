@@ -53,13 +53,15 @@ export type HandCardNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export type PlayerCardSelection = Set<HandCardNumber>;
 
+export type GameCardUse = Pick<Game<GameFlowTurn>, "gameFlow" | "playerDeck" | "gameLog">;
+
 export type UsingHandCards = {
   selected: PlayerCard[];
   remainder: PlayerCard[];
   discardUsed: () => void;
 };
 
-export const useHandCards = (game: Game<GameFlowTurn>, selection: PlayerCardSelection): UsingHandCards => {
+export const useHandCards = (game: GameCardUse, selection: PlayerCardSelection): UsingHandCards => {
   const player = game.gameFlow.player;
 
   const [selected, remainder] = partition(player.cards, (_, index) => selection.has(index));
