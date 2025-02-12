@@ -298,7 +298,7 @@ export const makeSerializableGame = (): SerializableGame => {
 
   return {
     turnFlow: {
-      type: "player_turn:take_4_actions",
+      type: "take_4_actions",
       playerName: julian.name,
       remainingActions: TURN_ACTION_COUNT,
     },

@@ -8,7 +8,7 @@ import { gameFlowFactory } from "../game/game-flow/game-flow-factories.ts";
 describe("serializable game flow mapping", () => {
   it("fails to map type requiring unknown player", () => {
     const serializableGameFlow = serializableGameTurnFlowFactory.build({
-      type: "player_turn:draw_2_cards",
+      type: "draw_2_cards",
     });
     const mapper = makeGameTurnFlowMapper(getMappedPlayer(new Map()));
     expect(() => mapper.toActual(serializableGameFlow)).toThrow();

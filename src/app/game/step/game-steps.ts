@@ -60,7 +60,7 @@ export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
       if (result.type !== "no_effect" && result.nextGameFlow) {
         game.turnFlow = result.nextGameFlow;
 
-        if (inGameFlow(game, "player_turn:take_4_actions") && startingPlayerName !== game.turnFlow.player.name) {
+        if (inGameFlow(game, "take_4_actions") && startingPlayerName !== game.turnFlow.player.name) {
           gameLog(`Turn passed to ${game.turnFlow.player.name}`);
         }
 
@@ -77,7 +77,7 @@ export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
 export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResult => {
   let result: StepResult | undefined = undefined;
 
-  if (!inGameFlow(game, "player_turn:")) {
+  if (!inGameFlow(game, "")) {
     // TODO handle without using exceptions
     throw new Error("game is already over");
   }
@@ -91,25 +91,25 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
     };
   }
 
-  if (inGameFlow(game, "player_turn:exposure_check") && step.type === "check_for_exposure") {
+  if (inGameFlow(game, "exposure_check") && step.type === "check_for_exposure") {
     gameLog(`${step.player.name} checked for exposure`);
     result = {
       type: "state_changed",
       nextGameFlow: {
-        type: "player_turn:take_4_actions",
+        type: "take_4_actions",
         player: player,
         remainingActions: 4,
       },
     };
   }
 
-  if (inGameFlow(game, "player_turn:take_4_actions") && step.type === "player_action") {
+  if (inGameFlow(game, "take_4_actions") && step.type === "player_action") {
     result = takeAction(game, step.action, gameLog);
     if (result.type === "state_changed" && !step.action.isFree) {
       if (game.turnFlow.remainingActions <= 1) {
         gameLog(`All actions taken`);
         result.nextGameFlow = {
-          type: "player_turn:draw_2_cards",
+          type: "draw_2_cards",
           player,
           remainingCards: 2,
         };
@@ -120,7 +120,7 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
     }
   }
 
-  if (inGameFlow(game, "player_turn:draw_2_cards") && step.type === "draw_player_card") {
+  if (inGameFlow(game, "draw_2_cards") && step.type === "draw_player_card") {
     const playerCard = game.playerDeck.drawPile.pop();
 
     // Players ran out of time.
@@ -146,7 +146,7 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
 
     if (game.turnFlow.remainingCards <= 1) {
       result.nextGameFlow = {
-        type: "player_turn:infect_cities",
+        type: "infect_cities",
         player,
         remainingCards: game.infectionRate.cards,
       };
@@ -156,7 +156,7 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
     }
   }
 
-  if (inGameFlow(game, "player_turn:infect_cities") && step.type === "draw_infection_card") {
+  if (inGameFlow(game, "infect_cities") && step.type === "draw_infection_card") {
     const infectionResult = drawInfectionCard(game, gameLog);
     if (infectionResult.maybeEnd.type === "game_over") {
       gameLog(`Game Over: ${infectionResult.maybeEnd.cause}`);
@@ -179,7 +179,7 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
       }
 
       result.nextGameFlow = {
-        type: "player_turn:exposure_check",
+        type: "exposure_check",
         player: nextPlayer,
       };
     } else {

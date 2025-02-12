@@ -10,7 +10,7 @@ import type { GameLog } from "../game-log/game-log.ts";
 // some actions are always free actions, some can be free
 export type Action = Move<true> | Move<false> | MakeSupplies | DropSupplies | MakeSupplyCentre;
 
-export type Move<T extends boolean> = {
+export type Move<T extends boolean = boolean> = {
   type: "move";
   isFree: T;
   toLocationName: string;
@@ -43,7 +43,7 @@ export type MakeSupplyCentre = {
 //           Then things like losing the game can override the pending change
 
 export const takeAction = (game: Game, action: Action, gameLog: GameLog): StepResult => {
-  if (!inGameFlow(game, "player_turn:take_4_actions")) {
+  if (!inGameFlow(game, "take_4_actions")) {
     return { type: "no_effect", cause: "wrong turn flow" };
   }
 

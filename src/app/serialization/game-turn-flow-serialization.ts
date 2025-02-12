@@ -5,21 +5,21 @@ import type { GameTurnFlow } from "../game/game-flow/game-turn-flow.ts";
 
 export const serializableGameTurnFlowSchema = Type.Union([
   Type.Object({
-    type: Type.Literal("player_turn:exposure_check"),
+    type: Type.Literal("exposure_check"),
     playerName: Type.String(),
   }),
   Type.Object({
-    type: Type.Literal("player_turn:take_4_actions"),
+    type: Type.Literal("take_4_actions"),
     playerName: Type.String(),
     remainingActions: Type.Number({ minimum: 1, maximum: 4 }),
   }),
   Type.Object({
-    type: Type.Literal("player_turn:draw_2_cards"),
+    type: Type.Literal("draw_2_cards"),
     playerName: Type.String(),
     remainingCards: Type.Number({ minimum: 1, maximum: 2 }),
   }),
   Type.Object({
-    type: Type.Literal("player_turn:infect_cities"),
+    type: Type.Literal("infect_cities"),
     playerName: Type.String(),
     remainingCards: Type.Number({ minimum: 1, maximum: 5 }),
   }),
@@ -33,26 +33,26 @@ export const makeGameTurnFlowMapper = (
   return {
     toActual: (serializable): GameTurnFlow => {
       switch (serializable.type) {
-        case "player_turn:exposure_check":
+        case "exposure_check":
           return {
-            type: "player_turn:exposure_check",
+            type: "exposure_check",
             player: getPlayer(serializable.playerName),
           };
-        case "player_turn:take_4_actions":
+        case "take_4_actions":
           return {
-            type: "player_turn:take_4_actions",
+            type: "take_4_actions",
             player: getPlayer(serializable.playerName),
             remainingActions: serializable.remainingActions,
           };
-        case "player_turn:draw_2_cards":
+        case "draw_2_cards":
           return {
-            type: "player_turn:draw_2_cards",
+            type: "draw_2_cards",
             player: getPlayer(serializable.playerName),
             remainingCards: serializable.remainingCards,
           };
-        case "player_turn:infect_cities":
+        case "infect_cities":
           return {
-            type: "player_turn:infect_cities",
+            type: "infect_cities",
             player: getPlayer(serializable.playerName),
             remainingCards: serializable.remainingCards,
           };
@@ -62,26 +62,26 @@ export const makeGameTurnFlowMapper = (
     },
     toSerializable: (actual): SerializableGameTurnFlow => {
       switch (actual.type) {
-        case "player_turn:exposure_check":
+        case "exposure_check":
           return {
-            type: "player_turn:exposure_check",
+            type: "exposure_check",
             playerName: actual.player.name,
           };
-        case "player_turn:take_4_actions":
+        case "take_4_actions":
           return {
-            type: "player_turn:take_4_actions",
+            type: "take_4_actions",
             playerName: actual.player.name,
             remainingActions: actual.remainingActions,
           };
-        case "player_turn:draw_2_cards":
+        case "draw_2_cards":
           return {
-            type: "player_turn:draw_2_cards",
+            type: "draw_2_cards",
             playerName: actual.player.name,
             remainingCards: actual.remainingCards,
           };
-        case "player_turn:infect_cities":
+        case "infect_cities":
           return {
-            type: "player_turn:infect_cities",
+            type: "infect_cities",
             playerName: actual.player.name,
             remainingCards: actual.remainingCards,
           };

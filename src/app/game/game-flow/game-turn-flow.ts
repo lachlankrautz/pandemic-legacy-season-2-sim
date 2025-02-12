@@ -9,24 +9,24 @@ export const inGameFlow = <TPrefix extends string>(
 };
 
 export type GameFlowTurnExposureCheck = {
-  type: "player_turn:exposure_check";
+  type: "exposure_check";
   player: Player;
 };
 
 export type GameFlowTurnTakeActions = {
-  type: "player_turn:take_4_actions";
+  type: "take_4_actions";
   player: Player;
   remainingActions: number;
 };
 
 export type GameFlowTurnDrawCards = {
-  type: "player_turn:draw_2_cards";
+  type: "draw_2_cards";
   player: Player;
   remainingCards: number;
 };
 
 export type GameFlowTurnInfectCities = {
-  type: "player_turn:infect_cities";
+  type: "infect_cities";
   player: Player;
   remainingCards: number;
 };

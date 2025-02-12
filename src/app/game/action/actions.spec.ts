@@ -1,19 +1,21 @@
 import { describe, it, expect, vi } from "vitest";
-import { takeAction, makeSupplies, makeSupplyCentre, dropSupplies, type DropSupplies } from "./actions.ts";
+import { takeAction, makeSupplies, makeSupplyCentre, dropSupplies } from "./actions.ts";
 import { GameLog } from "../game-log/game-log.ts";
 import { gameFactory } from "../game-factories.ts";
 import { playerFactory } from "../player/player-factories.ts";
 import { locationFactory } from "../location/location-factories.ts";
 import { StaticLocations } from "../location/location.js";
 import { playerCardFactory } from "../cards/player-card-factories.js";
+import { actionFactory, dropSuppliesActionFactory, moveActionFactory } from "./action-factories.ts";
 
 const mockGameLog: GameLog = vi.fn();
 
 describe("spend action points", () => {
   it("fails if no actions remain", () => {
-    const game = gameFactory.build({ turnFlow: { type: "player_turn:take_4_actions", remainingActions: 0 } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", remainingActions: 0 } });
+    const action = actionFactory.build({ isFree: false });
 
-    const result = takeAction(game, { type: "move", isFree: false, toLocationName: "Somewhere" }, mockGameLog);
+    const result = takeAction(game, action, mockGameLog);
     expect(result).toEqual({ type: "no_effect", cause: "No actions remaining" });
   });
 });
@@ -24,9 +26,10 @@ describe("move", () => {
     const locationTwo = locationFactory.build();
 
     const player = playerFactory.build({ location: locationOne });
-    const game = gameFactory.build({ turnFlow: { type: "player_turn:take_4_actions", player, remainingActions: 1 } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", player, remainingActions: 1 } });
+    const move = moveActionFactory.build({ toLocationName: locationTwo.name });
 
-    const result = takeAction(game, { type: "move", isFree: false, toLocationName: locationTwo.name }, mockGameLog);
+    const result = takeAction(game, move, mockGameLog);
     expect(result).toEqual({ type: "no_effect", cause: expect.stringContaining("Invalid move target") });
   });
 
@@ -39,15 +42,16 @@ describe("move", () => {
     });
     const player = playerFactory.build({ location: locationOne });
     const game = gameFactory.build({
-      turnFlow: { type: "player_turn:take_4_actions", player, remainingActions: 1 },
+      turnFlow: { type: "take_4_actions", player, remainingActions: 1 },
       // TODO make this automatically wired up in the factory
       locations: new Map([
         [locationOne.name, locationOne],
         [locationTwo.name, locationTwo],
       ]),
     });
+    const move = moveActionFactory.build({ toLocationName: locationTwo.name });
 
-    const result = takeAction(game, { type: "move", isFree: false, toLocationName: locationTwo.name }, mockGameLog);
+    const result = takeAction(game, move, mockGameLog);
     expect(result).toEqual({ type: "state_changed" });
     expect(player.location.name).toEqual(locationTwo.name);
   });
@@ -64,9 +68,9 @@ describe("make supplies", () => {
 describe("drop supplies", () => {
   it("fails if player does not have enough cubes", () => {
     const player = playerFactory.build({ supplyCubes: 1, location: { supplyCubes: 0 } });
-    const action: DropSupplies = { type: "drop_supplies", isFree: false, supplyCubes: 2 };
+    const dropSuppliesAction = dropSuppliesActionFactory.build({ supplyCubes: 2 });
 
-    const result = dropSupplies(player, action, mockGameLog);
+    const result = dropSupplies(player, dropSuppliesAction, mockGameLog);
 
     expect(result).toEqual({
       type: "no_effect",
@@ -78,9 +82,9 @@ describe("drop supplies", () => {
 
   it("drops supply cubes successfully", () => {
     const player = playerFactory.build({ supplyCubes: 3, location: { supplyCubes: 0 } });
-    const action: DropSupplies = { type: "drop_supplies", isFree: false, supplyCubes: 2 };
+    const dropSuppliesAction = dropSuppliesActionFactory.build({ supplyCubes: 2 });
 
-    dropSupplies(player, action, mockGameLog);
+    dropSupplies(player, dropSuppliesAction, mockGameLog);
 
     expect(player.supplyCubes).toBe(1);
     expect(player.location.supplyCubes).toBe(2);
@@ -91,7 +95,7 @@ describe("make supply centre", () => {
   it("fails if a supply centre already exists", () => {
     const player = playerFactory.build(undefined, { transient: { yellowCards: 5 } });
     player.location.supplyCentre = true;
-    const game = gameFactory.build({ turnFlow: { type: "player_turn:take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({
@@ -105,7 +109,7 @@ describe("make supply centre", () => {
   it("fails if not enough matching cards", () => {
     const location = locationFactory.build({ colour: "blue", supplyCentre: false });
     const player = playerFactory.build({ location }, { transient: { yellowCards: 5 } });
-    const game = gameFactory.build({ turnFlow: { type: "player_turn:take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({
@@ -133,7 +137,7 @@ describe("make supply centre", () => {
         location,
       }),
     );
-    const game = gameFactory.build({ turnFlow: { type: "player_turn:take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({
@@ -161,7 +165,7 @@ describe("make supply centre", () => {
         location,
       }),
     );
-    const game = gameFactory.build({ turnFlow: { type: "player_turn:take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({

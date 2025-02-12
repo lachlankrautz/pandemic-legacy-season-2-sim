@@ -7,7 +7,7 @@ export const startGameUseCase = (logger: Logger, repo: Repository, fileName: str
   const game = makeGame();
   repo.saveGame(fileName, game);
 
-  if (game.turnFlow.type !== "player_turn:take_4_actions") {
+  if (game.turnFlow.type !== "take_4_actions") {
     throw new Error("Game started in unexpected state", { cause: { gameFlow: game.turnFlow } });
   }
 

@@ -5,10 +5,10 @@ import { PlayerNames } from "../game/start/new-game.ts";
 import type { Player } from "../game/player/player.js";
 
 const flowTypes: SerializableGameTurnFlow["type"][] = [
-  "player_turn:exposure_check",
-  "player_turn:take_4_actions",
-  "player_turn:draw_2_cards",
-  "player_turn:infect_cities",
+  "exposure_check",
+  "take_4_actions",
+  "draw_2_cards",
+  "infect_cities",
 ] as const;
 
 export type SerializableGameTurnFlowParams = {
@@ -24,24 +24,24 @@ export const serializableGameTurnFlowFactory = Factory.define<SerializableGameTu
     const playerNames: string[] = playerMap ? playerMap.keys().toArray() : Object.values(PlayerNames);
 
     switch (type) {
-      case "player_turn:exposure_check":
+      case "exposure_check":
         return {
           type,
           playerName: getRandomItem(playerNames),
         };
-      case "player_turn:take_4_actions":
+      case "take_4_actions":
         return {
           type,
           playerName: getRandomItem(playerNames),
           remainingActions: 4,
         };
-      case "player_turn:draw_2_cards":
+      case "draw_2_cards":
         return {
           type,
           playerName: getRandomItem(playerNames),
           remainingCards: 2,
         };
-      case "player_turn:infect_cities":
+      case "infect_cities":
         return {
           type,
           playerName: getRandomItem(playerNames),
