@@ -10,27 +10,27 @@ export const StaticLocations = {
   ["San Francisco"]: {
     name: "San Francisco",
     type: "inland",
-    colour: "yellow",
+    colour: "blue",
   },
   ["Chicago"]: {
     name: "Chicago",
     type: "inland",
-    colour: "yellow",
+    colour: "blue",
   },
   ["Atlanta"]: {
     name: "Atlanta",
     type: "inland",
-    colour: "yellow",
+    colour: "blue",
   },
   ["Washington"]: {
     name: "Washington",
     type: "inland",
-    colour: "yellow",
+    colour: "blue",
   },
   ["New York"]: {
     name: "New York",
     type: "inland",
-    colour: "yellow",
+    colour: "blue",
   },
   ["Jacksonville"]: {
     name: "Jacksonville",
@@ -40,7 +40,7 @@ export const StaticLocations = {
   ["Hardhome"]: {
     name: "Hardhome",
     type: "inland",
-    colour: "yellow",
+    colour: "none",
   },
   ["Lima"]: {
     name: "Lima",
@@ -65,12 +65,12 @@ export const StaticLocations = {
   ["Ocean Gate"]: {
     name: "Ocean Gate",
     type: "inland",
-    colour: "yellow",
+    colour: "none",
   },
   ["Columbia"]: {
     name: "Columbia",
     type: "inland",
-    colour: "yellow",
+    colour: "none",
   },
   ["Sao Paulo"]: {
     name: "Sao Paulo",
@@ -80,17 +80,17 @@ export const StaticLocations = {
   ["Geidi Prime"]: {
     name: "Geidi Prime",
     type: "inland",
-    colour: "yellow",
+    colour: "none",
   },
   ["London"]: {
     name: "London",
     type: "inland",
-    colour: "yellow",
+    colour: "blue",
   },
   ["Tripoli"]: {
     name: "Tripoli",
     type: "inland",
-    colour: "yellow",
+    colour: "black",
   },
   ["Lagos"]: {
     name: "Lagos",
@@ -105,12 +105,12 @@ export const StaticLocations = {
   ["Cairo"]: {
     name: "Cairo",
     type: "inland",
-    colour: "yellow",
+    colour: "black",
   },
   ["Istanbul"]: {
     name: "Istanbul",
     type: "inland",
-    colour: "yellow",
+    colour: "black",
   },
 } as const satisfies Record<LocationName, StaticLocation>;
 

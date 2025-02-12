@@ -2,7 +2,7 @@ import { type Game } from "../game.ts";
 import type { StepResult } from "../step/game-steps.ts";
 import { type PlayerCardSelection, useHandCards } from "../cards/cards.ts";
 import type { Player } from "../player/player.ts";
-import type { GameFlowTurnTakeActions } from "../game-flow/game-turn-flow.ts";
+import { inGameFlow } from "../game-flow/game-turn-flow.ts";
 import { getGameLocation, type GetLocation } from "../location/location.ts";
 import type { GameLog } from "../game-log/game-log.ts";
 
@@ -42,7 +42,11 @@ export type MakeSupplyCentre = {
 //           the change it wants to make to flow control.
 //           Then things like losing the game can override the pending change
 
-export const takeAction = (game: Game<GameFlowTurnTakeActions>, action: Action, gameLog: GameLog): StepResult => {
+export const takeAction = (game: Game, action: Action, gameLog: GameLog): StepResult => {
+  if (!inGameFlow(game, "player_turn:take_4_actions")) {
+    return { type: "no_effect", cause: "wrong turn flow" };
+  }
+
   if (!action.isFree) {
     if (game.turnFlow.remainingActions < 1) {
       return {
@@ -109,7 +113,7 @@ export const makeSupplyCentre = (game: Game, cardSelection: PlayerCardSelection)
   if (!hasCurrentLocation) {
     return {
       type: "no_effect",
-      cause: `One of the select cards must match the curren location ${player.location.name}`,
+      cause: `One of the select cards must match the current location ${player.location.name}`,
     };
   }
 
