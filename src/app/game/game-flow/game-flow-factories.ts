@@ -1,56 +1,47 @@
 import { Factory } from "fishery";
 import { getRandomItem } from "../../random/random.ts";
-import type { GameFlow } from "./game-flow.ts";
+import type { GameTurnFlow } from "./game-turn-flow.ts";
 import { playerFactory } from "../player/player-factories.ts";
+import { Player } from "../player/player.ts";
 
-const flowTypes: GameFlow["type"][] = [
-  "game_over",
-  "game_won",
+const flowTypes: GameTurnFlow["type"][] = [
   "player_turn:exposure_check",
   "player_turn:take_4_actions",
   "player_turn:draw_2_cards",
   "player_turn:infect_cities",
 ] as const;
 
-const causes: string[] = ["player deck exhausted", "too many incidents"];
-
 export type GameFlowParams = {
-  type: GameFlow["type"];
+  type: GameTurnFlow["type"];
+  // Player supplied as a transient param because it is not
+  // present on every branch of the GameFlow union.
+  player: Player;
 };
 
-export const gameFlowFactory = Factory.define<GameFlow, GameFlowParams>(({ transientParams: { type } }) => {
+export const gameFlowFactory = Factory.define<GameTurnFlow, GameFlowParams>(({ transientParams: { type, player } }) => {
   type ??= getRandomItem(flowTypes);
   switch (type) {
-    case "game_won":
-      return {
-        type,
-      };
-    case "game_over":
-      return {
-        type,
-        cause: getRandomItem(causes),
-      };
     case "player_turn:exposure_check":
       return {
         type,
-        player: playerFactory.build(),
+        player: player || playerFactory.build(),
       };
     case "player_turn:take_4_actions":
       return {
         type,
-        player: playerFactory.build(),
+        player: player || playerFactory.build(),
         remainingActions: 4,
       };
     case "player_turn:draw_2_cards":
       return {
         type,
-        player: playerFactory.build(),
+        player: player || playerFactory.build(),
         remainingCards: 2,
       };
     case "player_turn:infect_cities":
       return {
         type,
-        player: playerFactory.build(),
+        player: player || playerFactory.build(),
         remainingCards: 2,
       };
   }

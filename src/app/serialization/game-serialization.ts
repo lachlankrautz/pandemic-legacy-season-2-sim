@@ -3,7 +3,7 @@ import { Value } from "@sinclair/typebox/value";
 import { type Static, Type } from "@sinclair/typebox";
 import { makeStepMapper, serializableStepSchema } from "./step-serialization.ts";
 import { makeActionMapper } from "./action-serialization.ts";
-import { makeGameFlowMapper, serializableGameFlowSchema } from "./game-flow-serialization.ts";
+import { makeGameTurnFlowMapper, serializableGameTurnFlowSchema } from "./game-turn-flow-serialization.ts";
 import { getMappedPlayer, type Player } from "../game/player/player.ts";
 import type { GetRequiredLocation, Location } from "../game/location/location.ts";
 import type { Deck, InfectionCard, PlayerCard } from "../game/cards/cards.ts";
@@ -47,8 +47,7 @@ export type SerializableInfectionCard = Static<typeof serializableInfectionCardS
  * e.g. { "location": Location } -> { "locationName": string }
  */
 export const serializableGameSchema = Type.Object({
-  // TODO game setup steps should probably be modelled here
-  gameFlow: serializableGameFlowSchema,
+  turnFlow: serializableGameTurnFlowSchema,
   locations: Type.Array(
     Type.Object({
       name: Type.String(),
@@ -128,7 +127,13 @@ export const serializableGameSchema = Type.Object({
     }),
   ]),
   incidents: Type.Number(),
-  state: Type.Union([Type.Literal("not_started"), Type.Literal("playing"), Type.Literal("lost"), Type.Literal("won")]),
+  // TODO game setup steps should probably be modelled here
+  state: Type.Union([
+    Type.Object({ type: Type.Literal("not_started") }),
+    Type.Object({ type: Type.Literal("playing") }),
+    Type.Object({ type: Type.Literal("won") }),
+    Type.Object({ type: Type.Literal("lost"), cause: Type.String() }),
+  ]),
   stepHistory: Type.Array(serializableStepSchema),
   gameLog: Type.Array(Type.String()),
 });
@@ -305,10 +310,10 @@ export const makeGameMapper = (
 
       const getPlayer = getMappedPlayer(playerMap);
       const stepMapper = makeStepMapper(getPlayer, makeActionMapper());
-      const gameFlowMapper = makeGameFlowMapper(getPlayer);
+      const turnFlowMapper = makeGameTurnFlowMapper(getPlayer);
 
       const game: Game = {
-        gameFlow: gameFlowMapper.toActual(serializable.gameFlow),
+        turnFlow: turnFlowMapper.toActual(serializable.turnFlow),
         locations: locationMap,
         players: playerMap,
         objectives: serializable.objectives.map((objective) => ({
@@ -341,10 +346,10 @@ export const makeGameMapper = (
       const playerCardMapper = makePlayerCardMapper(getRequiredLocation);
 
       const stepMapper = makeStepMapper(getMappedPlayer(playerMap), makeActionMapper());
-      const flowMapper = makeGameFlowMapper(getMappedPlayer(actual.players));
+      const flowMapper = makeGameTurnFlowMapper(getMappedPlayer(actual.players));
 
       return {
-        gameFlow: flowMapper.toSerializable(actual.gameFlow),
+        turnFlow: flowMapper.toSerializable(actual.turnFlow),
         locations: Array.from(actual.locations.values()).map((location) => ({
           name: location.name,
           type: location.type,

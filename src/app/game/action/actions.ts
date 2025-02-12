@@ -2,7 +2,7 @@ import { type Game } from "../game.ts";
 import type { StepResult } from "../step/game-steps.ts";
 import { type PlayerCardSelection, useHandCards } from "../cards/cards.ts";
 import type { Player } from "../player/player.ts";
-import type { GameFlowTurn, GameFlowTurnTakeActions } from "../game-flow/game-flow.ts";
+import type { GameFlowTurnTakeActions } from "../game-flow/game-turn-flow.ts";
 import { getGameLocation, type GetLocation } from "../location/location.ts";
 import type { GameLog } from "../game-log/game-log.ts";
 
@@ -44,7 +44,7 @@ export type MakeSupplyCentre = {
 
 export const takeAction = (game: Game<GameFlowTurnTakeActions>, action: Action, gameLog: GameLog): StepResult => {
   if (!action.isFree) {
-    if (game.gameFlow.remainingActions < 1) {
+    if (game.turnFlow.remainingActions < 1) {
       return {
         type: "no_effect",
         cause: "No actions remaining",
@@ -52,7 +52,7 @@ export const takeAction = (game: Game<GameFlowTurnTakeActions>, action: Action, 
     }
   }
 
-  const player = game.gameFlow.player;
+  const player = game.turnFlow.player;
 
   switch (action.type) {
     case "move":
@@ -75,8 +75,8 @@ export const makeSupplies = (player: Player, gameLog: GameLog): StepResult => {
   };
 };
 
-export const makeSupplyCentre = (game: Game<GameFlowTurn>, cardSelection: PlayerCardSelection): StepResult => {
-  const player = game.gameFlow.player;
+export const makeSupplyCentre = (game: Game, cardSelection: PlayerCardSelection): StepResult => {
+  const player = game.turnFlow.player;
 
   if (player.location.supplyCentre) {
     return {

@@ -9,13 +9,7 @@ import {
 import { type Connection, type Game, getEpidemicCardCount, TURN_ACTION_COUNT, type TurnOrder } from "../game.ts";
 import { shuffleArray } from "../../random/random.ts";
 import { chunkArray } from "../../../util/arrays.ts";
-import {
-  type CityColour,
-  links,
-  type Location,
-  type LocationDisplayName,
-  LocationNames,
-} from "../location/location.ts";
+import { type CityColour, links, type Location, type LocationName, LocationNames } from "../location/location.ts";
 import type { Deck } from "../cards/cards.ts";
 
 export const PlayerNames = {
@@ -28,11 +22,11 @@ export const PlayerNames = {
 type LocationOptions = Partial<Pick<Location, "supplyCubes" | "plagueCubes">>;
 
 const locationEntry = (
-  name: LocationDisplayName,
+  name: LocationName,
   type: Location["type"],
   colour: CityColour,
   options: LocationOptions = {},
-): [LocationDisplayName, SerializableLocation] => [
+): [LocationName, SerializableLocation] => [
   name,
   {
     name,
@@ -47,7 +41,7 @@ const locationEntry = (
   },
 ];
 
-const makePlayer = (name: string, locationName: LocationDisplayName, turnOrder: TurnOrder): SerializablePlayer => {
+const makePlayer = (name: string, locationName: LocationName, turnOrder: TurnOrder): SerializablePlayer => {
   return {
     name,
     locationName,
@@ -303,7 +297,7 @@ export const makeSerializableGame = (): SerializableGame => {
   }
 
   return {
-    gameFlow: {
+    turnFlow: {
       type: "player_turn:take_4_actions",
       playerName: julian.name,
       remainingActions: TURN_ACTION_COUNT,
@@ -339,7 +333,7 @@ export const makeSerializableGame = (): SerializableGame => {
       cards: 2,
     },
     incidents: 0,
-    state: "not_started",
+    state: { type: "playing" },
     stepHistory: [],
     gameLog: [],
   };

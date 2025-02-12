@@ -7,10 +7,10 @@ export const startGameUseCase = (logger: Logger, repo: Repository, fileName: str
   const game = makeGame();
   repo.saveGame(fileName, game);
 
-  if (game.gameFlow.type !== "player_turn:take_4_actions") {
-    throw new Error("Game started in unexpected state", { cause: { gameFlow: game.gameFlow } });
+  if (game.turnFlow.type !== "player_turn:take_4_actions") {
+    throw new Error("Game started in unexpected state", { cause: { gameFlow: game.turnFlow } });
   }
 
-  logger.info(`Starting player: ${game.gameFlow.player.name}`);
-  logger.info(`Game flow at "${game.gameFlow.type}"`);
+  logger.info(`Starting player: ${game.turnFlow.player.name}`);
+  logger.info(`Game flow at "${game.turnFlow.type}"`);
 };

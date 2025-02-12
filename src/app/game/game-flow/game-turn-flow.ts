@@ -4,13 +4,9 @@ import type { Game } from "../game.ts";
 export const inGameFlow = <TPrefix extends string>(
   game: Game,
   prefix: TPrefix,
-): game is Game<Extract<GameFlow, { type: `${TPrefix}${string}` }>> => {
-  return game.gameFlow.type.startsWith(prefix);
+): game is Game<Extract<GameTurnFlow, { type: `${TPrefix}${string}` }>> => {
+  return game.turnFlow.type.startsWith(prefix);
 };
-
-export type GameFlowWon = { type: "game_won" };
-
-export type GameFlowOver = { type: "game_over"; cause: string };
 
 export type GameFlowTurnExposureCheck = {
   type: "player_turn:exposure_check";
@@ -35,10 +31,8 @@ export type GameFlowTurnInfectCities = {
   remainingCards: number;
 };
 
-export type GameFlowTurn =
+export type GameTurnFlow =
   | GameFlowTurnExposureCheck
   | GameFlowTurnTakeActions
   | GameFlowTurnDrawCards
   | GameFlowTurnInfectCities;
-
-export type GameFlow = GameFlowWon | GameFlowOver | GameFlowTurn;

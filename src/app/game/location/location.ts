@@ -4,115 +4,115 @@ import type { PlayerCard } from "../cards/cards.ts";
 
 export type CityColour = "blue" | "yellow" | "black" | "none";
 
-export type StaticLocation = Pick<Location, "name" | "type" | "colour">;
+export type StaticLocation = Pick<Location, "type" | "colour"> & { name: LocationName };
 
 export const StaticLocations = {
-  SAN_FRANCISCO: {
+  ["San Francisco"]: {
     name: "San Francisco",
     type: "inland",
     colour: "yellow",
   },
-  CHICAGO: {
+  ["Chicago"]: {
     name: "Chicago",
     type: "inland",
     colour: "yellow",
   },
-  ATLANTA: {
+  ["Atlanta"]: {
     name: "Atlanta",
     type: "inland",
     colour: "yellow",
   },
-  WASHINGTON: {
+  ["Washington"]: {
     name: "Washington",
     type: "inland",
     colour: "yellow",
   },
-  NEW_YORK: {
+  ["New York"]: {
     name: "New York",
     type: "inland",
     colour: "yellow",
   },
-  JACKSONVILLE: {
+  ["Jacksonville"]: {
     name: "Jacksonville",
     type: "inland",
     colour: "yellow",
   },
-  HARDHOME: {
+  ["Hardhome"]: {
     name: "Hardhome",
     type: "inland",
     colour: "yellow",
   },
-  LIMA: {
+  ["Lima"]: {
     name: "Lima",
     type: "inland",
     colour: "yellow",
   },
-  BOGOTA: {
+  ["Bogota"]: {
     name: "Bogota",
     type: "inland",
     colour: "yellow",
   },
-  SANTIAGO: {
+  ["Santiago"]: {
     name: "Santiago",
     type: "inland",
     colour: "yellow",
   },
-  BUENOS_AIRES: {
+  ["Buenos Aires"]: {
     name: "Buenos Aires",
     type: "inland",
     colour: "yellow",
   },
-  OCEAN_GATE: {
+  ["Ocean Gate"]: {
     name: "Ocean Gate",
     type: "inland",
     colour: "yellow",
   },
-  COLUMBIA: {
+  ["Columbia"]: {
     name: "Columbia",
     type: "inland",
     colour: "yellow",
   },
-  SAO_PAULO: {
+  ["Sao Paulo"]: {
     name: "Sao Paulo",
     type: "inland",
     colour: "yellow",
   },
-  GEIDI_PRIME: {
+  ["Geidi Prime"]: {
     name: "Geidi Prime",
     type: "inland",
     colour: "yellow",
   },
-  LONDON: {
+  ["London"]: {
     name: "London",
     type: "inland",
     colour: "yellow",
   },
-  TRIPOLI: {
+  ["Tripoli"]: {
     name: "Tripoli",
     type: "inland",
     colour: "yellow",
   },
-  LAGOS: {
+  ["Lagos"]: {
     name: "Lagos",
     type: "inland",
     colour: "yellow",
   },
-  KINSHASA: {
+  ["Kinshasa"]: {
     name: "Kinshasa",
     type: "inland",
     colour: "yellow",
   },
-  CAIRO: {
+  ["Cairo"]: {
     name: "Cairo",
     type: "inland",
     colour: "yellow",
   },
-  ISTANBUL: {
+  ["Istanbul"]: {
     name: "Istanbul",
     type: "inland",
     colour: "yellow",
   },
-} as const satisfies Record<string, StaticLocation>;
+} as const satisfies Record<LocationName, StaticLocation>;
 
 export type Location<TColour extends CityColour = CityColour> = {
   name: string;
@@ -169,7 +169,11 @@ export const LocationNames = {
   ISTANBUL: "Istanbul",
 } as const satisfies Record<string, string | undefined>;
 
-export type LocationDisplayName = (typeof LocationNames)[keyof typeof LocationNames];
+export type LocationName = (typeof LocationNames)[keyof typeof LocationNames];
+
+export const isLocationName = (name: string): name is LocationName => {
+  return Object.values(LocationNames).includes(name);
+};
 
 export const links = [
   [LocationNames.SAN_FRANCISCO, LocationNames.CHICAGO],
@@ -194,4 +198,4 @@ export const links = [
   [LocationNames.SAO_PAULO, LocationNames.LIMA],
   [LocationNames.LIMA, LocationNames.BOGOTA],
   [LocationNames.LIMA, LocationNames.HARDHOME],
-] as const satisfies [LocationDisplayName, LocationDisplayName][];
+] as const satisfies [LocationName, LocationName][];

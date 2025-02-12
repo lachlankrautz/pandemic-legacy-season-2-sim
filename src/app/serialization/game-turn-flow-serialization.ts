@@ -1,16 +1,9 @@
 import type { Mapper } from "./game-serialization.ts";
 import { type Static, Type } from "@sinclair/typebox";
 import type { GetRequiredPlayer } from "../game/player/player.ts";
-import type { GameFlow } from "../game/game-flow/game-flow.ts";
+import type { GameTurnFlow } from "../game/game-flow/game-turn-flow.ts";
 
-export const serializableGameFlowSchema = Type.Union([
-  Type.Object({
-    type: Type.Literal("game_won"),
-  }),
-  Type.Object({
-    type: Type.Literal("game_over"),
-    cause: Type.String(),
-  }),
+export const serializableGameTurnFlowSchema = Type.Union([
   Type.Object({
     type: Type.Literal("player_turn:exposure_check"),
     playerName: Type.String(),
@@ -32,11 +25,13 @@ export const serializableGameFlowSchema = Type.Union([
   }),
 ]);
 
-export type SerializableGameFlow = Static<typeof serializableGameFlowSchema>;
+export type SerializableGameTurnFlow = Static<typeof serializableGameTurnFlowSchema>;
 
-export const makeGameFlowMapper = (getPlayer: GetRequiredPlayer): Mapper<GameFlow, SerializableGameFlow> => {
+export const makeGameTurnFlowMapper = (
+  getPlayer: GetRequiredPlayer,
+): Mapper<GameTurnFlow, SerializableGameTurnFlow> => {
   return {
-    toActual: (serializable): GameFlow => {
+    toActual: (serializable): GameTurnFlow => {
       switch (serializable.type) {
         case "player_turn:exposure_check":
           return {
@@ -65,7 +60,7 @@ export const makeGameFlowMapper = (getPlayer: GetRequiredPlayer): Mapper<GameFlo
           return serializable;
       }
     },
-    toSerializable: (actual): SerializableGameFlow => {
+    toSerializable: (actual): SerializableGameTurnFlow => {
       switch (actual.type) {
         case "player_turn:exposure_check":
           return {

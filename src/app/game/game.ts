@@ -1,6 +1,6 @@
 import type { Step } from "./step/game-steps.ts";
 import type { Player } from "./player/player.ts";
-import type { GameFlow } from "./game-flow/game-flow.ts";
+import type { GameTurnFlow } from "./game-flow/game-turn-flow.ts";
 import type { Location } from "./location/location.ts";
 import type { Deck, InfectionCard, PlayerCard } from "./cards/cards.ts";
 import type { InfectionRate } from "./infection/infection.ts";
@@ -32,8 +32,14 @@ export type Month = {
 
 export const TURN_ACTION_COUNT: number = 4;
 
-export type Game<TFlow extends GameFlow = GameFlow> = {
-  gameFlow: TFlow;
+export type GameState =
+  | { type: "not_started" }
+  | { type: "playing" }
+  | { type: "won" }
+  | { type: "lost"; cause: string };
+
+export type Game<TFlow extends GameTurnFlow = GameTurnFlow> = {
+  turnFlow: TFlow;
   locations: Map<string, Location>;
   players: Map<string, Player>;
   objectives: Objective[];
@@ -43,7 +49,7 @@ export type Game<TFlow extends GameFlow = GameFlow> = {
   infectionDeck: Deck<InfectionCard>;
   infectionRate: InfectionRate;
   incidents: number;
-  state: "not_started" | "playing" | "lost" | "won";
+  state: GameState;
   stepHistory: Step[];
   gameLog: string[];
 };

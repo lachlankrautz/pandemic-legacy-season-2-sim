@@ -1,14 +1,14 @@
 import { Factory } from "fishery";
 import type { SerializableGame } from "./game-serialization.ts";
-import type { SerializableGameFlow } from "./game-flow-serialization.ts";
-import { serializableGameFlowFactory } from "./game-flow-serialization-factories.ts";
+import type { SerializableGameTurnFlow } from "./game-turn-flow-serialization.ts";
+import { serializableGameTurnFlowFactory } from "./game-turn-flow-serialization-factories.ts";
 import { getRandomItem } from "../random/random.js";
 import { LocationNames } from "../game/location/location.js";
 import { serializableLocationMapFactory } from "./location-serialization-factories.js";
 import { serializablePlayerMapFactory } from "./player-serialization-factories.js";
 
 export type SerializableGameParams = {
-  flowType: SerializableGameFlow["type"];
+  turnFlowType: SerializableGameTurnFlow["type"];
 };
 
 // TODO think about how to specify what locations are in the game
@@ -19,9 +19,9 @@ export type SerializableGameParams = {
 //      the connectors etc
 
 export const serializableGameFactory = Factory.define<SerializableGame, SerializableGameParams>(
-  ({ transientParams: { flowType } }) => {
+  ({ transientParams: { turnFlowType } }) => {
     return {
-      gameFlow: serializableGameFlowFactory.build({}, { transient: flowType ? { type: flowType } : {} }),
+      turnFlow: serializableGameTurnFlowFactory.build({}, { transient: turnFlowType ? { type: turnFlowType } : {} }),
       // TODO shouldn't make everything by default
       locations: serializableLocationMapFactory.build().values().toArray(),
       players: serializablePlayerMapFactory.build().values().toArray(),
@@ -51,7 +51,7 @@ export const serializableGameFactory = Factory.define<SerializableGame, Serializ
         cards: 2,
       },
       incidents: 0,
-      state: "playing",
+      state: { type: "playing" },
       stepHistory: [],
       gameLog: [],
     };

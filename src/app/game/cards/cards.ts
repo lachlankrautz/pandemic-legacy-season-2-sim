@@ -1,6 +1,5 @@
 import type { Game } from "../game.ts";
 import { partition } from "../../../util/arrays.ts";
-import type { GameFlowTurn } from "../game-flow/game-flow.ts";
 import type { CityColour, Location } from "../location/location.ts";
 
 export type Deck<T> = {
@@ -53,7 +52,7 @@ export type HandCardNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export type PlayerCardSelection = Set<HandCardNumber>;
 
-export type GameCardUse = Pick<Game<GameFlowTurn>, "gameFlow" | "playerDeck" | "gameLog">;
+export type GameCardUse = Pick<Game, "turnFlow" | "playerDeck" | "gameLog">;
 
 export type UsingHandCards = {
   selected: PlayerCard[];
@@ -62,7 +61,7 @@ export type UsingHandCards = {
 };
 
 export const useHandCards = (game: GameCardUse, selection: PlayerCardSelection): UsingHandCards => {
-  const player = game.gameFlow.player;
+  const player = game.turnFlow.player;
 
   const [selected, remainder] = partition(player.cards, (_, index) => selection.has(index));
 

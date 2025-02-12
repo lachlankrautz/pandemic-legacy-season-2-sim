@@ -3,7 +3,7 @@ import { type Action, takeAction } from "../action/actions.ts";
 import { drawInfectionCard } from "../infection/infect-cities.ts";
 import { epidemic } from "../infection/epidemic.ts";
 import type { Player } from "../player/player.ts";
-import { type GameFlow, type GameFlowOver, type GameFlowWon, inGameFlow } from "../game-flow/game-flow.ts";
+import { type GameTurnFlow, inGameFlow } from "../game-flow/game-turn-flow.ts";
 import { cardDisplayName } from "../location/location.ts";
 import type { GameLog } from "../game-log/game-log.ts";
 
@@ -41,9 +41,8 @@ export type StepResult =
   | { type: "no_effect"; cause: string }
   | {
       type: "state_changed";
-      nextGameFlow?: GameFlow;
-    }
-  | { type: "game_end"; nextGameFlow: GameFlowWon | GameFlowOver };
+      nextGameFlow?: GameTurnFlow;
+    };
 
 export type GameDriver = {
   takeStep: (step: Step) => StepResult;
@@ -59,13 +58,13 @@ export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
       const result = takeGameStep(game, step, gameLog);
 
       if (result.type !== "no_effect" && result.nextGameFlow) {
-        game.gameFlow = result.nextGameFlow;
+        game.turnFlow = result.nextGameFlow;
 
-        if (inGameFlow(game, "player_turn:take_4_actions") && startingPlayerName !== game.gameFlow.player.name) {
-          gameLog(`Turn passed to ${game.gameFlow.player.name}`);
+        if (inGameFlow(game, "player_turn:take_4_actions") && startingPlayerName !== game.turnFlow.player.name) {
+          gameLog(`Turn passed to ${game.turnFlow.player.name}`);
         }
 
-        gameLog(`Game flow moved to: "${game.gameFlow.type}"`);
+        gameLog(`Game flow moved to: "${game.turnFlow.type}"`);
       }
 
       return result;
@@ -82,7 +81,7 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
     // TODO handle without using exceptions
     throw new Error("game is already over");
   }
-  const player = game.gameFlow.player;
+  const player = game.turnFlow.player;
 
   // Is it this player's turn
   if (player.name !== step.player.name) {
@@ -107,7 +106,7 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
   if (inGameFlow(game, "player_turn:take_4_actions") && step.type === "player_action") {
     result = takeAction(game, step.action, gameLog);
     if (result.type === "state_changed" && !step.action.isFree) {
-      if (game.gameFlow.remainingActions <= 1) {
+      if (game.turnFlow.remainingActions <= 1) {
         gameLog(`All actions taken`);
         result.nextGameFlow = {
           type: "player_turn:draw_2_cards",
@@ -115,8 +114,8 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
           remainingCards: 2,
         };
       } else {
-        game.gameFlow.remainingActions--;
-        gameLog(`${step.player.name} has ${game.gameFlow.remainingActions} action(s) remaining`);
+        game.turnFlow.remainingActions--;
+        gameLog(`${step.player.name} has ${game.turnFlow.remainingActions} action(s) remaining`);
       }
     }
   }
@@ -126,14 +125,12 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
 
     // Players ran out of time.
     if (playerCard === undefined) {
-      gameLog("Unable to draw card, player deck is empty.");
-      return {
-        type: "game_end",
-        nextGameFlow: {
-          type: "game_over",
-          cause: "Player deck empty.",
-        },
+      gameLog("Game Over: Unable to draw card, player deck is empty.");
+      game.state = {
+        type: "lost",
+        cause: "Unable to draw card, player deck is empty.",
       };
+      return { type: "state_changed" };
     }
     gameLog(`${step.player.name} received ${cardDisplayName(playerCard)} card`);
 
@@ -147,36 +144,35 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
       type: "state_changed",
     };
 
-    if (game.gameFlow.remainingCards <= 1) {
+    if (game.turnFlow.remainingCards <= 1) {
       result.nextGameFlow = {
         type: "player_turn:infect_cities",
         player,
         remainingCards: game.infectionRate.cards,
       };
     } else {
-      game.gameFlow.remainingCards--;
-      gameLog(`${player.name} has ${game.gameFlow.remainingCards} player card(s) remaining`);
+      game.turnFlow.remainingCards--;
+      gameLog(`${player.name} has ${game.turnFlow.remainingCards} player card(s) remaining`);
     }
   }
 
   if (inGameFlow(game, "player_turn:infect_cities") && step.type === "draw_infection_card") {
     const infectionResult = drawInfectionCard(game, gameLog);
     if (infectionResult.maybeEnd.type === "game_over") {
-      return {
-        type: "game_end",
-        nextGameFlow: {
-          type: "game_over",
-          cause: infectionResult.maybeEnd.cause,
-        },
+      gameLog(`Game Over: ${infectionResult.maybeEnd.cause}`);
+      game.state = {
+        type: "lost",
+        cause: infectionResult.maybeEnd.cause,
       };
+      return { type: "state_changed" };
     }
 
     result = {
       type: "state_changed",
     };
 
-    if (game.gameFlow.remainingCards <= 1) {
-      const nextTurnOrder = getNextTurnOrder(game.gameFlow.player.turnOrder);
+    if (game.turnFlow.remainingCards <= 1) {
+      const nextTurnOrder = getNextTurnOrder(game.turnFlow.player.turnOrder);
       const nextPlayer = Array.from(game.players.values()).find((player) => player.turnOrder === nextTurnOrder);
       if (nextPlayer === undefined) {
         throw new Error("Unable to find the next player in turn order");
@@ -187,15 +183,15 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
         player: nextPlayer,
       };
     } else {
-      game.gameFlow.remainingCards--;
-      gameLog(`${player.name} has ${game.gameFlow.remainingCards} infection card(s) remaining`);
+      game.turnFlow.remainingCards--;
+      gameLog(`${player.name} has ${game.turnFlow.remainingCards} infection card(s) remaining`);
     }
   }
 
   if (result === undefined) {
     result = {
       type: "no_effect",
-      cause: `Step "${step.type}" not expected during game flow "${game.gameFlow.type}".`,
+      cause: `Step "${step.type}" not expected during game flow "${game.turnFlow.type}".`,
     };
   }
 
