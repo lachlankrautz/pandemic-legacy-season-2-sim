@@ -2,7 +2,7 @@ import type { Logger } from "../../logging/logger.ts";
 import type { Repository } from "../../repository/repository.ts";
 import { makeGame } from "./new-game.ts";
 
-export const startGameUseCase = (logger: Logger, repo: Repository, fileName: string) => {
+export const startGameUseCase = (logger: Logger, repo: Repository, fileName: string): void => {
   logger.info("Starting new game");
   const game = makeGame();
   repo.saveGame(fileName, game);
