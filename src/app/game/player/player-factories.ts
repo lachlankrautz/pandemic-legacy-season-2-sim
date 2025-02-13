@@ -4,7 +4,7 @@ import { PlayerNames } from "../start/new-game.ts";
 import type { Player } from "./player.ts";
 import { locationFactory } from "../location/location-factories.ts";
 import { type Location, LocationNames } from "../location/location.ts";
-import { playerCardsHandFactory, type PlayerCardsHandParams } from "../cards/player-card-factories.js";
+import { playerCardsHandFactory, type PlayerCardsHandParams } from "../cards/player-card-factories.ts";
 import { np } from "../../../util/non-plain-objects.ts";
 
 export type PlayerParams = {

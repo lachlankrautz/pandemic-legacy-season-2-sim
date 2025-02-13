@@ -1,13 +1,6 @@
-import type { Game, TurnOrder } from "../game.ts";
+import type { TurnOrder } from "../game.ts";
 import type { Location } from "../location/location.ts";
 import type { PlayerCard } from "../cards/cards.ts";
-
-export type GetPlayer = (name: string) => Player | undefined;
-
-export const getGamePlayer =
-  (game: Game): GetPlayer =>
-  (name: string): Player | undefined =>
-    game.players.get(name);
 
 export type GetRequiredPlayer = (name: string) => Player | never;
 

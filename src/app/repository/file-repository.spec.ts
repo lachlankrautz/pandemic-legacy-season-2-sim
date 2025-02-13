@@ -6,7 +6,7 @@ import { getSaveFilePath, makeFileRepository } from "./file-repository.ts";
 import { serializableGameFactory } from "../serialization/game-serialization-factories.ts";
 import { getConfig } from "../../config/config.ts";
 import path from "path";
-import { gameFactory } from "../game/game-factories.js";
+import { gameFactory } from "../game/game-factories.ts";
 
 describe("file repository", () => {
   const logger = makeLogger();

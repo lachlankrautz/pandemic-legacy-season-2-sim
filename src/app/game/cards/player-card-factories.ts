@@ -3,7 +3,7 @@ import { faker } from "@faker-js/faker/locale/en";
 import type { PlayerCard } from "./cards.ts";
 import { getRandomItem } from "../../random/random.ts";
 import { type Location, type StaticLocation } from "../location/location.ts";
-import { locationFactory } from "../location/location-factories.js";
+import { locationFactory } from "../location/location-factories.ts";
 
 const types: PlayerCard["type"][] = ["city", "produce_supplies", "portable_antiviral_lab", "epidemic", "event"];
 

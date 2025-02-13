@@ -4,8 +4,8 @@ import { GameLog } from "../game-log/game-log.ts";
 import { gameFactory } from "../game-factories.ts";
 import { playerFactory } from "../player/player-factories.ts";
 import { locationFactory } from "../location/location-factories.ts";
-import { StaticLocations } from "../location/location.js";
-import { playerCardFactory } from "../cards/player-card-factories.js";
+import { StaticLocations } from "../location/location.ts";
+import { playerCardFactory } from "../cards/player-card-factories.ts";
 import { actionFactory, dropSuppliesActionFactory, moveActionFactory } from "./action-factories.ts";
 
 const mockGameLog: GameLog = vi.fn();
@@ -25,8 +25,14 @@ describe("move", () => {
     const locationOne = locationFactory.build();
     const locationTwo = locationFactory.build();
 
+    // TODO factory should to this
+    const locations = new Map([
+      [locationOne.name, locationOne],
+      [locationTwo.name, locationTwo],
+    ]);
+
     const player = playerFactory.build({ location: locationOne });
-    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", player, remainingActions: 1 } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", player, remainingActions: 1 }, locations });
     const move = moveActionFactory.build({ toLocationName: locationTwo.name });
 
     const result = takeAction(game, move, mockGameLog);

@@ -1,5 +1,5 @@
 import { Factory } from "fishery";
-import { gameFlowFactory } from "./game-flow/game-flow-factories.ts";
+import { gameTurnFlowFactory } from "./game-flow/game-turn-flow-factories.ts";
 import type { Game } from "./game.ts";
 import type { GameTurnFlow } from "./game-flow/game-turn-flow.ts";
 import type { Player } from "./player/player.ts";
@@ -39,7 +39,7 @@ export const gameFactory = Factory.define<Game, GameParams>(
     }
 
     return {
-      turnFlow: gameFlowFactory.build(
+      turnFlow: gameTurnFlowFactory.build(
         {},
         {
           transient: {

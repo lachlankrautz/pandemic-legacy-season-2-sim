@@ -3,7 +3,7 @@ import { serializableGameFactory } from "./game-serialization-factories.ts";
 import { gameFactory } from "../game/game-factories.ts";
 import { makeGameMapper } from "./game-serialization.ts";
 import { playerMapFactory } from "../game/player/player-factories.ts";
-import { locationMapFactory } from "../game/location/location-factories.js";
+import { locationMapFactory } from "../game/location/location-factories.ts";
 
 describe("serializable game mapping", () => {
   it("can map to actual", () => {

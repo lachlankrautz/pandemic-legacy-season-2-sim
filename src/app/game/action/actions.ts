@@ -3,7 +3,7 @@ import type { StepResult } from "../step/game-steps.ts";
 import { type PlayerCardSelection, useHandCards } from "../cards/cards.ts";
 import type { Player } from "../player/player.ts";
 import { inGameFlow } from "../game-flow/game-turn-flow.ts";
-import { getGameLocation, type GetLocation } from "../location/location.ts";
+import { getMappedLocation, type GetRequiredLocation } from "../location/location.ts";
 import type { GameLog } from "../game-log/game-log.ts";
 
 // actions/free action is wrong
@@ -60,7 +60,7 @@ export const takeAction = (game: Game, action: Action, gameLog: GameLog): StepRe
 
   switch (action.type) {
     case "move":
-      return move(player, action, getGameLocation(game), gameLog);
+      return move(player, action, getMappedLocation(game.locations), gameLog);
     case "drop_supplies":
       return dropSupplies(player, action, gameLog);
     case "make_supplies":
@@ -148,7 +148,7 @@ export const dropSupplies = (player: Player, drop: DropSupplies, gameLog: GameLo
 export const move = <T extends boolean>(
   player: Player,
   move: Move<T>,
-  getLocation: GetLocation,
+  getLocation: GetRequiredLocation,
   gameLog: GameLog,
 ): StepResult => {
   const possibleDestinationNames = player.location.connections.map((connection) => connection.location.name).join(", ");

@@ -2,10 +2,10 @@ import { Factory } from "fishery";
 import type { SerializableGame } from "./game-serialization.ts";
 import type { SerializableGameTurnFlow } from "./game-turn-flow-serialization.ts";
 import { serializableGameTurnFlowFactory } from "./game-turn-flow-serialization-factories.ts";
-import { getRandomItem } from "../random/random.js";
-import { LocationNames } from "../game/location/location.js";
-import { serializableLocationMapFactory } from "./location-serialization-factories.js";
-import { serializablePlayerMapFactory } from "./player-serialization-factories.js";
+import { getRandomItem } from "../random/random.ts";
+import { LocationNames } from "../game/location/location.ts";
+import { serializableLocationMapFactory } from "./location-serialization-factories.ts";
+import { serializablePlayerMapFactory } from "./player-serialization-factories.ts";
 
 export type SerializableGameParams = {
   turnFlowType: SerializableGameTurnFlow["type"];

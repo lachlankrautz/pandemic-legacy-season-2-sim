@@ -1,7 +1,7 @@
 import { Factory } from "fishery";
 import { type CityColour, isLocationName, type Location, type StaticLocation, StaticLocations } from "./location.ts";
 import { getRandomItem } from "../../random/random.ts";
-import { np } from "../../../util/non-plain-objects.js";
+import { np } from "../../../util/non-plain-objects.ts";
 
 // export type LocationParams = {
 // };

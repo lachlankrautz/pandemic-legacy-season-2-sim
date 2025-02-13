@@ -3,7 +3,7 @@ import { getMappedPlayer } from "../game/player/player.ts";
 import { playerMapFactory } from "../game/player/player-factories.ts";
 import { makeGameTurnFlowMapper } from "./game-turn-flow-serialization.ts";
 import { serializableGameTurnFlowFactory } from "./game-turn-flow-serialization-factories.ts";
-import { gameFlowFactory } from "../game/game-flow/game-flow-factories.ts";
+import { gameTurnFlowFactory } from "../game/game-flow/game-turn-flow-factories.ts";
 
 describe("serializable game flow mapping", () => {
   it("fails to map type requiring unknown player", () => {
@@ -24,7 +24,7 @@ describe("serializable game flow mapping", () => {
 
 describe("game flow mapping", () => {
   it("can map to serializable", () => {
-    const gameFlow = gameFlowFactory.build();
+    const gameFlow = gameTurnFlowFactory.build();
     const mapper = makeGameTurnFlowMapper(getMappedPlayer(new Map()));
     expect(() => mapper.toSerializable(gameFlow)).not.toThrow();
   });

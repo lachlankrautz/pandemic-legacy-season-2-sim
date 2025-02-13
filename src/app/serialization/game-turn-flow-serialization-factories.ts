@@ -2,7 +2,7 @@ import { Factory } from "fishery";
 import type { SerializableGameTurnFlow } from "./game-turn-flow-serialization.ts";
 import { getRandomItem } from "../random/random.ts";
 import { PlayerNames } from "../game/start/new-game.ts";
-import type { Player } from "../game/player/player.js";
+import type { Player } from "../game/player/player.ts";
 
 const flowTypes: SerializableGameTurnFlow["type"][] = [
   "exposure_check",

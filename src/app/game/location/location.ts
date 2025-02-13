@@ -1,5 +1,5 @@
 import type { Player } from "../player/player.ts";
-import type { Connection, Game } from "../game.ts";
+import type { Connection } from "../game.ts";
 import type { PlayerCard } from "../cards/cards.ts";
 
 export type CityColour = "blue" | "yellow" | "black" | "none";
@@ -125,12 +125,13 @@ export type Location<TColour extends CityColour = CityColour> = {
   players: Player[];
 };
 
-export type GetLocation = (name: string) => Location | undefined;
-
-export const getGameLocation =
-  (game: Game): GetLocation =>
-  (name: string): Location | undefined =>
-    game.locations.get(name);
+export const getMappedLocation = (map: Map<string, Location>) => (name: string) => {
+  const location = map.get(name);
+  if (location === undefined) {
+    throw new Error(`Location not found: ${name}`);
+  }
+  return location;
+};
 
 export type GetRequiredLocation = (name: string) => Location | never;
 
