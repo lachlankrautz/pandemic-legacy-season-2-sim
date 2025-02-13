@@ -77,7 +77,7 @@ export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
 export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResult => {
   let result: StepResult | undefined = undefined;
 
-  if (!inGameFlow(game, "")) {
+  if (game.state.type !== "playing") {
     // TODO handle without using exceptions
     throw new Error("game is already over");
   }
@@ -197,6 +197,9 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
 
   if (result.type === "state_changed") {
     game.stepHistory.push(step);
+    if (result.nextGameFlow) {
+      game.turnFlow = result.nextGameFlow;
+    }
   }
 
   return result;
