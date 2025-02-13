@@ -7,7 +7,7 @@ describe("use player cards", () => {
   it("moves cards from hand to discard", () => {
     const handSize = 7;
     const player = playerFactory.build(undefined, { transient: { yellowCards: 5, cardCount: handSize } });
-    const game = gameFactory.build(undefined, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { player } });
 
     const initialGameDiscardSize = game.playerDeck.discardPile.length;
     const selection: PlayerCardSelection = new Set([0, 1, 2, 3, 4]);

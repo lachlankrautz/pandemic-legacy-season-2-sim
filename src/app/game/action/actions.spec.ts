@@ -101,7 +101,7 @@ describe("make supply centre", () => {
   it("fails if a supply centre already exists", () => {
     const player = playerFactory.build(undefined, { transient: { yellowCards: 5 } });
     player.location.supplyCentre = true;
-    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({
@@ -115,7 +115,7 @@ describe("make supply centre", () => {
   it("fails if not enough matching cards", () => {
     const location = locationFactory.build({ colour: "blue", supplyCentre: false });
     const player = playerFactory.build({ location }, { transient: { yellowCards: 5 } });
-    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({
@@ -143,7 +143,7 @@ describe("make supply centre", () => {
         location,
       }),
     );
-    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({
@@ -171,7 +171,7 @@ describe("make supply centre", () => {
         location,
       }),
     );
-    const game = gameFactory.build({ turnFlow: { type: "take_4_actions" } }, { transient: { player } });
+    const game = gameFactory.build({ turnFlow: { type: "take_4_actions", player } });
 
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({

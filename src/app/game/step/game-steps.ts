@@ -157,13 +157,8 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
   }
 
   if (inGameFlow(game, "infect_cities") && step.type === "draw_infection_card") {
-    const infectionResult = drawInfectionCard(game, gameLog);
-    if (infectionResult.maybeEnd.type === "game_over") {
-      gameLog(`Game Over: ${infectionResult.maybeEnd.cause}`);
-      game.state = {
-        type: "lost",
-        cause: infectionResult.maybeEnd.cause,
-      };
+    drawInfectionCard(game, gameLog);
+    if (game.state.type !== "playing") {
       return { type: "state_changed" };
     }
 

@@ -1,6 +1,5 @@
 import type { Location } from "../location/location.ts";
 import type { GameLog } from "../game-log/game-log.ts";
-import type { MaybeGameEnd } from "./infect-cities.ts";
 import type { Game } from "../game.ts";
 
 export const GAME_MAX_INCIDENTS = 8;
@@ -40,7 +39,7 @@ export const infectionRates = [
   },
 ] as const satisfies { position: number; cards: number }[];
 
-export const increaseGameInjectionRate = (game: Game, gameLog: GameLog): void => {
+export const increaseGameInfectionRate = (game: Game, gameLog: GameLog): void => {
   game.infectionRate = getIncreasedInfectionRate(game.infectionRate);
   gameLog(`Moved infection rate to position ${game.infectionRate.position}, ${game.infectionRate.cards} cards`);
 };
@@ -56,16 +55,15 @@ export const getIncreasedInfectionRate = (infectionRate: InfectionRate): Infecti
 
 export type InfectionRate = (typeof infectionRates)[number];
 
-export const recordGameIncident = (game: Game, location: Location, gameLog: GameLog): MaybeGameEnd => {
+export const recordGameIncident = (game: Game, location: Location, gameLog: GameLog): void => {
   game.incidents = Math.min(GAME_MAX_INCIDENTS, game.incidents + 1);
   gameLog(`Infection at ${location.name} added a plague cube, it now has ${location.plagueCubes}`);
   gameLog(`Incident count at ${game.incidents}`);
   if (game.incidents >= GAME_MAX_INCIDENTS) {
-    return {
-      type: "game_over",
+    gameLog(`Game Over: Too many incidents.`);
+    game.state = {
+      type: "lost",
       cause: "Too many incidents.",
     };
   }
-
-  return { type: "game_continues" };
 };

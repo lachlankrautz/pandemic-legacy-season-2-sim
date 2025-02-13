@@ -1,5 +1,12 @@
 import { Factory } from "fishery";
-import { type CityColour, isLocationName, type Location, type StaticLocation, StaticLocations } from "./location.ts";
+import {
+  type CityColour,
+  isLocationName,
+  type Location,
+  type LocationName,
+  type StaticLocation,
+  StaticLocations,
+} from "./location.ts";
 import { getRandomItem } from "../../random/random.ts";
 import { np } from "../../../util/non-plain-objects.ts";
 
@@ -44,16 +51,23 @@ export const locationFactory = Factory.define<Location>(({ params: { name, type,
   });
 });
 
-export const locationMapFactory = Factory.define<Map<string, Location>>(() => {
-  // TODO decide if linking the locations should happen here or elsewhere
-  return new Map(
-    Object.values(StaticLocations).map(({ name, type, colour }) => [
-      name,
-      locationFactory.build({
-        name,
-        type,
-        colour,
-      }),
-    ]),
-  );
-});
+export type LocationMapFactoryParams = {
+  locationNames: LocationName[];
+};
+
+export const locationMapFactory = Factory.define<Map<string, Location>, LocationMapFactoryParams>(
+  ({ transientParams: { locationNames } }) => {
+    return new Map(
+      Object.values(StaticLocations)
+        .filter(({ name }) => locationNames === undefined || locationNames.includes(name))
+        .map(({ name, type, colour }) => [
+          name,
+          locationFactory.build({
+            name,
+            type,
+            colour,
+          }),
+        ]),
+    );
+  },
+);

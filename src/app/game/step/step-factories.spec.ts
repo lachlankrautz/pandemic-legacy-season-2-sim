@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stepFactory } from "./step-factories.js";
+import { stepFactory } from "./step-factories.ts";
 
 describe("step factory", () => {
   it("creates a game step", () => {

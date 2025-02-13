@@ -2,7 +2,7 @@ import { type Game } from "../game.ts";
 import { shuffleArray } from "../../random/random.ts";
 import type { Location } from "../location/location.ts";
 import type { GameLog } from "../game-log/game-log.ts";
-import { increaseGameInjectionRate, recordGameIncident } from "./infection.ts";
+import { increaseGameInfectionRate, recordGameIncident } from "./infection.ts";
 
 const MAX_PLAGUE_CUBES = 3;
 
@@ -15,7 +15,7 @@ export const nextInfectionCardLocation = (game: Game, gameLog: GameLog): Locatio
     game.infectionDeck.discardPile = [];
     gameLog("Reshuffled empty infection deck");
 
-    increaseGameInjectionRate(game, gameLog);
+    increaseGameInfectionRate(game, gameLog);
   }
 
   const card = game.infectionDeck.drawPile.pop();
@@ -46,7 +46,6 @@ export const newInfectedCity = (location: Location): InfectedCity => ({
 export type DrawInfectionCardResult = {
   infectionCardLocation: Location;
   cities: Record<string, InfectedCity | undefined>;
-  maybeEnd: MaybeGameEnd;
 };
 
 export const drawInfectionCard = (game: Game, gameLog: GameLog): DrawInfectionCardResult => {
@@ -56,22 +55,12 @@ export const drawInfectionCard = (game: Game, gameLog: GameLog): DrawInfectionCa
   const result: DrawInfectionCardResult = {
     infectionCardLocation,
     cities: {},
-    maybeEnd: { type: "game_continues" },
   };
 
   infectCity(game, infectionCardLocation, result, gameLog);
 
   return result;
 };
-
-export type MaybeGameEnd =
-  | {
-      type: "game_over";
-      cause: string;
-    }
-  | {
-      type: "game_continues";
-    };
 
 export const infectCity = (game: Game, location: Location, result: DrawInfectionCardResult, gameLog: GameLog): void => {
   const cityResult = (result.cities[location.name] ??= newInfectedCity(location));
@@ -93,7 +82,7 @@ export const infectCity = (game: Game, location: Location, result: DrawInfection
   if (location.plagueCubes < MAX_PLAGUE_CUBES) {
     location.plagueCubes++;
     cityResult.plagueCubesAdded++;
-    result.maybeEnd = recordGameIncident(game, location, gameLog);
+    recordGameIncident(game, location, gameLog);
     return;
   }
 
@@ -102,7 +91,7 @@ export const infectCity = (game: Game, location: Location, result: DrawInfection
   for (const connection of location.connections) {
     infectCity(game, connection.location, result, gameLog);
     // Don't infect more cities if the game has already ended.
-    if (result.maybeEnd.type === "game_over") {
+    if (game.state.type !== "playing") {
       return;
     }
   }

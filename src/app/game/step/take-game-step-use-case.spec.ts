@@ -4,12 +4,12 @@ import type { Repository } from "../../repository/repository.ts";
 import { gameFactory } from "../game-factories.ts";
 import { takeGameStepUseCase } from "./take-game-step-use-case.ts";
 import { serializableStepFactory } from "../../serialization/step-serialization-factories.ts";
-import { playerMapFactory } from "../player/player-factories.js";
+import { playerMapFactory } from "../player/player-factories.ts";
 
 const logger = makeLogger();
 
 const mockRepo: Repository = {
-  loadGame: () => gameFactory.build(undefined, { transient: { playerMap: playerMapFactory.build() } }),
+  loadGame: () => gameFactory.build({ players: playerMapFactory.build() }),
   saveGame: vi.fn(),
 };
 

@@ -2,7 +2,7 @@ import { type Game } from "../game.ts";
 import { shuffleArray } from "../../random/random.ts";
 import type { GameLog } from "../game-log/game-log.ts";
 import type { InfectionCard } from "../cards/cards.ts";
-import { increaseGameInjectionRate } from "./infection.ts";
+import { increaseGameInfectionRate } from "./infection.ts";
 
 export type EpidemicResult = {
   infectCard: InfectionCard;
@@ -12,7 +12,7 @@ export type EpidemicResult = {
 
 export const epidemic = (game: Game, gameLog: GameLog): EpidemicResult => {
   // Increase
-  increaseGameInjectionRate(game, gameLog);
+  increaseGameInfectionRate(game, gameLog);
 
   // Draw a card from the bottom
   const infectCard = game.infectionDeck.drawPile.shift();
