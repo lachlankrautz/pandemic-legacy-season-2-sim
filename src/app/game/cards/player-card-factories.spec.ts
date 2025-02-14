@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { playerCardFactory, playerCardsHandFactory } from "./player-card-factories.ts";
+import { locationFactory } from "../location/location-factories.ts";
+import type { Location } from "../location/location.ts";
 
 describe("player card factory", () => {
   it("creates a player card", () => {
@@ -11,6 +13,22 @@ describe("player card factory", () => {
 
     expect(card.type).toEqual("epidemic");
     expect(card.displayName).toEqual("Epidemic");
+  });
+
+  it("reuses existing location reference", () => {
+    const location = locationFactory.build();
+    const locationMap: Map<string, Location> = new Map([[location.name, location]]);
+
+    const card = playerCardFactory.build(
+      { type: "city", location: { name: location.name } },
+      { transient: { locationMap } },
+    );
+
+    expect(card.type).toEqual("city");
+    if (card.type !== "city") {
+      throw new Error("narrow type to match previous assertion");
+    }
+    expect(card.location).toBe(location);
   });
 });
 

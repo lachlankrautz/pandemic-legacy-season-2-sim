@@ -156,8 +156,8 @@ describe("make supply centre", () => {
 
   it("succeeds with 5 matching cards and the current location", () => {
     const [playerLocation, ...otherLocations] = Object.values(StaticLocations)
-      .filter((location) => location.colour === "yellow")
-      .map((location) => locationFactory.build({ ...location, supplyCentre: false }))
+      .filter((staticLocation) => staticLocation.colour === "yellow")
+      .map((staticLocation) => locationFactory.build({ ...staticLocation, supplyCentre: false }))
       .slice(0, 5);
 
     if (playerLocation === undefined) {

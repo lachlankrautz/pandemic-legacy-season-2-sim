@@ -60,4 +60,45 @@ describe("game factory", () => {
       true,
     );
   });
+
+  it("creates requested player cards", () => {
+    const game = gameFactory.build(undefined, {
+      transient: {
+        playerCardLocationNames: {
+          [LocationNames.SAN_FRANCISCO]: 2,
+          [LocationNames.CHICAGO]: 3,
+        },
+      },
+    });
+
+    expect(game.playerDeck.drawPile.length).toEqual(5);
+    expect(
+      game.playerDeck.drawPile.filter(
+        (card) => card.type === "city" && card.location.name === LocationNames.SAN_FRANCISCO,
+      ).length,
+    ).toEqual(2);
+    expect(
+      game.playerDeck.drawPile.filter((card) => card.type === "city" && card.location.name === LocationNames.CHICAGO)
+        .length,
+    ).toEqual(3);
+  });
+
+  it("creates requested infection cards", () => {
+    const game = gameFactory.build(undefined, {
+      transient: {
+        infectionCardLocationNames: {
+          [LocationNames.SAN_FRANCISCO]: 2,
+          [LocationNames.CHICAGO]: 3,
+        },
+      },
+    });
+
+    expect(game.infectionDeck.drawPile.length).toEqual(5);
+    expect(
+      game.infectionDeck.drawPile.filter((card) => card.location.name === LocationNames.SAN_FRANCISCO).length,
+    ).toEqual(2);
+    expect(game.infectionDeck.drawPile.filter((card) => card.location.name === LocationNames.CHICAGO).length).toEqual(
+      3,
+    );
+  });
 });

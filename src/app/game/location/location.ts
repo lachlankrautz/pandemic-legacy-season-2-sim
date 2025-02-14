@@ -4,7 +4,7 @@ import type { PlayerCard } from "../cards/cards.ts";
 
 export type CityColour = "blue" | "yellow" | "black" | "none";
 
-export type StaticLocation = Pick<Location, "type" | "colour"> & { name: LocationName };
+export type StaticLocation = Pick<Location, "name" | "type" | "colour">;
 
 export const StaticLocations = {
   ["San Francisco"]: {

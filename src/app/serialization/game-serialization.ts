@@ -5,7 +5,7 @@ import { makeStepMapper, serializableStepSchema } from "./step-serialization.ts"
 import { makeActionMapper } from "./action-serialization.ts";
 import { makeGameTurnFlowMapper, serializableGameTurnFlowSchema } from "./game-turn-flow-serialization.ts";
 import { getMappedPlayer, type Player } from "../game/player/player.ts";
-import type { GetRequiredLocation, Location } from "../game/location/location.ts";
+import { getMappedLocation, type GetRequiredLocation, type Location } from "../game/location/location.ts";
 import type { Deck, InfectionCard, PlayerCard } from "../game/cards/cards.ts";
 
 export const serializablePlayerCardSchema = Type.Union([
@@ -333,6 +333,8 @@ export const makeGameMapper = (
         state: serializable.state,
         stepHistory: serializable.stepHistory.map((step) => stepMapper.toActual(step)),
         gameLog: serializable.gameLog,
+        getPlayer: getMappedPlayer(playerMap),
+        getLocation: getMappedLocation(locationMap),
       };
 
       if (game.infectionDeck.drawPile.length === 0) {

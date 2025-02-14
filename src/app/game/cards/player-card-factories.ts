@@ -2,7 +2,7 @@ import { Factory } from "fishery";
 import { faker } from "@faker-js/faker/locale/en";
 import type { PlayerCard } from "./cards.ts";
 import { getRandomItem } from "../../random/random.ts";
-import { type Location, type StaticLocation } from "../location/location.ts";
+import { type Location } from "../location/location.ts";
 import { locationFactory } from "../location/location-factories.ts";
 
 const types: PlayerCard["type"][] = ["city", "produce_supplies", "portable_antiviral_lab", "epidemic", "event"];
@@ -26,50 +26,51 @@ const eventNames: string[] = [
 export type PlayerCardParams = {
   type: PlayerCard["type"];
   locationMap: Map<string, Location>;
-  staticLocation: Partial<StaticLocation>;
 };
 
 export const playerCardFactory = Factory.define<PlayerCard, PlayerCardParams>(
-  ({ params: { type }, transientParams: { locationMap, staticLocation } }) => {
-    type ??= getRandomItem(types);
+  ({ params, transientParams: { locationMap } }) => {
+    params.type ??= getRandomItem(types);
+
     let eventName: string;
-    let location: Location;
-    switch (type) {
+    let cityLocation: Location;
+
+    switch (params.type) {
       case "city":
-        location = locationFactory.build(staticLocation, {
+        cityLocation = locationFactory.build(params?.location, {
           transient: {
             ...(locationMap ? { locationMap } : {}),
           },
         });
         return {
-          type,
-          displayName: `City: ${location.name}`,
-          location,
+          type: "city",
+          displayName: `City: ${cityLocation.name}`,
+          location: cityLocation,
         };
 
       case "produce_supplies":
         return {
-          type,
+          type: "produce_supplies",
           displayName: "Produce Supplies",
         };
 
       case "portable_antiviral_lab":
         return {
-          type,
+          type: "portable_antiviral_lab",
           displayName: "Portable antiviral Lab",
         };
 
       case "event":
         eventName = getRandomItem(eventNames);
         return {
-          type,
+          type: "event",
           name: eventName,
           displayName: eventName,
         };
 
       case "epidemic":
         return {
-          type,
+          type: "epidemic",
           displayName: "Epidemic",
         };
     }
@@ -102,33 +103,15 @@ export const playerCardsHandFactory = Factory.define<PlayerCard[], PlayerCardsHa
     const cards: PlayerCard[] = [];
 
     if (yellowCards) {
-      cards.push(
-        ...playerCardFactory.buildList(
-          yellowCards,
-          { type: "city" },
-          { transient: { staticLocation: { colour: "yellow" } } },
-        ),
-      );
+      cards.push(...playerCardFactory.buildList(yellowCards, { type: "city", location: { colour: "yellow" } }));
     }
 
     if (blackCards) {
-      cards.push(
-        ...playerCardFactory.buildList(
-          blackCards,
-          { type: "city" },
-          { transient: { staticLocation: { colour: "black" } } },
-        ),
-      );
+      cards.push(...playerCardFactory.buildList(blackCards, { type: "city", location: { colour: "black" } }));
     }
 
     if (blueCards) {
-      cards.push(
-        ...playerCardFactory.buildList(
-          blueCards,
-          { type: "city" },
-          { transient: { staticLocation: { colour: "blue" } } },
-        ),
-      );
+      cards.push(...playerCardFactory.buildList(blueCards, { type: "city", location: { colour: "blue" } }));
     }
 
     // Ensure the minimum count has been reached

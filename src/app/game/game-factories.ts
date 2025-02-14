@@ -1,20 +1,37 @@
 import { Factory } from "fishery";
 import { gameTurnFlowFactory } from "./game-flow/game-turn-flow-factories.ts";
 import type { Connection, Game } from "./game.ts";
-import { getRandomItem } from "../random/random.ts";
-import { type LocationName } from "./location/location.ts";
-import { locationMapFactory } from "./location/location-factories.js";
+import { getRandomItem, shuffleArray } from "../random/random.ts";
+import { getMappedLocation, type LocationName } from "./location/location.ts";
+import { locationMapFactory } from "./location/location-factories.ts";
+import { playerCardFactory } from "./cards/player-card-factories.ts";
+import { infectionCardFactory } from "./infection/infection-card-factories.ts";
+import { getMappedPlayer } from "./player/player.ts";
 
 export type GameParams = {
   lost: boolean;
   locationNames: LocationName[];
   links: [LocationName, LocationName][];
+  infectionCardLocationNames: Record<string, number>;
+  playerCardLocationNames: Record<string, number>;
+  shuffleGameDecks: boolean;
 };
 
 const causes: string[] = ["player deck exhausted", "too many incidents"];
 
 export const gameFactory = Factory.define<Game, GameParams>(
-  ({ params, transientParams: { lost, links, locationNames }, afterBuild }) => {
+  ({
+    params,
+    transientParams: {
+      lost,
+      links,
+      locationNames,
+      playerCardLocationNames,
+      infectionCardLocationNames,
+      shuffleGameDecks,
+    },
+    afterBuild,
+  }) => {
     const providedTurnPlayer = params.turnFlow?.player !== undefined;
 
     afterBuild((game) => {
@@ -85,6 +102,51 @@ export const gameFactory = Factory.define<Game, GameParams>(
           }
         }
       }
+
+      // Create requested player city cards and push them to the deck
+      // Create them in the `afterBuild` step so that the final map
+      // of locations can be passed down to ensure shared objects
+      // are referenced and not recreated.
+      Object.entries(playerCardLocationNames || {})
+        .map(([locationName, cardCount]) =>
+          playerCardFactory.buildList(
+            cardCount,
+            {
+              type: "city",
+              location: { name: locationName },
+            },
+            // Reuse existing locations
+            { transient: { locationMap: game.locations } },
+          ),
+        )
+        .forEach((playerCards) => game.playerDeck.drawPile.push(...playerCards));
+
+      // Create requested infection cards and push them to the deck
+      // Create them in the `afterBuild` step so that the final map
+      // of locations can be passed down to ensure shared objects
+      // are referenced and not recreated.
+      Object.entries(infectionCardLocationNames || {})
+        .map(([locationName, cardCount]) =>
+          infectionCardFactory.buildList(
+            cardCount,
+            {
+              location: { name: locationName },
+            },
+            // Reuse existing locations
+            { transient: { locationMap: game.locations } },
+          ),
+        )
+        .forEach((infectionCards) => game.infectionDeck.drawPile.push(...infectionCards));
+
+      if (shuffleGameDecks) {
+        game.playerDeck.drawPile = shuffleArray(game.playerDeck.drawPile);
+        game.playerDeck.discardPile = shuffleArray(game.playerDeck.discardPile);
+        game.infectionDeck.drawPile = shuffleArray(game.infectionDeck.drawPile);
+        game.infectionDeck.discardPile = shuffleArray(game.infectionDeck.discardPile);
+      }
+
+      game.getPlayer = getMappedPlayer(game.players);
+      game.getLocation = getMappedLocation(game.locations);
     });
 
     return {
@@ -113,6 +175,12 @@ export const gameFactory = Factory.define<Game, GameParams>(
       state: lost ? { type: "lost", cause: getRandomItem(causes) } : { type: "playing" },
       stepHistory: [],
       gameLog: [],
+      getPlayer: () => {
+        throw new Error("valid implementation added in afterBuild step");
+      },
+      getLocation: () => {
+        throw new Error("valid implementation added in afterBuild step");
+      },
     };
   },
 );

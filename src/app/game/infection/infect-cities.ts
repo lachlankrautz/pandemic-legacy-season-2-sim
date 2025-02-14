@@ -62,7 +62,7 @@ export const drawInfectionCard = (game: Game, gameLog: GameLog): DrawInfectionCa
   return result;
 };
 
-export const infectCity = (game: Game, location: Location, result: DrawInfectionCardResult, gameLog: GameLog): void => {
+const infectCity = (game: Game, location: Location, result: DrawInfectionCardResult, gameLog: GameLog): void => {
   const cityResult = (result.cities[location.name] ??= newInfectedCity(location));
 
   // Each city can only outbreak once in a single infection chain.

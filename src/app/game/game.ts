@@ -1,7 +1,7 @@
 import type { Step } from "./step/game-steps.ts";
-import type { Player } from "./player/player.ts";
+import type { GetRequiredPlayer, Player } from "./player/player.ts";
 import type { GameTurnFlow } from "./game-flow/game-turn-flow.ts";
-import type { Location } from "./location/location.ts";
+import type { GetRequiredLocation, Location } from "./location/location.ts";
 import type { Deck, InfectionCard, PlayerCard } from "./cards/cards.ts";
 import type { InfectionRate } from "./infection/infection.ts";
 
@@ -52,6 +52,8 @@ export type Game<TFlow extends GameTurnFlow = GameTurnFlow> = {
   state: GameState;
   stepHistory: Step[];
   gameLog: string[];
+  getPlayer: GetRequiredPlayer;
+  getLocation: GetRequiredLocation;
 };
 
 export const getEpidemicCardCount = (cityCardCount: number): number => {

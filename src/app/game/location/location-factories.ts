@@ -10,8 +10,9 @@ import {
 import { getRandomItem } from "../../random/random.ts";
 import { np } from "../../../util/non-plain-objects.ts";
 
-// export type LocationParams = {
-// };
+export type LocationParams = {
+  locationMap: Map<string, Location>;
+};
 
 const getStaticLocation = (
   name: string | undefined,
@@ -33,23 +34,37 @@ const getStaticLocation = (
   return getRandomItem(Object.values(StaticLocations));
 };
 
-export const locationFactory = Factory.define<Location>(({ params: { name, type, colour } }) => {
-  const staticLocation = getStaticLocation(name, type, colour);
+export const locationFactory = Factory.define<Location, LocationParams>(
+  ({ params: { name, type, colour }, transientParams: { locationMap }, afterBuild }) => {
+    afterBuild((location) => {
+      // Add new location to the location map
+      if (locationMap !== undefined && !locationMap.has(location.name)) {
+        locationMap.set(location.name, location);
+      }
+    });
 
-  // Using `np` to prevent recursive merges.
-  // Locations are referenced by many objects and need to not
-  // be replaced with new objects.
-  return np({
-    name: staticLocation.name,
-    type: staticLocation.type,
-    colour: staticLocation.colour,
-    supplyCubes: 0,
-    plagueCubes: 0,
-    supplyCentre: false,
-    connections: [],
-    players: [],
-  });
-});
+    const staticLocation = getStaticLocation(name, type, colour);
+
+    const existingLocation = locationMap?.get(staticLocation.name);
+    if (existingLocation !== undefined) {
+      return existingLocation;
+    }
+
+    // Using `np` to prevent recursive merges.
+    // Locations are referenced by many objects and need to not
+    // be replaced with new objects.
+    return np({
+      name: staticLocation.name,
+      type: staticLocation.type,
+      colour: staticLocation.colour,
+      supplyCubes: 0,
+      plagueCubes: 0,
+      supplyCentre: false,
+      connections: [],
+      players: [],
+    });
+  },
+);
 
 export type LocationMapFactoryParams = {
   locationNames: LocationName[];
