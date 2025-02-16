@@ -7,6 +7,11 @@ describe("chunk", () => {
     const chunks = chunkArray(input, 2);
     expect(chunks).toEqual([[1, 2], [3, 4], [5, 6], [7]]);
   });
+
+  it("throws with invalid chunk size", () => {
+    const input = [1, 2, 3, 4, 5, 6, 7];
+    expect(() => chunkArray(input, 0)).toThrow();
+  });
 });
 
 describe("partition", () => {

@@ -15,6 +15,17 @@ describe("game driver", () => {
 
     expect(() => makeGameDriver(game, gameLog)).not.toThrow();
   });
+
+  it("advances game turn flow after successful step", () => {
+    const game = gameFactory.build({ turnFlow: { type: "exposure_check" } });
+    const gameLog = makeGameLog(game, logger);
+    const driver = makeGameDriver(game, gameLog);
+    const step = stepFactory.build({ type: "check_for_exposure", player: game.turnFlow.player });
+
+    const result = driver.takeStep(step);
+    expect(result.type).toEqual("state_changed");
+    expect(game.turnFlow.type).toEqual("take_4_actions");
+  });
 });
 
 describe("take game step", () => {

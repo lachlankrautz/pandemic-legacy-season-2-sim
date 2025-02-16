@@ -5,12 +5,11 @@ import { faker } from "@faker-js/faker/locale/en";
 import { LocationNames } from "../game/location/location.ts";
 
 export type SerializableActionParams = {
-  type: SerializableAction["type"];
   locationNames: string[];
 };
 
 export const serializableActionFactory = Factory.define<SerializableAction, SerializableActionParams>(
-  ({ transientParams: { type, locationNames } }) => {
+  ({ params: { type }, transientParams: { locationNames } }) => {
     type ??= getRandomItem(["move", "make_supplies", "drop_supplies", "make_supply_centre"]);
 
     switch (type) {

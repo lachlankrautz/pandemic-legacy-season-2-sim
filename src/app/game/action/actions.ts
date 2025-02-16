@@ -10,6 +10,13 @@ import type { GameLog } from "../game-log/game-log.ts";
 // some actions are always free actions, some can be free
 export type Action = Move<true> | Move<false> | MakeSupplies | DropSupplies | MakeSupplyCentre;
 
+export const actionTypes = [
+  "move",
+  "make_supplies",
+  "drop_supplies",
+  "make_supply_centre",
+] as const satisfies Action["type"][];
+
 export type Move<T extends boolean = boolean> = {
   type: "move";
   isFree: T;

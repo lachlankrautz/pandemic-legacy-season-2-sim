@@ -16,11 +16,10 @@ const stepTypes: Step["type"][] = [
 ] as const;
 
 export type StepParams = {
-  type: Step["type"];
   player: Player;
 };
 
-export const stepFactory = Factory.define<Step, StepParams>(({ transientParams: { type, player } }) => {
+export const stepFactory = Factory.define<Step, StepParams>(({ params: { type }, transientParams: { player } }) => {
   type ??= getRandomItem(stepTypes);
 
   // TODO this needs to be remade so that

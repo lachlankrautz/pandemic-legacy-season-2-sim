@@ -28,7 +28,7 @@ export const makeYargsCliRunner = (
   playTui: LazyPlayTuiCommand,
   startGame: LazyStartGameCommand,
   takeStep: LazyTakeStepCommand,
-  stepCommandLoader: LazyTakeSerializedStepCommand,
+  takeSerializedStep: LazyTakeSerializedStepCommand,
   showInfoCommandLoader: LazyShowInfoCommand,
 ): CliRunner => {
   const checkDebug = (args: { debug: boolean | undefined }) => {
@@ -107,7 +107,7 @@ export const makeYargsCliRunner = (
           },
         });
       },
-      (args) => stepCommandLoader()(args.save, args.step),
+      (args) => takeSerializedStep()(args.save, args.step),
     )
     .command(
       "move",

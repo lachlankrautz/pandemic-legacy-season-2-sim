@@ -6,6 +6,8 @@ import type { Location } from "../location/location.ts";
 
 export type ShowInfo = "all" | "locations" | "players";
 
+export const showInfoTypes = ["all", "locations", "players"] as const satisfies ShowInfo[];
+
 export const showInfoUseCase = (repo: Repository, fileName: string, showInfo: ShowInfo): string => {
   const game: Game = repo.loadGame(fileName);
 

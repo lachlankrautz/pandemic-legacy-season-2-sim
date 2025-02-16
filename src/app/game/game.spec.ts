@@ -11,8 +11,14 @@ describe("next turn order", () => {
 });
 
 describe("epidemic card count", () => {
-  it("gets the right number of epidemic cards", () => {
-    expect(getEpidemicCardCount(45)).toEqual(7);
-    expect(getEpidemicCardCount(64)).toEqual(10);
+  it.each([
+    { playerCards: 30, epidemics: 5 },
+    { playerCards: 40, epidemics: 6 },
+    { playerCards: 50, epidemics: 7 },
+    { playerCards: 55, epidemics: 8 },
+    { playerCards: 60, epidemics: 9 },
+    { playerCards: 65, epidemics: 10 },
+  ])("gets the right number of epidemics for $playerCards players cards", ({ playerCards, epidemics }) => {
+    expect(getEpidemicCardCount(playerCards)).toEqual(epidemics);
   });
 });

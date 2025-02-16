@@ -25,6 +25,10 @@ import type { GameLog } from "../game-log/game-log.ts";
  * by not the current player simply does nothing.
  */
 
+// TODO create a step handler type and split each branch of this
+//      module up into a separate handler
+//      have separate tests for each handler
+
 export type Step =
   | { type: "check_for_exposure"; player: Player }
   | {
@@ -44,6 +48,15 @@ export type StepResult =
       nextGameFlow?: GameTurnFlow;
     };
 
+export const stepTypes = [
+  "check_for_exposure",
+  "player_action",
+  "draw_player_card",
+  "draw_infection_card",
+  "play_event_card",
+  "discard_player_cards",
+] as const satisfies Step["type"][];
+
 export type GameDriver = {
   takeStep: (step: Step) => StepResult;
   getNextSteps: () => string[];
@@ -53,17 +66,10 @@ export type GameDriver = {
 export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
   return {
     takeStep: (step) => {
-      const startingPlayerName = step.player.name;
-
       const result = takeGameStep(game, step, gameLog);
 
       if (result.type !== "no_effect" && result.nextGameFlow) {
         game.turnFlow = result.nextGameFlow;
-
-        if (inGameFlow(game, "take_4_actions") && startingPlayerName !== game.turnFlow.player.name) {
-          gameLog(`Turn passed to ${game.turnFlow.player.name}`);
-        }
-
         gameLog(`Game flow moved to: "${game.turnFlow.type}"`);
       }
 
@@ -172,7 +178,7 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
       if (nextPlayer === undefined) {
         throw new Error("Unable to find the next player in turn order");
       }
-
+      gameLog(`Turn passed to ${game.turnFlow.player.name}`);
       result.nextGameFlow = {
         type: "exposure_check",
         player: nextPlayer,

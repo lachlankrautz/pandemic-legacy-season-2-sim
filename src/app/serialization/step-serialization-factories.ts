@@ -5,7 +5,7 @@ import { PlayerNames } from "../game/start/new-game.ts";
 import { serializableActionFactory } from "./action-serialization-factories.ts";
 import type { Player } from "../game/player/player.ts";
 
-const stepTypes: SerializableStep["type"][] = [
+export const stepTypes: SerializableStep["type"][] = [
   "player_action",
   "check_for_exposure",
   "discard_player_cards",
@@ -15,12 +15,11 @@ const stepTypes: SerializableStep["type"][] = [
 ] as const;
 
 export type SerializableStepParams = {
-  type: SerializableStep["type"];
   playerMap: Map<string, Player>;
 };
 
 export const serializableStepFactory = Factory.define<SerializableStep, SerializableStepParams>(
-  ({ transientParams: { type, playerMap } }) => {
+  ({ params: { type }, transientParams: { playerMap } }) => {
     type ??= getRandomItem(stepTypes);
 
     // Use names from players available in map

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { gameFactory } from "../../game-factories.ts";
-import { takeGameStep } from "../game-steps.js";
-import { stepFactory } from "../step-factories.js";
+import { takeGameStep } from "../game-steps.ts";
+import { stepFactory } from "../step-factories.ts";
 
 describe("draw player card", () => {
   it("ends the game if the draw pile is already empty", () => {

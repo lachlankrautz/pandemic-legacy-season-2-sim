@@ -1,9 +1,19 @@
-import { it, describe, expect } from "vitest";
+import { it, describe, expect, vi } from "vitest";
+
+const mockRun = vi.fn();
+const mockBootstrapCli = vi.fn(() => ({
+  run: mockRun,
+}));
+
+vi.mock("../bootstrap/bootstrap.ts", () => ({
+  boostrapCli: mockBootstrapCli,
+}));
 
 describe("main cli", () => {
-  it("runs cli", () => {
-    // TODO how the hell do you test this?
+  it("runs cli", async () => {
+    await import("../entrypoint/main.ts");
 
-    expect(true).toBeTruthy();
+    expect(mockBootstrapCli).toHaveBeenCalled();
+    expect(mockRun).toHaveBeenCalledWith(process.argv);
   });
 });
