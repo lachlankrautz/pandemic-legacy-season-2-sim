@@ -1,8 +1,15 @@
 import { Factory } from "fishery";
 import { getRandomItem } from "../../random/random.ts";
-import type { GameTurnFlow } from "./game-turn-flow.ts";
+import type {
+  GameFlowTurnDrawCards,
+  GameFlowTurnExposureCheck,
+  GameFlowTurnInfectCities,
+  GameFlowTurnTakeActions,
+  GameTurnFlow,
+} from "./game-turn-flow.ts";
 import { playerFactory } from "../player/player-factories.ts";
 import { Player } from "../player/player.ts";
+import type { Game } from "../game.ts";
 
 const flowTypes: GameTurnFlow["type"][] = [
   "exposure_check",
@@ -12,39 +19,53 @@ const flowTypes: GameTurnFlow["type"][] = [
 ] as const;
 
 export type GameFlowParams = {
-  type: GameTurnFlow["type"];
-  // Player supplied as a transient param because it is not
-  // present on every branch of the GameFlow union.
-  player: Player;
+  game: Game;
+  playerMap: Map<string, Player>;
 };
 
-export const gameTurnFlowFactory = Factory.define<GameTurnFlow, GameFlowParams>(
-  ({ transientParams: { type, player } }) => {
-    type ??= getRandomItem(flowTypes);
-    switch (type) {
-      case "exposure_check":
-        return {
-          type,
-          player: player || playerFactory.build(),
-        };
-      case "take_4_actions":
-        return {
-          type,
-          player: player || playerFactory.build(),
-          remainingActions: 4,
-        };
-      case "draw_2_cards":
-        return {
-          type,
-          player: player || playerFactory.build(),
-          remainingCards: 2,
-        };
-      case "infect_cities":
-        return {
-          type,
-          player: player || playerFactory.build(),
-          remainingCards: 2,
-        };
-    }
+export const exposureCheckTurnFlowFactory = Factory.define<GameFlowTurnExposureCheck, GameFlowParams>(({ params }) => {
+  return {
+    type: "exposure_check",
+    player: playerFactory.build(params.player),
+  };
+});
+
+export const takePlayerActionsTurnFlowFactory = Factory.define<GameFlowTurnTakeActions, GameFlowParams>(
+  ({ params }) => {
+    return {
+      type: "take_4_actions",
+      player: playerFactory.build(params.player),
+      remainingActions: 4,
+    };
   },
 );
+
+export const drawPlayerCardsTurnFlowFactory = Factory.define<GameFlowTurnDrawCards, GameFlowParams>(({ params }) => {
+  return {
+    type: "draw_2_cards",
+    player: playerFactory.build(params.player),
+    remainingCards: 2,
+  };
+});
+
+export const infectCitiesTurnFlowFactory = Factory.define<GameFlowTurnInfectCities, GameFlowParams>(({ params }) => {
+  return {
+    type: "infect_cities",
+    player: playerFactory.build(params.player),
+    remainingCards: 2,
+  };
+});
+
+export const gameTurnFlowFactory = Factory.define<GameTurnFlow, GameFlowParams>(({ params }) => {
+  params.type ??= getRandomItem(flowTypes);
+  switch (params.type) {
+    case "exposure_check":
+      return exposureCheckTurnFlowFactory.build(params);
+    case "take_4_actions":
+      return takePlayerActionsTurnFlowFactory.build(params);
+    case "draw_2_cards":
+      return drawPlayerCardsTurnFlowFactory.build(params);
+    case "infect_cities":
+      return infectCitiesTurnFlowFactory.build(params);
+  }
+});

@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { stepFactory } from "./step-factories.ts";
+import { stepTypes } from "./game-steps.ts";
 
 describe("step factory", () => {
-  it("creates a game step", () => {
-    expect(() => stepFactory.build()).not.toThrow();
+  it.each(stepTypes)("creates a game step %s", (type) => {
+    expect(() => stepFactory.build({ type })).not.toThrow();
   });
 });
 

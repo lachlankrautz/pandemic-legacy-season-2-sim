@@ -1,11 +1,13 @@
 import type { Player } from "../player/player.ts";
 import type { Game } from "../game.ts";
 
-export const inGameFlow = <TPrefix extends string>(
+export type GameOnType<TTurnFlowType extends TurnFlowType> = Game<TurnFlowOnType<TTurnFlowType>>;
+
+export const isGameOnType = <TGameFlowType extends GameTurnFlow["type"]>(
   game: Game,
-  prefix: TPrefix,
-): game is Game<Extract<GameTurnFlow, { type: `${TPrefix}${string}` }>> => {
-  return game.turnFlow.type.startsWith(prefix);
+  type: TGameFlowType,
+): game is GameOnType<TGameFlowType> => {
+  return game.turnFlow.type === type;
 };
 
 export type GameFlowTurnExposureCheck = {
@@ -36,3 +38,7 @@ export type GameTurnFlow =
   | GameFlowTurnTakeActions
   | GameFlowTurnDrawCards
   | GameFlowTurnInfectCities;
+
+export type TurnFlowType = GameTurnFlow["type"];
+
+export type TurnFlowOnType<TTurnFlowType extends TurnFlowType> = Extract<GameTurnFlow, { type: TTurnFlowType }>;

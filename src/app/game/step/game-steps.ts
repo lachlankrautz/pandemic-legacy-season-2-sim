@@ -1,11 +1,9 @@
-import { type Game, getNextTurnOrder } from "../game.ts";
-import { type Action, takeAction } from "../action/actions.ts";
-import { drawInfectionCard } from "../infection/infect-cities.ts";
-import { epidemic } from "../infection/epidemic.ts";
+import { type Game } from "../game.ts";
+import { type Action } from "../action/actions.ts";
 import type { Player } from "../player/player.ts";
-import { type GameTurnFlow, inGameFlow } from "../game-flow/game-turn-flow.ts";
-import { cardDisplayName } from "../location/location.ts";
+import { type GameTurnFlow } from "../game-flow/game-turn-flow.ts";
 import type { GameLog } from "../game-log/game-log.ts";
+import { stepHandlers } from "./step-handlers.ts";
 
 /**
  * A step is an atomic level of interaction with the game. A step could be
@@ -25,21 +23,29 @@ import type { GameLog } from "../game-log/game-log.ts";
  * by not the current player simply does nothing.
  */
 
-// TODO create a step handler type and split each branch of this
-//      module up into a separate handler
-//      have separate tests for each handler
-
 export type Step =
-  | { type: "check_for_exposure"; player: Player }
-  | {
-      type: "player_action";
-      player: Player;
-      action: Action;
-    }
-  | { type: "draw_player_card"; player: Player }
-  | { type: "draw_infection_card"; player: Player }
-  | { type: "play_event_card"; player: Player; TODO_defineComplexChoices: unknown }
-  | { type: "discard_player_cards"; player: Player; cardNames: string[] };
+  | CheckExposureStep
+  | PlayerActionStep
+  | DrawPlayerCardStep
+  | DrawInfectionCardStep
+  | PlayEventCardStep
+  | DiscardPlayerCardsStep;
+
+export type CheckExposureStep = { type: "check_for_exposure"; player: Player };
+
+export type PlayerActionStep = {
+  type: "player_action";
+  player: Player;
+  action: Action;
+};
+
+export type DrawPlayerCardStep = { type: "draw_player_card"; player: Player };
+
+export type DrawInfectionCardStep = { type: "draw_infection_card"; player: Player };
+
+export type PlayEventCardStep = { type: "play_event_card"; player: Player; TODO_defineComplexChoices: unknown };
+
+export type DiscardPlayerCardsStep = { type: "discard_player_cards"; player: Player; cardNames: string[] };
 
 export type StepResult =
   | { type: "no_effect"; cause: string }
@@ -48,6 +54,8 @@ export type StepResult =
       nextGameFlow?: GameTurnFlow;
     };
 
+export type StepType = Step["type"];
+
 export const stepTypes = [
   "check_for_exposure",
   "player_action",
@@ -55,7 +63,16 @@ export const stepTypes = [
   "draw_infection_card",
   "play_event_card",
   "discard_player_cards",
-] as const satisfies Step["type"][];
+] as const satisfies StepType[];
+
+export type StepOnType<TStepType extends StepType> = Extract<Step, { type: TStepType }>;
+
+export const isStepOnType = <TStepType extends StepType>(
+  step: Step,
+  type: TStepType,
+): step is StepOnType<TStepType> => {
+  return step.type === type;
+};
 
 export type GameDriver = {
   takeStep: (step: Step) => StepResult;
@@ -97,103 +114,17 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
     };
   }
 
-  if (inGameFlow(game, "exposure_check") && step.type === "check_for_exposure") {
-    gameLog(`${step.player.name} checked for exposure`);
-    result = {
-      type: "state_changed",
-      nextGameFlow: {
-        type: "take_4_actions",
-        player: player,
-        remainingActions: 4,
-      },
-    };
-  }
-
-  if (inGameFlow(game, "take_4_actions") && step.type === "player_action") {
-    result = takeAction(game, step.action, gameLog);
-    if (result.type === "state_changed" && !step.action.isFree) {
-      if (game.turnFlow.remainingActions <= 1) {
-        gameLog(`All actions taken`);
-        result.nextGameFlow = {
-          type: "draw_2_cards",
-          player,
-          remainingCards: 2,
-        };
-      } else {
-        game.turnFlow.remainingActions--;
-        gameLog(`${step.player.name} has ${game.turnFlow.remainingActions} action(s) remaining`);
-      }
-    }
-  }
-
-  if (inGameFlow(game, "draw_2_cards") && step.type === "draw_player_card") {
-    const playerCard = game.playerDeck.drawPile.pop();
-
-    // Players ran out of time.
-    if (playerCard === undefined) {
-      gameLog("Game Over: Unable to draw card, player deck is empty.");
-      game.state = {
-        type: "lost",
-        cause: "Unable to draw card, player deck is empty.",
-      };
-      return { type: "state_changed" };
-    }
-    gameLog(`${step.player.name} received ${cardDisplayName(playerCard)} card`);
-
-    if (playerCard.type === "epidemic") {
-      epidemic(game, gameLog);
-    } else {
-      step.player.cards.push(playerCard);
-    }
-
-    result = {
-      type: "state_changed",
-    };
-
-    if (game.turnFlow.remainingCards <= 1) {
-      result.nextGameFlow = {
-        type: "infect_cities",
-        player,
-        remainingCards: game.infectionRate.cards,
-      };
-    } else {
-      game.turnFlow.remainingCards--;
-      gameLog(`${player.name} has ${game.turnFlow.remainingCards} player card(s) remaining`);
-    }
-  }
-
-  if (inGameFlow(game, "infect_cities") && step.type === "draw_infection_card") {
-    drawInfectionCard(game, gameLog);
-    if (game.state.type !== "playing") {
-      return { type: "state_changed" };
-    }
-
-    result = {
-      type: "state_changed",
-    };
-
-    if (game.turnFlow.remainingCards <= 1) {
-      const nextTurnOrder = getNextTurnOrder(game.turnFlow.player.turnOrder);
-      const nextPlayer = Array.from(game.players.values()).find((player) => player.turnOrder === nextTurnOrder);
-      if (nextPlayer === undefined) {
-        throw new Error("Unable to find the next player in turn order");
-      }
-      gameLog(`Turn passed to ${game.turnFlow.player.name}`);
-      result.nextGameFlow = {
-        type: "exposure_check",
-        player: nextPlayer,
-      };
-    } else {
-      game.turnFlow.remainingCards--;
-      gameLog(`${player.name} has ${game.turnFlow.remainingCards} infection card(s) remaining`);
-    }
+  if (
+    step.type === "check_for_exposure" ||
+    step.type === "player_action" ||
+    step.type === "draw_player_card" ||
+    step.type === "draw_infection_card"
+  ) {
+    result = stepHandlers[step.type](game, gameLog, step);
   }
 
   if (result === undefined) {
-    result = {
-      type: "no_effect",
-      cause: `Step "${step.type}" not expected during game flow "${game.turnFlow.type}".`,
-    };
+    throw new Error(`Step type ${step.type} not implemented`);
   }
 
   if (result.type === "state_changed") {

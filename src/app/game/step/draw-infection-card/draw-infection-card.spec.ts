@@ -1,28 +1,24 @@
 import { describe, it, expect, vi } from "vitest";
-import { gameFactory } from "../../game-factories.ts";
-import { stepFactory } from "../step-factories.ts";
-import { takeGameStep } from "../game-steps.ts";
+import { gameOnInfectCitiesFactory } from "../../game-factories.ts";
+import { drawInfectionCardStepFactory } from "../step-factories.ts";
 import { infectionCardFactory } from "../../infection/infection-card-factories.ts";
+import { handleDrawInfectionCard } from "./draw-infection-card.ts";
 
 describe("draw player card", () => {
   it("increases the infection rate if the deck is empty", () => {
-    const game = gameFactory.build({
-      turnFlow: {
-        type: "infect_cities",
-        remainingCards: 2,
-      },
+    const game = gameOnInfectCitiesFactory.build({
       infectionDeck: {
         drawPile: [],
         discardPile: infectionCardFactory.buildList(10),
       },
     });
-    const step = stepFactory.build({ type: "draw_infection_card", player: game.turnFlow.player });
+    const step = drawInfectionCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
     expect(game.state.type).toEqual("playing");
     expect(game.infectionRate.position).toEqual(1);
 
-    takeGameStep(game, step, gameLog);
+    handleDrawInfectionCard(game, gameLog, step);
 
     expect(game.state.type).toEqual("playing");
     expect(game.infectionRate.position).toEqual(2);

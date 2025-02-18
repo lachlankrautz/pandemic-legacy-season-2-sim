@@ -2,7 +2,7 @@ import { type Game } from "../game.ts";
 import type { StepResult } from "../step/game-steps.ts";
 import { type PlayerCardSelection, useHandCards } from "../cards/cards.ts";
 import type { Player } from "../player/player.ts";
-import { inGameFlow } from "../game-flow/game-turn-flow.ts";
+import { isGameOnType } from "../game-flow/game-turn-flow.ts";
 import { getMappedLocation, type GetRequiredLocation } from "../location/location.ts";
 import type { GameLog } from "../game-log/game-log.ts";
 
@@ -50,7 +50,7 @@ export type MakeSupplyCentre = {
 //           Then things like losing the game can override the pending change
 
 export const takeAction = (game: Game, action: Action, gameLog: GameLog): StepResult => {
-  if (!inGameFlow(game, "take_4_actions")) {
+  if (!isGameOnType(game, "take_4_actions")) {
     return { type: "no_effect", cause: "wrong turn flow" };
   }
 

@@ -1,10 +1,16 @@
 import { Factory } from "fishery";
 import { getRandomItem } from "../../random/random.ts";
-import type { Step } from "./game-steps.ts";
+import type {
+  CheckExposureStep,
+  DiscardPlayerCardsStep,
+  DrawInfectionCardStep,
+  DrawPlayerCardStep,
+  PlayerActionStep,
+  PlayEventCardStep,
+  Step,
+} from "./game-steps.ts";
 import { actionFactory } from "../action/action-factories.ts";
-import { PlayerNames } from "../start/new-game.ts";
-import type { Player } from "../player/player.ts";
-import { LocationNames } from "../location/location.ts";
+import { playerFactory } from "../player/player-factories.ts";
 
 const stepTypes: Step["type"][] = [
   "player_action",
@@ -15,67 +21,75 @@ const stepTypes: Step["type"][] = [
   "play_event_card",
 ] as const;
 
-export type StepParams = {
-  player: Player;
-};
+// export type StepParams = {
+// };
 
-export const stepFactory = Factory.define<Step, StepParams>(({ params: { type }, transientParams: { player } }) => {
-  type ??= getRandomItem(stepTypes);
-
-  // TODO this needs to be remade so that
-  //      new locations are created from an enum
-  //      that ensures name, colour and type match up
-  player ??= {
-    name: getRandomItem(Object.values(PlayerNames)),
-    location: {
-      name: getRandomItem(Object.values(LocationNames)),
-      type: "inland",
-      colour: "yellow",
-      supplyCubes: 0,
-      plagueCubes: 0,
-      supplyCentre: false,
-      connections: [],
-      players: [],
-    },
-    turnOrder: getRandomItem([1, 2, 3, 4]),
-    supplyCubes: 0,
-    cards: [],
+export const playerActionStepFactory = Factory.define<PlayerActionStep>(({ params }) => {
+  const player = playerFactory.build(params.player);
+  return {
+    type: "player_action",
+    player,
+    action: actionFactory.build(params.action),
   };
+});
 
-  switch (type) {
+export const checkForExposureStepFactory = Factory.define<CheckExposureStep>(({ params }) => {
+  const player = playerFactory.build(params.player);
+  return {
+    type: "check_for_exposure",
+    player,
+  };
+});
+
+export const discardPlayerCardsStepFactory = Factory.define<DiscardPlayerCardsStep>(({ params }) => {
+  const player = playerFactory.build(params.player);
+  return {
+    type: "discard_player_cards",
+    player,
+    // TODO this should probably be hand indexes
+    cardNames: [],
+  };
+});
+
+export const drawPlayerCardStepFactory = Factory.define<DrawPlayerCardStep>(({ params }) => {
+  const player = playerFactory.build(params.player);
+  return {
+    type: "draw_player_card",
+    player,
+  };
+});
+
+export const drawInfectionCardStepFactory = Factory.define<DrawInfectionCardStep>(({ params }) => {
+  const player = playerFactory.build(params.player);
+  return {
+    type: "draw_infection_card",
+    player,
+  };
+});
+
+export const playEventCardStepFactory = Factory.define<PlayEventCardStep>(({ params }) => {
+  const player = playerFactory.build(params.player);
+  return {
+    type: "play_event_card",
+    player,
+    TODO_defineComplexChoices: undefined,
+  };
+});
+
+export const stepFactory = Factory.define<Step>(({ params }) => {
+  params.type ??= getRandomItem(stepTypes);
+  switch (params.type) {
     case "player_action":
-      return {
-        type: "player_action",
-        player,
-        action: actionFactory.build(),
-      };
+      return playerActionStepFactory.build(params);
     case "check_for_exposure":
-      return {
-        type: "check_for_exposure",
-        player,
-      };
+      return checkForExposureStepFactory.build(params);
     case "discard_player_cards":
-      return {
-        type: "discard_player_cards",
-        player,
-        // TODO this should probably be hand indexes
-        cardNames: [],
-      };
+      return discardPlayerCardsStepFactory.build(params);
     case "draw_player_card":
-      return {
-        type: "draw_player_card",
-        player,
-      };
+      return drawPlayerCardStepFactory.build(params);
     case "draw_infection_card":
-      return {
-        type: "draw_infection_card",
-        player,
-      };
+      return drawInfectionCardStepFactory.build(params);
     case "play_event_card":
-      return {
-        type: "play_event_card",
-        player,
-        TODO_defineComplexChoices: undefined,
-      };
+      return playEventCardStepFactory.build(params);
   }
 });

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { getMappedPlayer } from "../game/player/player.ts";
 import { playerMapFactory } from "../game/player/player-factories.ts";
 import { makeGameTurnFlowMapper } from "./game-turn-flow-serialization.ts";
-import { serializableGameTurnFlowFactory } from "./game-turn-flow-serialization-factories.ts";
+import { flowTypes, serializableGameTurnFlowFactory } from "./game-turn-flow-serialization-factories.ts";
 import { gameTurnFlowFactory } from "../game/game-flow/game-turn-flow-factories.ts";
 
 describe("serializable game flow mapping", () => {
@@ -23,8 +23,8 @@ describe("serializable game flow mapping", () => {
 });
 
 describe("game flow mapping", () => {
-  it("can map to serializable", () => {
-    const gameFlow = gameTurnFlowFactory.build();
+  it.each(flowTypes)("can map to serializable %s", (type) => {
+    const gameFlow = gameTurnFlowFactory.build({ type });
     const mapper = makeGameTurnFlowMapper(getMappedPlayer(new Map()));
     expect(() => mapper.toSerializable(gameFlow)).not.toThrow();
   });
