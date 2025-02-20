@@ -25,8 +25,13 @@ export const handleDrawInfectionCard: StepHandler<"infect_cities", "draw_infecti
       player: nextPlayer,
     };
   } else {
-    game.turnFlow.remainingCards--;
-    gameLog(`${step.player.name} has ${game.turnFlow.remainingCards} infection card(s) remaining`);
+    const remainingCards = game.turnFlow.remainingCards - 1;
+    result.nextGameFlow = {
+      type: "infect_cities",
+      player: game.turnFlow.player,
+      remainingCards,
+    };
+    gameLog(`${step.player.name} has ${remainingCards} infection card(s) remaining`);
   }
 
   return result;

@@ -37,11 +37,24 @@ describe("player cards hand factory", () => {
     expect(() => playerCardsHandFactory.build()).not.toThrow();
   });
 
-  it("creates requested coloured cards", () => {
-    const hand = playerCardsHandFactory.build(undefined, { transient: { yellowCards: 5 } });
+  it.each([
+    {
+      transient: { yellowCards: 5 },
+      colour: "yellow",
+    },
+    {
+      transient: { blueCards: 5 },
+      colour: "blue",
+    },
+    {
+      transient: { blackCards: 5 },
+      colour: "black",
+    },
+  ])("creates requested coloured cards", ({ colour, transient }) => {
+    const hand = playerCardsHandFactory.build(undefined, { transient });
 
     expect(hand.length).toEqual(5);
-    expect(hand.every((card) => card.type === "city" && card.location.colour === "yellow")).toEqual(true);
+    expect(hand.every((card) => card.type === "city" && card.location.colour === colour)).toEqual(true);
   });
 
   it("creates a starting hand of 2", () => {

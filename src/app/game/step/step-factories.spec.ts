@@ -7,5 +7,3 @@ describe("step factory", () => {
     expect(() => stepFactory.build({ type })).not.toThrow();
   });
 });
-
-// TODO individual factories for every branch of the step union

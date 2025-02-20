@@ -140,6 +140,61 @@ describe("infect cities", () => {
     expect(newYork.plagueCubes).toEqual(0);
   });
 
+  it("outbreak stops early if the game ends", () => {
+    const game = gameFactory.build(
+      { incidents: 7 },
+      {
+        transient: {
+          infectionCardLocationNames: {
+            [LocationNames.CHICAGO]: 1,
+          },
+          locationNames: [
+            LocationNames.SAN_FRANCISCO,
+            LocationNames.CHICAGO,
+            LocationNames.ATLANTA,
+            LocationNames.WASHINGTON,
+            LocationNames.JACKSONVILLE,
+            LocationNames.NEW_YORK,
+          ],
+          links,
+        },
+      },
+    );
+    const gameLog: GameLog = vi.fn();
+
+    const chicago = game.getLocation(LocationNames.CHICAGO);
+    chicago.supplyCubes = 0;
+    chicago.plagueCubes = 3;
+    const sanFran = game.getLocation(LocationNames.SAN_FRANCISCO);
+    sanFran.supplyCubes = 2;
+    sanFran.plagueCubes = 0;
+    const atlanta = game.getLocation(LocationNames.ATLANTA);
+    const washington = game.getLocation(LocationNames.WASHINGTON);
+    const jacksonville = game.getLocation(LocationNames.JACKSONVILLE);
+    const newYork = game.getLocation(LocationNames.NEW_YORK);
+
+    expect(game.incidents).toEqual(7);
+
+    drawInfectionCard(game, gameLog);
+
+    expect(game.incidents).toEqual(8);
+    expect(game.state.type).toEqual("lost");
+
+    expect(chicago.supplyCubes).toEqual(0);
+    expect(sanFran.supplyCubes).toEqual(1);
+    expect(atlanta.supplyCubes).toEqual(0);
+    expect(washington.supplyCubes).toEqual(0);
+    expect(jacksonville.supplyCubes).toEqual(0);
+    expect(newYork.supplyCubes).toEqual(0);
+
+    expect(chicago.plagueCubes).toEqual(3);
+    expect(sanFran.plagueCubes).toEqual(0);
+    expect(atlanta.plagueCubes).toEqual(1);
+    expect(washington.plagueCubes).toEqual(0);
+    expect(jacksonville.plagueCubes).toEqual(0);
+    expect(newYork.plagueCubes).toEqual(0);
+  });
+
   it("outbreak that causes no plague cubes does not cause incident", () => {
     const game = gameFactory.build(undefined, {
       transient: {

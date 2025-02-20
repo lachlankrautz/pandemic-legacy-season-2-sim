@@ -13,8 +13,13 @@ export const handlePlayerAction: StepHandler<"take_4_actions", "player_action"> 
         remainingCards: 2,
       };
     } else {
-      game.turnFlow.remainingActions--;
-      gameLog(`${step.player.name} has ${game.turnFlow.remainingActions} action(s) remaining`);
+      const remainingActions = game.turnFlow.remainingActions - 1;
+      result.nextGameFlow = {
+        type: "take_4_actions",
+        player: step.player,
+        remainingActions,
+      };
+      gameLog(`${step.player.name} has ${remainingActions} action(s) remaining`);
     }
   }
 

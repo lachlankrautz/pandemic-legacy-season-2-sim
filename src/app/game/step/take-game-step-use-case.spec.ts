@@ -18,6 +18,7 @@ describe("start game use case", () => {
     vi.clearAllMocks();
   });
 
+  // TODO this test can actually fail trying to draw from an empty deck
   it("starts a new game", () => {
     const step = serializableStepFactory.build();
 

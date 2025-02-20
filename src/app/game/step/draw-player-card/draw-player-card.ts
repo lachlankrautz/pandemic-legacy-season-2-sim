@@ -1,5 +1,4 @@
 import { cardDisplayName } from "../../location/location.ts";
-import { epidemic } from "../../infection/epidemic.ts";
 import { StepHandler } from "../step-handlers.ts";
 import type { StepResult } from "../game-steps.ts";
 
@@ -17,12 +16,6 @@ export const handleDrawPlayerCard: StepHandler<"draw_2_cards", "draw_player_card
   }
   gameLog(`${step.player.name} received ${cardDisplayName(playerCard)} card`);
 
-  if (playerCard.type === "epidemic") {
-    epidemic(game, gameLog);
-  } else {
-    step.player.cards.push(playerCard);
-  }
-
   const result: StepResult = {
     type: "state_changed",
   };
@@ -34,8 +27,13 @@ export const handleDrawPlayerCard: StepHandler<"draw_2_cards", "draw_player_card
       remainingCards: game.infectionRate.cards,
     };
   } else {
-    game.turnFlow.remainingCards--;
-    gameLog(`${step.player.name} has ${game.turnFlow.remainingCards} player card(s) remaining`);
+    const remainingCards = game.turnFlow.remainingCards - 1;
+    result.nextGameFlow = {
+      type: "draw_2_cards",
+      player: step.player,
+      remainingCards: remainingCards,
+    };
+    gameLog(`${step.player.name} has ${remainingCards} player card(s) remaining`);
   }
 
   return result;
