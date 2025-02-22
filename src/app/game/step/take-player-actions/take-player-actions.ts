@@ -1,7 +1,7 @@
 import { takeAction } from "../../action/actions.ts";
-import { StepHandler } from "../step-handlers.ts";
+import { type StepHandler } from "../step-handlers.ts";
 
-export const handlePlayerAction: StepHandler<"take_4_actions", "player_action"> = (game, gameLog, step) => {
+export const handlePlayerAction: StepHandler<"take_4_actions", "player_action"> = ({ game, gameLog, step }) => {
   const result = takeAction(game, step.action, gameLog);
 
   if (result.type === "state_changed" && !step.action.isFree) {

@@ -1,9 +1,13 @@
-import { StepHandler } from "../step-handlers.ts";
+import { type StepHandler } from "../step-handlers.ts";
 import { drawInfectionCard } from "../../infection/infect-cities.ts";
 import { getNextTurnOrder } from "../../game.ts";
 import type { StepResult } from "../game-steps.ts";
 
-export const handleDrawInfectionCard: StepHandler<"infect_cities", "draw_infection_card"> = (game, gameLog, step) => {
+export const handleDrawInfectionCard: StepHandler<"infect_cities", "draw_infection_card"> = ({
+  game,
+  gameLog,
+  step,
+}) => {
   drawInfectionCard(game, gameLog);
   if (game.state.type !== "playing") {
     return { type: "state_changed" };

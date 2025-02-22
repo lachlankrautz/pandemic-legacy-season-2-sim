@@ -60,6 +60,11 @@ export const serializableStepFactory = Factory.define<SerializableStep, Serializ
           playerName: getRandomItem(playerNames),
           TODO_defineComplexChoices: undefined,
         };
+      case "resolve_epidemic":
+        return {
+          type: "resolve_epidemic",
+          playerName: getRandomItem(playerNames),
+        };
     }
   },
 );

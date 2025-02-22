@@ -3,8 +3,8 @@ import { gameOnInfectCitiesFactory } from "../../game-factories.ts";
 import { drawInfectionCardStepFactory } from "../step-factories.ts";
 import { infectionCardFactory } from "../../infection/infection-card-factories.ts";
 import { handleDrawInfectionCard } from "./draw-infection-card.ts";
-import { LocationNames } from "../../location/location.js";
-import { playerMapFactory } from "../../player/player-factories.js";
+import { LocationNames } from "../../location/location.ts";
+import { playerMapFactory } from "../../player/player-factories.ts";
 
 describe("draw infection card", () => {
   it("increases the infection rate if the deck is empty", () => {
@@ -20,7 +20,7 @@ describe("draw infection card", () => {
     expect(game.state.type).toEqual("playing");
     expect(game.infectionRate.position).toEqual(1);
 
-    handleDrawInfectionCard(game, gameLog, step);
+    handleDrawInfectionCard({ game, gameLog, step });
 
     expect(game.state.type).toEqual("playing");
     expect(game.infectionRate.position).toEqual(2);
@@ -33,7 +33,7 @@ describe("draw infection card", () => {
     const step = drawInfectionCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
-    expect(() => handleDrawInfectionCard(game, gameLog, step)).toThrow(/deck.*empty/);
+    expect(() => handleDrawInfectionCard({ game, gameLog, step })).toThrow(/deck.*empty/);
   });
 
   it("ends early if game end is triggered", () => {
@@ -44,7 +44,7 @@ describe("draw infection card", () => {
     const step = drawInfectionCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
-    const result = handleDrawInfectionCard(game, gameLog, step);
+    const result = handleDrawInfectionCard({ game, gameLog, step });
 
     expect(game.state.type).toEqual("lost");
     expect(result.type).toEqual("state_changed");
@@ -64,7 +64,7 @@ describe("draw infection card", () => {
     const step = drawInfectionCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
-    const result = handleDrawInfectionCard(game, gameLog, step);
+    const result = handleDrawInfectionCard({ game, gameLog, step });
 
     expect(game.incidents).toEqual(0);
     expect(game.state.type).toEqual("playing");
@@ -94,7 +94,7 @@ describe("draw infection card", () => {
     const step = drawInfectionCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
-    const result = handleDrawInfectionCard(game, gameLog, step);
+    const result = handleDrawInfectionCard({ game, gameLog, step });
 
     expect(game.incidents).toEqual(0);
     expect(game.state.type).toEqual("playing");
@@ -123,6 +123,6 @@ describe("draw infection card", () => {
     const step = drawInfectionCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
-    expect(() => handleDrawInfectionCard(game, gameLog, step)).toThrow(/find .* next player/);
+    expect(() => handleDrawInfectionCard({ game, gameLog, step })).toThrow(/find .* next player/);
   });
 });

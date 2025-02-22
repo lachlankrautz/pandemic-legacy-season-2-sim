@@ -34,6 +34,10 @@ export const serializableStepSchema = Type.Union([
     playerName: Type.String(),
     cardNames: Type.Array(Type.String()),
   }),
+  Type.Object({
+    type: Type.Literal("resolve_epidemic"),
+    playerName: Type.String(),
+  }),
 ]);
 
 export type SerializableStep = Static<typeof serializableStepSchema>;
@@ -78,6 +82,11 @@ export const makeStepMapper = (
           playerName: actual.player.name,
           TODO_defineComplexChoices: actual.TODO_defineComplexChoices,
         };
+      case "resolve_epidemic":
+        return {
+          type: "resolve_epidemic",
+          playerName: actual.player.name,
+        };
     }
   },
   toActual: (serializable): Step => {
@@ -115,6 +124,11 @@ export const makeStepMapper = (
           type: "play_event_card",
           player: getPlayer(serializable.playerName),
           TODO_defineComplexChoices: serializable.TODO_defineComplexChoices,
+        };
+      case "resolve_epidemic":
+        return {
+          type: "resolve_epidemic",
+          player: getPlayer(serializable.playerName),
         };
     }
   },

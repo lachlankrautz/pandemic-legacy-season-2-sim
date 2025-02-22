@@ -5,47 +5,86 @@ import { handlePlayerAction } from "./take-player-actions/take-player-actions.ts
 import { handleDrawPlayerCard } from "./draw-player-card/draw-player-card.ts";
 import { handleDrawInfectionCard } from "./draw-infection-card/draw-infection-card.ts";
 import { type GameOnType, isGameOnType, type TurnFlowType } from "../game-flow/game-turn-flow.ts";
+import { mustPlayEpidemicCard, type RequiredStepRule } from "./required-steps.ts";
+import { handleResolveEpidemic } from "./resolve-epidemic/resolve-epidemic.ts";
 
-export type StepHandler<TFlowType extends TurnFlowType = TurnFlowType, TStepType extends StepType = StepType> = (
-  game: GameOnType<TFlowType>,
-  gameLog: GameLog,
-  step: StepOnType<TStepType>,
+export type StepHandlerInput<TFlowType extends TurnFlowType = TurnFlowType, TStepType extends StepType = StepType> = {
+  game: GameOnType<TFlowType>;
+  gameLog: GameLog;
+  step: StepOnType<TStepType>;
+};
+
+export type ChainedStepHandler<TFlowType extends TurnFlowType = TurnFlowType, TStepType extends StepType = StepType> = (
+  input: StepHandlerInput<TFlowType, TStepType>,
+  next: StepHandler,
 ) => StepResult;
 
-export type StepHandlers = Record<StepType, StepHandler>;
+export type StepHandler<TFlowType extends TurnFlowType = TurnFlowType, TStepType extends StepType = StepType> = (
+  input: StepHandlerInput<TFlowType, TStepType>,
+) => StepResult;
 
-export const handleStepTiming = <TFlowType extends TurnFlowType = TurnFlowType, TStepType extends StepType = StepType>(
+/**
+ * If the wrapped handler is a match pass input with narrowed type.
+ */
+export const handleTurnFlowStep = <
+  TFlowType extends TurnFlowType = TurnFlowType,
+  TStepType extends StepType = StepType,
+>(
   flowType: TFlowType,
   stepType: TStepType,
   handler: StepHandler<TFlowType, TStepType>,
-): StepHandler => {
-  return (game, gameLog, step) => {
+): ChainedStepHandler => {
+  return ({ game, gameLog, step }, next) => {
     if (!isGameOnType(game, flowType)) {
-      return {
-        type: "no_effect",
-        cause: "Wrong game turn flow",
-      };
+      return next({ game, gameLog, step });
     }
 
     if (!isStepOnType(step, stepType)) {
-      return {
-        type: "no_effect",
-        cause: "Wrong step type for handler",
-      };
+      return next({ game, gameLog, step });
     }
 
-    return handler(game, gameLog, step);
+    return handler({ game, gameLog, step });
   };
 };
 
-export const stepHandlers: Pick<
-  StepHandlers,
-  "check_for_exposure" | "player_action" | "draw_player_card" | "draw_infection_card"
-> = {
-  ["check_for_exposure"]: handleStepTiming("exposure_check", "check_for_exposure", handleCheckForExposure),
-  ["player_action"]: handleStepTiming("take_4_actions", "player_action", handlePlayerAction),
-  ["draw_player_card"]: handleStepTiming("draw_2_cards", "draw_player_card", handleDrawPlayerCard),
-  ["draw_infection_card"]: handleStepTiming("infect_cities", "draw_infection_card", handleDrawInfectionCard),
-  // ["play_event_card"]: () => undefined,
-  // ["discard_player_cards"]: () => undefined,
+export const handleRequiredStep = <TStepType extends StepType>(
+  rule: RequiredStepRule<TStepType>,
+  handler: StepHandler<TurnFlowType, TStepType>,
+): ChainedStepHandler => {
+  return ({ game, gameLog, step }, next) => {
+    const requiredStep = rule(game);
+
+    // Step is not required
+    if (requiredStep === undefined) {
+      return next({ game, gameLog, step });
+    }
+
+    // Input step is invalid or will match a different required rule handler
+    if (!isStepOnType(step, requiredStep.type)) {
+      return next({ game, gameLog, step });
+    }
+
+    return handler({ game, gameLog, step });
+  };
 };
+
+export const chainHandlers = (...handlers: ChainedStepHandler[]): StepHandler => {
+  const unhandled: StepHandler = ({ game, step }) => {
+    // TODO is this a cheat?
+    //      should there actually be a null or should a step
+    //      that matches no handlers never be sent in the first place?
+    throw new Error(`Step type ${step.type} for game on turn flow ${game.turnFlow.type} not handled`);
+  };
+
+  return handlers
+    .reverse()
+    .reduce((next: StepHandler, handler: ChainedStepHandler) => (input) => handler(input, next), unhandled);
+};
+
+export const stepHandlers = chainHandlers(
+  handleRequiredStep(mustPlayEpidemicCard, handleResolveEpidemic),
+  handleTurnFlowStep("exposure_check", "check_for_exposure", handleCheckForExposure),
+  handleTurnFlowStep("take_4_actions", "player_action", handlePlayerAction),
+  handleTurnFlowStep("draw_2_cards", "draw_player_card", handleDrawPlayerCard),
+  handleTurnFlowStep("infect_cities", "draw_infection_card", handleDrawInfectionCard),
+);

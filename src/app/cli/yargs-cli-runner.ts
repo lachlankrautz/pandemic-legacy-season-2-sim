@@ -285,6 +285,27 @@ export const makeYargsCliRunner = (
           playerName: args.player,
         }),
     )
+    .command(
+      "epidemic",
+      "Resolve a drawn epidemic card",
+      (yargs) => {
+        return yargs.options({
+          save: {
+            type: "string",
+            required: true,
+          },
+          player: {
+            type: "string",
+            required: true,
+          },
+        });
+      },
+      (args) =>
+        takeStep()(args.save, {
+          type: "resolve_epidemic",
+          playerName: args.player,
+        }),
+    )
     .demandCommand();
 
   return {

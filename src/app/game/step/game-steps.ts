@@ -3,7 +3,7 @@ import { type Action } from "../action/actions.ts";
 import type { Player } from "../player/player.ts";
 import { type GameTurnFlow } from "../game-flow/game-turn-flow.ts";
 import type { GameLog } from "../game-log/game-log.ts";
-import { stepHandlers } from "./step-handlers.ts";
+import { chainHandlers, stepHandlers } from "./step-handlers.ts";
 
 /**
  * A step is an atomic level of interaction with the game. A step could be
@@ -29,7 +29,8 @@ export type Step =
   | DrawPlayerCardStep
   | DrawInfectionCardStep
   | PlayEventCardStep
-  | DiscardPlayerCardsStep;
+  | DiscardPlayerCardsStep
+  | ResolveEpidemicStep;
 
 export type CheckExposureStep = { type: "check_for_exposure"; player: Player };
 
@@ -47,6 +48,8 @@ export type PlayEventCardStep = { type: "play_event_card"; player: Player; TODO_
 
 export type DiscardPlayerCardsStep = { type: "discard_player_cards"; player: Player; cardNames: string[] };
 
+export type ResolveEpidemicStep = { type: "resolve_epidemic"; player: Player };
+
 export type StepResult =
   | { type: "no_effect"; cause: string }
   | {
@@ -63,6 +66,7 @@ export const stepTypes = [
   "draw_infection_card",
   "play_event_card",
   "discard_player_cards",
+  "resolve_epidemic",
 ] as const satisfies StepType[];
 
 export type StepOnType<TStepType extends StepType> = Extract<Step, { type: TStepType }>;
@@ -98,14 +102,14 @@ export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
 };
 
 export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResult => {
-  let result: StepResult | undefined = undefined;
-
+  // TODO move to a handler
   if (game.state.type !== "playing") {
     // TODO handle without using exceptions
     throw new Error("game is already over");
   }
   const player = game.turnFlow.player;
 
+  // TODO move to a handler
   // Is it this player's turn
   if (player.name !== step.player.name) {
     return {
@@ -114,18 +118,9 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
     };
   }
 
-  if (
-    step.type === "check_for_exposure" ||
-    step.type === "player_action" ||
-    step.type === "draw_player_card" ||
-    step.type === "draw_infection_card"
-  ) {
-    result = stepHandlers[step.type](game, gameLog, step);
-  }
+  const handler = chainHandlers(stepHandlers);
 
-  if (result === undefined) {
-    throw new Error(`Step type ${step.type} not implemented`);
-  }
+  const result: StepResult = handler({ game, gameLog, step });
 
   if (result.type === "state_changed") {
     game.stepHistory.push(step);

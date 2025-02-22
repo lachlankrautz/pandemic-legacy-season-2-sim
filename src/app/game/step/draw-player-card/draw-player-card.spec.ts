@@ -1,18 +1,18 @@
 import { describe, it, expect, vi } from "vitest";
-import { gameFactory } from "../../game-factories.ts";
-import { takeGameStep } from "../game-steps.ts";
-import { stepFactory } from "../step-factories.ts";
-import { LocationNames } from "../../location/location.js";
+import { gameOnDrawPlayerCardsFactory } from "../../game-factories.ts";
+import { drawPlayerCardStepFactory } from "../step-factories.ts";
+import { LocationNames } from "../../location/location.ts";
+import { handleDrawPlayerCard } from "./draw-player-card.ts";
 
 describe("draw player card", () => {
   it("ends the game if the draw pile is already empty", () => {
-    const game = gameFactory.build({ turnFlow: { type: "draw_2_cards", remainingCards: 2 } });
-    const step = stepFactory.build({ type: "draw_player_card", player: game.turnFlow.player });
+    const game = gameOnDrawPlayerCardsFactory.build({ turnFlow: { remainingCards: 2 } });
+    const step = drawPlayerCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
     expect(game.state.type).toEqual("playing");
 
-    takeGameStep(game, step, gameLog);
+    handleDrawPlayerCard({ game, step, gameLog });
 
     expect(game.state.type).toEqual("lost");
     if (game.state.type !== "lost") {
@@ -22,8 +22,8 @@ describe("draw player card", () => {
   });
 
   it("updates the remaining cards in turn flow", () => {
-    const game = gameFactory.build(
-      { turnFlow: { type: "draw_2_cards", remainingCards: 2 } },
+    const game = gameOnDrawPlayerCardsFactory.build(
+      { turnFlow: { remainingCards: 2 } },
       {
         transient: {
           playerCardLocationNames: {
@@ -32,10 +32,10 @@ describe("draw player card", () => {
         },
       },
     );
-    const step = stepFactory.build({ type: "draw_player_card", player: game.turnFlow.player });
+    const step = drawPlayerCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
-    const result = takeGameStep(game, step, gameLog);
+    const result = handleDrawPlayerCard({ game, step, gameLog });
 
     expect(game.state.type).toEqual("playing");
     expect(result.type).toEqual("state_changed");
@@ -50,8 +50,8 @@ describe("draw player card", () => {
   });
 
   it("advances to infect cities after all cards are drawn", () => {
-    const game = gameFactory.build(
-      { turnFlow: { type: "draw_2_cards", remainingCards: 1 } },
+    const game = gameOnDrawPlayerCardsFactory.build(
+      { turnFlow: { remainingCards: 1 } },
       {
         transient: {
           playerCardLocationNames: {
@@ -60,10 +60,10 @@ describe("draw player card", () => {
         },
       },
     );
-    const step = stepFactory.build({ type: "draw_player_card", player: game.turnFlow.player });
+    const step = drawPlayerCardStepFactory.build({ player: game.turnFlow.player });
     const gameLog = vi.fn();
 
-    const result = takeGameStep(game, step, gameLog);
+    const result = handleDrawPlayerCard({ game, step, gameLog });
 
     expect(game.state.type).toEqual("playing");
     expect(result.type).toEqual("state_changed");

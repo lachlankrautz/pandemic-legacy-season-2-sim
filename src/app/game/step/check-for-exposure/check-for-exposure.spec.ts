@@ -10,7 +10,7 @@ describe("check for exposure", () => {
     const gameLog: GameLog = vi.fn();
     const step = checkForExposureStepFactory.build({ type: "check_for_exposure" });
 
-    const result = handleCheckForExposure(game, gameLog, step);
+    const result = handleCheckForExposure({ game, gameLog, step });
 
     expect(result.type).toEqual("state_changed");
     if (result.type !== "state_changed") {

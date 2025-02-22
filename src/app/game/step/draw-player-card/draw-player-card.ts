@@ -1,8 +1,8 @@
 import { cardDisplayName } from "../../location/location.ts";
-import { StepHandler } from "../step-handlers.ts";
+import { type StepHandler } from "../step-handlers.ts";
 import type { StepResult } from "../game-steps.ts";
 
-export const handleDrawPlayerCard: StepHandler<"draw_2_cards", "draw_player_card"> = (game, gameLog, step) => {
+export const handleDrawPlayerCard: StepHandler<"draw_2_cards", "draw_player_card"> = ({ game, gameLog, step }) => {
   const playerCard = game.playerDeck.drawPile.pop();
 
   // Players ran out of time.

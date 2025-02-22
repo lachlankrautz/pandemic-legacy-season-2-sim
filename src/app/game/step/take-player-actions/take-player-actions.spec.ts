@@ -11,7 +11,7 @@ describe("take player actions", () => {
     const step = playerActionStepFactory.build({ action: { type: "make_supplies" } });
     const gameLog = vi.fn();
 
-    const result = handlePlayerAction(game, gameLog, step);
+    const result = handlePlayerAction({ game, gameLog, step });
 
     expect(game.state.type).toEqual("playing");
     expect(result.type).toEqual("state_changed");
@@ -31,7 +31,7 @@ describe("take player actions", () => {
     const step = playerActionStepFactory.build({ action: { type: "make_supplies" } });
     const gameLog = vi.fn();
 
-    const result = handlePlayerAction(game, gameLog, step);
+    const result = handlePlayerAction({ game, gameLog, step });
 
     expect(game.state.type).toEqual("playing");
     expect(result.type).toEqual("state_changed");

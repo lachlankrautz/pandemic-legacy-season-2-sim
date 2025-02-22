@@ -7,6 +7,7 @@ import type {
   DrawPlayerCardStep,
   PlayerActionStep,
   PlayEventCardStep,
+  ResolveEpidemicStep,
   Step,
 } from "./game-steps.ts";
 import { actionFactory } from "../action/action-factories.ts";
@@ -76,6 +77,14 @@ export const playEventCardStepFactory = Factory.define<PlayEventCardStep>(({ par
   };
 });
 
+export const resolveEpidemicStepFactory = Factory.define<ResolveEpidemicStep>(({ params }) => {
+  const player = playerFactory.build(params.player);
+  return {
+    type: "resolve_epidemic",
+    player,
+  };
+});
+
 export const stepFactory = Factory.define<Step>(({ params }) => {
   params.type ??= getRandomItem(stepTypes);
   switch (params.type) {
@@ -91,5 +100,7 @@ export const stepFactory = Factory.define<Step>(({ params }) => {
       return drawInfectionCardStepFactory.build(params);
     case "play_event_card":
       return playEventCardStepFactory.build(params);
+    case "resolve_epidemic":
+      return resolveEpidemicStepFactory.build(params);
   }
 });

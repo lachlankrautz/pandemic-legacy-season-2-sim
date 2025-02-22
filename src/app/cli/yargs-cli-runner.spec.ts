@@ -144,6 +144,15 @@ describe("yargs cli runner", () => {
     expect(mockTakeStep).toHaveBeenCalledWith("test", expectedStep);
   });
 
+  it("runs epidemic command", () => {
+    act(["epidemic", "--save", "test", "--player", "Hammond"]);
+    const expectedStep: SerializableStep = {
+      type: "resolve_epidemic",
+      playerName: "Hammond",
+    };
+    expect(mockTakeStep).toHaveBeenCalledWith("test", expectedStep);
+  });
+
   it("failing command logs and exits", async () => {
     const spyLogger = vi.spyOn(testLogger, "error").mockImplementation(() => undefined);
 
