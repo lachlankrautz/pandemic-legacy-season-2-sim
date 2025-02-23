@@ -1,6 +1,6 @@
-import { type ReactNode, useState, createElement } from "react";
+import React, { useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import type { Page } from "./App.ts";
+import type { Page } from "./App.tsx";
 
 type ItemProps = {
   key: string;
@@ -12,22 +12,27 @@ export type MainMenuProps = {
   navigate: (page: Page) => void;
 };
 
-const MainMenu = (props: MainMenuProps): ReactNode => {
+const MainMenu = (props: MainMenuProps): React.ReactNode => {
   const { exit } = useApp();
 
   const items: ItemProps[] = [
     {
-      key: "start",
+      key: "startItem",
       text: "Start Game",
       handler: () => props.navigate("game"),
     },
     {
-      key: "options",
+      key: "botItem",
+      text: "Watch Bot",
+      handler: () => props.navigate("bot"),
+    },
+    {
+      key: "optionsItem",
       text: "Options",
       handler: () => props.navigate("options"),
     },
     {
-      key: "exit",
+      key: "exitItem",
       text: "Exit",
       handler: exit,
     },
@@ -54,21 +59,21 @@ const MainMenu = (props: MainMenuProps): ReactNode => {
     }
   });
 
-  return createElement(
-    Box,
-    { flexDirection: "column", width: 50 },
-    items.map((item, index) => {
-      return createElement(
-        Box,
-        {
-          key: item.key,
-          borderStyle: "round",
-          borderColor: selectedIndex === index ? "green" : "black",
-          justifyContent: "center",
-        },
-        createElement(Text, {}, item.text),
-      );
-    }),
+  return (
+    <Box flexDirection={"column"} width={50}>
+      {items.map((item, index) => {
+        return (
+          <Box
+            key={item.key}
+            borderStyle={"round"}
+            borderColor={selectedIndex === index ? "green" : "black"}
+            justifyContent={"center"}
+          >
+            <Text>{item.text}</Text>
+          </Box>
+        );
+      })}
+    </Box>
   );
 };
 

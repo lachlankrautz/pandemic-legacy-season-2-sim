@@ -4,7 +4,7 @@ import { startGameUseCase } from "../app/game/start/start-game-use-case.ts";
 import { makeFileRepository } from "../app/repository/file-repository.ts";
 import type { SerializableStep } from "../app/serialization/step-serialization.ts";
 import { takeGameStepUseCase, takeSerializedGameStepUseCase } from "../app/game/step/take-game-step-use-case.ts";
-import { makeLogger } from "../app/logging/logger.ts";
+import { makeLogger, makeNullLogger } from "../app/logging/logger.ts";
 import { type ShowInfo, showInfoUseCase } from "../app/game/view/show-info-use-case.ts";
 import { makeTuiRunner } from "../app/ink-tui/root.ts";
 import { runBotUseCase } from "../app/bots/run-bot-use-case.ts";
@@ -14,10 +14,9 @@ import { runBotUseCase } from "../app/bots/run-bot-use-case.ts";
  */
 export const boostrapCli = (): CliRunner => {
   const logger = makeLogger();
-
   return makeYargsCliRunner(
     logger,
-    () => makeTuiRunner(),
+    () => makeTuiRunner(makeNullLogger()),
     () => (fileName: string) => startGameUseCase(logger, makeFileRepository(logger), fileName),
     () => (fileName: string, inputStep: SerializableStep) =>
       takeGameStepUseCase(logger, makeFileRepository(logger), fileName, inputStep),

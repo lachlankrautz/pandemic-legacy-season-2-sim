@@ -16,6 +16,11 @@ export const playGame = (driver: GameDriver, logger: Logger): void => {
   logger.info("Bot run finished");
 };
 
+export const playGameTick = (driver: GameDriver): void => {
+  const game = driver.getGame();
+  driver.takeStep(makeStep(game, game.turnFlow.player));
+};
+
 const makeStep = (game: Game, player: Player): Step => {
   const requiredStep = makeRequiredStep(game, player);
   if (requiredStep !== undefined) {

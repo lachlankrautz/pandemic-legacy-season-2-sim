@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["ESNext"],
+    "lib": [
+      "dom",
+      "ESNext"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "rootDir": "./src/",
@@ -13,7 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "noErrorTruncation": true,
     "noEmit": true,
-
+    "jsx": "preserve",
     // adapted from "strictest"
     // https://www.npmjs.com/package/@tsconfig/strictest
     "strict": true,
