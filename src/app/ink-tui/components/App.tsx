@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import React, { useState } from "react";
 import MainMenu from "./MainMenu.tsx";
 import GamePlayer from "./GamePlayer.tsx";
 import Options from "./Options.tsx";
@@ -21,11 +21,11 @@ export type AppProps = {
   logger: Logger;
 };
 
-const App = (props: AppProps): ReactNode => {
+const App = (props: AppProps): React.ReactNode => {
   const [page, navigate] = useState<Page>("main");
   const [driver] = useState(() => newGameDriver(props.logger));
 
-  let pageNode: ReactNode;
+  let pageNode: React.ReactNode;
   switch (page) {
     case "main":
       pageNode = <MainMenu key={"main"} navigate={navigate}></MainMenu>;

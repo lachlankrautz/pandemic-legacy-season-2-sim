@@ -36,6 +36,10 @@ export const makeLogger = (): Logger => {
     transports: [new transports.Console()],
   });
 
+  return adaptLogger(logger);
+};
+
+const adaptLogger = (logger: WinstonLogger): Logger => {
   return {
     setLevel: (level) => {
       logger.level = level;
@@ -73,22 +77,5 @@ export const makeNullLogger = (): Logger => {
     transports: [new transports.Stream({ stream: nullStream })],
   });
 
-  return {
-    setLevel: (level) => {
-      logger.level = level;
-    },
-    isDebugEnabled: () => logger.isDebugEnabled(),
-    info: (...args) => {
-      logger.info(...args);
-    },
-    warn: (...args) => {
-      logger.warn(...args);
-    },
-    debug: (...args) => {
-      logger.debug(...args);
-    },
-    error: (...args) => {
-      logger.error(...args);
-    },
-  };
+  return adaptLogger(logger);
 };

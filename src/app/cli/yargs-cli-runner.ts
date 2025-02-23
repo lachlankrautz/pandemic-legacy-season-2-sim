@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import type { SerializableStep } from "../serialization/step-serialization.ts";
 import type { Logger } from "../logging/logger.ts";
 import type { ShowInfo } from "../game/view/show-info-use-case.ts";
-import type { TuiRunner } from "../ink-tui/root.ts";
+import type { TuiRunner } from "../ink-tui/root.tsx";
 
 export type CliRunner = {
   run(args: string[]): Promise<void>;

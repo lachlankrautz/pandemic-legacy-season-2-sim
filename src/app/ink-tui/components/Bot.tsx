@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import React, { useState } from "react";
 import { Box, useInput } from "ink";
 import type { GameDriver } from "../../game/step/game-steps.ts";
 import GameDisplay from "./GameDisplay.tsx";
@@ -9,7 +9,7 @@ export type BotProps = {
   driver: GameDriver;
 };
 
-const BotPlayer = ({ navigateBack, driver }: BotProps): ReactNode => {
+const BotPlayer = ({ navigateBack, driver }: BotProps): React.ReactNode => {
   const [gameState, updateGameState] = useState({ game: driver.getGame() });
 
   useInput((input, key) => {
