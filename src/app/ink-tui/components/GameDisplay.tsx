@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Text } from "ink";
+import { Box, Text, Newline } from "ink";
 import type { Game } from "../../game/game.ts";
 
 export type GameDisplayProps = {
@@ -41,7 +41,11 @@ const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode
         // minWidth: 120,
         borderStyle={"single"}
       >
-        <Text>Logs:\n{game.gameLog.slice(game.gameLog.length - 5).join("\n")}`)</Text>
+        <Text>
+          Logs:
+          <Newline />
+          {game.gameLog.slice(game.gameLog.length - 5).join("\n")}
+        </Text>
       </Box>
     </Box>
   );
