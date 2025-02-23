@@ -11,6 +11,8 @@ export const checkSupplyCentres = (
     objective.hasBuiltCount++;
   }
 
-  objective.isCompleted = objective.mustBuildCount <= objective.hasBuiltCount;
-  gameLog(`${objective.type} is completed`);
+  if (objective.mustBuildCount <= objective.hasBuiltCount) {
+    objective.isCompleted = true;
+    gameLog(`${objective.type} is completed`);
+  }
 };

@@ -94,8 +94,10 @@ export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
 
       // TODO this and other after step logic doesn't seem to be in the right place
       if (result.type !== "no_effect" && result.nextGameFlow) {
+        if (game.turnFlow.type !== result.nextGameFlow.type) {
+          gameLog(`Game flow moved to: "${game.turnFlow.type}"`);
+        }
         game.turnFlow = result.nextGameFlow;
-        gameLog(`Game flow moved to: "${game.turnFlow.type}"`);
       }
 
       return result;

@@ -23,6 +23,8 @@ export type LazyTakeSerializedStepCommand = () => (save: string, stepJson: strin
 
 export type LazyShowInfoCommand = () => (save: string, showInfo: ShowInfo) => string;
 
+export type LazyRunBotCommand = () => (botName: string) => void;
+
 export const makeYargsCliRunner = (
   logger: Logger,
   playTui: LazyPlayTuiCommand,
@@ -30,6 +32,7 @@ export const makeYargsCliRunner = (
   takeStep: LazyTakeStepCommand,
   takeSerializedStep: LazyTakeSerializedStepCommand,
   showInfoCommandLoader: LazyShowInfoCommand,
+  runBot: LazyRunBotCommand,
 ): CliRunner => {
   const checkDebug = (args: { debug: boolean | undefined }) => {
     if (args.debug) {
@@ -331,6 +334,19 @@ export const makeYargsCliRunner = (
           type: "resolve_epidemic",
           playerName: args.player,
         }),
+    )
+    .command(
+      "bot",
+      "Watch a bot play a game",
+      (yargs) => {
+        return yargs.options({
+          botName: {
+            type: "string",
+            required: true,
+          },
+        });
+      },
+      (args) => runBot()(args.botName),
     )
     .demandCommand();
 

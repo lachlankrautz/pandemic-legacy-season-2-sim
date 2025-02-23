@@ -14,6 +14,7 @@ describe("yargs cli runner", () => {
   const mockTakeStep = vi.fn();
   const mockTakeSerializedStep = vi.fn();
   const mockShowInfo = vi.fn(() => "");
+  const mockRunBot = vi.fn();
 
   const act = (args: string[]): Promise<void> =>
     makeYargsCliRunner(
@@ -23,6 +24,7 @@ describe("yargs cli runner", () => {
       () => mockTakeStep,
       () => mockTakeSerializedStep,
       () => mockShowInfo,
+      () => mockRunBot,
     ).run(["test", "command", ...args]);
 
   const processExitPattern: RegExp = /process\.exit/;
