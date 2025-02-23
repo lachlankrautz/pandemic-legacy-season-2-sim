@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import type { GameLog } from "../../game-log/game-log.ts";
-import { gameFactory } from "../../game-factories.js";
-import { playerFactory } from "../../player/player-factories.js";
-import { resolveEpidemicStepFactory } from "../step-factories.js";
-import { handleResolveEpidemic } from "./resolve-epidemic.js";
-import { playerCardFactory } from "../../cards/player-card-factories.js";
-import { epidemic } from "../../infection/epidemic.js";
-import { LocationNames } from "../../location/location.js";
+import { gameFactory } from "../../game-factories.ts";
+import { playerFactory } from "../../player/player-factories.ts";
+import { resolveEpidemicStepFactory } from "../step-factories.ts";
+import { handleResolveEpidemic } from "./resolve-epidemic.ts";
+import { playerCardFactory } from "../../cards/player-card-factories.ts";
+import { epidemic } from "../../infection/epidemic.ts";
+import { LocationNames } from "../../location/location.ts";
 
 vi.mock("../../infection/epidemic.ts", { spy: true });
 

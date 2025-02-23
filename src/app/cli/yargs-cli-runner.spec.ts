@@ -153,6 +153,16 @@ describe("yargs cli runner", () => {
     expect(mockTakeStep).toHaveBeenCalledWith("test", expectedStep);
   });
 
+  it("runs discard player card command", () => {
+    act(["discard", "--save", "test", "--player", "Hammond", "--index", "0"]);
+    const expectedStep: SerializableStep = {
+      type: "discard_player_card",
+      playerName: "Hammond",
+      cardIndex: 0,
+    };
+    expect(mockTakeStep).toHaveBeenCalledWith("test", expectedStep);
+  });
+
   it("failing command logs and exits", async () => {
     const spyLogger = vi.spyOn(testLogger, "error").mockImplementation(() => undefined);
 

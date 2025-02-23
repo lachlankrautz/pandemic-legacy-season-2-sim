@@ -15,6 +15,7 @@ export type PlayerParams = {
   blackCards: number;
   blueCards: number;
   cardCount: number;
+  allowEpidemic: boolean;
 };
 
 const playerParamsToCardHand = (params: Partial<PlayerParams>): Partial<PlayerCardsHandParams> => {
@@ -38,6 +39,10 @@ const playerParamsToCardHand = (params: Partial<PlayerParams>): Partial<PlayerCa
 
   if (params.cardCount !== undefined) {
     cardsParams.count = params.cardCount;
+  }
+
+  if (params.allowEpidemic !== undefined) {
+    cardsParams.allowEpidemic = params.allowEpidemic;
   }
 
   return cardsParams;

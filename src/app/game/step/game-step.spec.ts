@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import { makeGameDriver, takeGameStep } from "./game-steps.ts";
-import { gameFactory } from "../game-factories.ts";
-import { makeGameLog } from "../game-log/game-log.ts";
+import { gameFactory, gameOnExposureCheckFactory } from "../game-factories.ts";
+import { type GameLog, makeGameLog } from "../game-log/game-log.ts";
 import { makeLogger } from "../../logging/logger.ts";
-import { stepFactory } from "./step-factories.ts";
-import { playerMapFactory } from "../player/player-factories.ts";
+import { checkForExposureStepFactory, stepFactory } from "./step-factories.ts";
+import { playerFactory, playerMapFactory } from "../player/player-factories.ts";
+import { playerCardFactory } from "../cards/player-card-factories.ts";
+import { HAND_LIMIT } from "./required-steps/required-steps.ts";
 
 const logger = makeLogger();
 
@@ -104,5 +106,35 @@ describe("take game step", () => {
       throw new Error("narrow type of already asserted value");
     }
     expect(game.turnFlow.type).toEqual("take_4_actions");
+  });
+
+  it("requires players discard cards before taking any other step", () => {
+    const player = playerFactory.build({ cards: playerCardFactory.buildList(HAND_LIMIT + 1) });
+    const game = gameOnExposureCheckFactory.build({ players: new Map([[player.name, player]]) });
+    const gameLog: GameLog = vi.fn();
+    const step = checkForExposureStepFactory.build({ player });
+
+    const result = takeGameStep(game, step, gameLog);
+
+    expect(result.type).toEqual("no_effect");
+    if (result.type !== "no_effect") {
+      throw new Error("narrowing type to match assertion");
+    }
+    expect(result.cause).toMatch(/step discard_player_card is required/);
+  });
+
+  it("requires players resolve epidemics before any other step", () => {
+    const player = playerFactory.build({ cards: [playerCardFactory.build({ type: "epidemic" })] });
+    const game = gameOnExposureCheckFactory.build({ players: new Map([[player.name, player]]) });
+    const gameLog: GameLog = vi.fn();
+    const step = checkForExposureStepFactory.build({ player });
+
+    const result = takeGameStep(game, step, gameLog);
+
+    expect(result.type).toEqual("no_effect");
+    if (result.type !== "no_effect") {
+      throw new Error("narrowing type to match assertion");
+    }
+    expect(result.cause).toMatch(/step resolve_epidemic is required/);
   });
 });

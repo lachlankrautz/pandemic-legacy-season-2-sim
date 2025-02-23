@@ -1,6 +1,6 @@
 import { type StepHandler } from "../step-handlers.ts";
 import { partitionOne } from "../../../../util/arrays.ts";
-import { epidemic } from "../../infection/epidemic.js";
+import { epidemic } from "../../infection/epidemic.ts";
 
 export const handleResolveEpidemic: StepHandler = ({ game, gameLog }) => {
   const [epidemicCard, remainingCards] = partitionOne(game.turnFlow.player.cards, (card) => card.type === "epidemic");

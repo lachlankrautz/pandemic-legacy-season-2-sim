@@ -14,16 +14,18 @@ export const partition = <T>(array: T[], predicate: (item: T, index: number) => 
   return [pass, fail];
 };
 
-export const partitionOne = <T>(array: T[], predicate: (item: T) => boolean): [T | undefined, T[]] => {
+export const partitionOne = <T>(array: T[], predicate: (item: T, index: number) => boolean): [T | undefined, T[]] => {
   let pass: T | undefined;
   const fail: T[] = [];
-  for (const item of array) {
-    if (!predicate(item)) {
+
+  array.forEach((item, index) => {
+    if (!predicate(item, index)) {
       fail.push(item);
     } else {
       predicate = () => false;
       pass = item;
     }
-  }
+  });
+
   return [pass, fail];
 };

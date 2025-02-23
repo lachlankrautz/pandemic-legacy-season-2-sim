@@ -6,6 +6,7 @@ import { type Location } from "../location/location.ts";
 import { locationFactory } from "../location/location-factories.ts";
 
 const types: PlayerCard["type"][] = ["city", "produce_supplies", "portable_antiviral_lab", "epidemic", "event"];
+const typesWithoutEpidemic: PlayerCard["type"][] = ["city", "produce_supplies", "portable_antiviral_lab", "event"];
 
 const eventNames: string[] = [
   "Strategic Reserves",
@@ -26,11 +27,12 @@ const eventNames: string[] = [
 export type PlayerCardParams = {
   type: PlayerCard["type"];
   locationMap: Map<string, Location>;
+  allowEpidemic: boolean;
 };
 
 export const playerCardFactory = Factory.define<PlayerCard, PlayerCardParams>(
-  ({ params, transientParams: { locationMap } }) => {
-    params.type ??= getRandomItem(types);
+  ({ params, transientParams: { locationMap, allowEpidemic } }) => {
+    params.type ??= getRandomItem(allowEpidemic ? types : typesWithoutEpidemic);
 
     let eventName: string;
     let cityLocation: Location;
@@ -92,6 +94,7 @@ export type PlayerCardsHandParams = {
   blueCards: number;
 
   count: number;
+  allowEpidemic: boolean;
 };
 
 export const playerCardsHandFactory = Factory.define<PlayerCard[], PlayerCardsHandParams>(

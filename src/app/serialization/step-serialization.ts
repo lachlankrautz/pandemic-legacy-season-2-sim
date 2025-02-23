@@ -30,9 +30,9 @@ export const serializableStepSchema = Type.Union([
     TODO_defineComplexChoices: Type.Unknown(),
   }),
   Type.Object({
-    type: Type.Literal("discard_player_cards"),
+    type: Type.Literal("discard_player_card"),
     playerName: Type.String(),
-    cardNames: Type.Array(Type.String()),
+    cardIndex: Type.Number(),
   }),
   Type.Object({
     type: Type.Literal("resolve_epidemic"),
@@ -59,12 +59,11 @@ export const makeStepMapper = (
           type: "check_for_exposure",
           playerName: actual.player.name,
         };
-      case "discard_player_cards":
+      case "discard_player_card":
         return {
-          type: "discard_player_cards",
+          type: "discard_player_card",
           playerName: actual.player.name,
-          // TODO this should probably be hand indexes
-          cardNames: actual.cardNames,
+          cardIndex: actual.cardIndex,
         };
       case "draw_player_card":
         return {
@@ -102,12 +101,11 @@ export const makeStepMapper = (
           type: "check_for_exposure",
           player: getPlayer(serializable.playerName),
         };
-      case "discard_player_cards":
+      case "discard_player_card":
         return {
-          type: "discard_player_cards",
+          type: "discard_player_card",
           player: getPlayer(serializable.playerName),
-          // TODO this should probably be hand indexes
-          cardNames: serializable.cardNames,
+          cardIndex: serializable.cardIndex,
         };
       case "draw_player_card":
         return {

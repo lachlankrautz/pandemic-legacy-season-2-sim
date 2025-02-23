@@ -29,7 +29,7 @@ export type Step =
   | DrawPlayerCardStep
   | DrawInfectionCardStep
   | PlayEventCardStep
-  | DiscardPlayerCardsStep
+  | DiscardPlayerCardStep
   | ResolveEpidemicStep;
 
 export type CheckExposureStep = { type: "check_for_exposure"; player: Player };
@@ -46,7 +46,7 @@ export type DrawInfectionCardStep = { type: "draw_infection_card"; player: Playe
 
 export type PlayEventCardStep = { type: "play_event_card"; player: Player; TODO_defineComplexChoices: unknown };
 
-export type DiscardPlayerCardsStep = { type: "discard_player_cards"; player: Player; cardNames: string[] };
+export type DiscardPlayerCardStep = { type: "discard_player_card"; player: Player; cardIndex: number };
 
 export type ResolveEpidemicStep = { type: "resolve_epidemic"; player: Player };
 
@@ -65,7 +65,7 @@ export const stepTypes = [
   "draw_player_card",
   "draw_infection_card",
   "play_event_card",
-  "discard_player_cards",
+  "discard_player_card",
   "resolve_epidemic",
 ] as const satisfies StepType[];
 

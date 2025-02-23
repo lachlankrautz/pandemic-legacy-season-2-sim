@@ -265,6 +265,32 @@ export const makeYargsCliRunner = (
         }),
     )
     .command(
+      "discard",
+      "Discard a player card",
+      (yargs) => {
+        return yargs.options({
+          save: {
+            type: "string",
+            required: true,
+          },
+          player: {
+            type: "string",
+            required: true,
+          },
+          index: {
+            type: "number",
+            required: true,
+          },
+        });
+      },
+      (args) =>
+        takeStep()(args.save, {
+          type: "discard_player_card",
+          playerName: args.player,
+          cardIndex: args.index,
+        }),
+    )
+    .command(
       "infect",
       "Draw an infection card",
       (yargs) => {

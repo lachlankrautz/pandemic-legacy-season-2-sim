@@ -2,7 +2,7 @@ import { Factory } from "fishery";
 import { getRandomItem } from "../../random/random.ts";
 import type {
   CheckExposureStep,
-  DiscardPlayerCardsStep,
+  DiscardPlayerCardStep,
   DrawInfectionCardStep,
   DrawPlayerCardStep,
   PlayerActionStep,
@@ -12,11 +12,12 @@ import type {
 } from "./game-steps.ts";
 import { actionFactory } from "../action/action-factories.ts";
 import { playerFactory } from "../player/player-factories.ts";
+import { faker } from "@faker-js/faker/locale/en";
 
 const stepTypes: Step["type"][] = [
   "player_action",
   "check_for_exposure",
-  "discard_player_cards",
+  "discard_player_card",
   "draw_player_card",
   "draw_infection_card",
   "play_event_card",
@@ -42,13 +43,12 @@ export const checkForExposureStepFactory = Factory.define<CheckExposureStep>(({ 
   };
 });
 
-export const discardPlayerCardsStepFactory = Factory.define<DiscardPlayerCardsStep>(({ params }) => {
+export const discardPlayerCardStepFactory = Factory.define<DiscardPlayerCardStep>(({ params }) => {
   const player = playerFactory.build(params.player);
   return {
-    type: "discard_player_cards",
+    type: "discard_player_card",
     player,
-    // TODO this should probably be hand indexes
-    cardNames: [],
+    cardIndex: faker.number.int({ min: 0, max: 10 }),
   };
 });
 
@@ -92,8 +92,8 @@ export const stepFactory = Factory.define<Step>(({ params }) => {
       return playerActionStepFactory.build(params);
     case "check_for_exposure":
       return checkForExposureStepFactory.build(params);
-    case "discard_player_cards":
-      return discardPlayerCardsStepFactory.build(params);
+    case "discard_player_card":
+      return discardPlayerCardStepFactory.build(params);
     case "draw_player_card":
       return drawPlayerCardStepFactory.build(params);
     case "draw_infection_card":

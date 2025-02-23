@@ -5,8 +5,13 @@ import { handlePlayerAction } from "./take-player-actions/take-player-actions.ts
 import { handleDrawPlayerCard } from "./draw-player-card/draw-player-card.ts";
 import { handleDrawInfectionCard } from "./draw-infection-card/draw-infection-card.ts";
 import { type GameOnType, isGameOnType, type TurnFlowType } from "../game-flow/game-turn-flow.ts";
-import { mustPlayEpidemicCard, type RequiredStepRule } from "./required-steps.ts";
+import {
+  mustDiscardExcessPlayerCards,
+  mustPlayEpidemicCard,
+  type RequiredStepRule,
+} from "./required-steps/required-steps.ts";
 import { handleResolveEpidemic } from "./resolve-epidemic/resolve-epidemic.ts";
+import { handleDiscardPlayerCard } from "./discard-player-card/discard-player-card.ts";
 
 export type StepHandlerInput<TFlowType extends TurnFlowType = TurnFlowType, TStepType extends StepType = StepType> = {
   game: GameOnType<TFlowType>;
@@ -59,9 +64,12 @@ export const handleRequiredStep = <TStepType extends StepType>(
       return next({ game, gameLog, step });
     }
 
-    // Input step is invalid or will match a different required rule handler
+    // Input step is invalid, only the required step is acceptable
     if (!isStepOnType(step, requiredStep.type)) {
-      return next({ game, gameLog, step });
+      return {
+        type: "no_effect",
+        cause: `Cannot perform ${step.type}; step ${requiredStep.type} is required`,
+      };
     }
 
     return handler({ game, gameLog, step });
@@ -82,6 +90,7 @@ export const chainHandlers = (...handlers: ChainedStepHandler[]): StepHandler =>
 };
 
 export const stepHandlers = chainHandlers(
+  handleRequiredStep(mustDiscardExcessPlayerCards, handleDiscardPlayerCard),
   handleRequiredStep(mustPlayEpidemicCard, handleResolveEpidemic),
   handleTurnFlowStep("exposure_check", "check_for_exposure", handleCheckForExposure),
   handleTurnFlowStep("take_4_actions", "player_action", handlePlayerAction),
