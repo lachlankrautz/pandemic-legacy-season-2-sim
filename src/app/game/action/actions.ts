@@ -131,6 +131,7 @@ export const makeSupplyCentre = (game: Game, cardSelection: PlayerCardSelection)
 
   return {
     type: "state_changed",
+    builtSupplyCentre: true,
   };
 };
 

@@ -19,8 +19,20 @@ export type Connection = {
   type: "land" | "sea";
 };
 
-export type Objective = {
-  name: string;
+export type Objective = ConnectCitiesObjective | BuildSupplyCentresObjective;
+
+export type BuildSupplyCentresObjective = {
+  type: "build_supply_centres";
+  hasBuiltCount: number;
+  mustBuildCount: number;
+  isCompleted: boolean;
+  isMandatory: boolean;
+};
+
+export type ConnectCitiesObjective = {
+  type: "connect_cities";
+  hasConnectedCount: number;
+  mustConnectCount: number;
   isCompleted: boolean;
   isMandatory: boolean;
 };

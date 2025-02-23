@@ -176,6 +176,7 @@ describe("make supply centre", () => {
     const result = makeSupplyCentre(game, new Set([0, 1, 2, 3, 4]));
     expect(result).toEqual({
       type: "state_changed",
+      builtSupplyCentre: true,
     });
     expect(player.location.supplyCentre).toEqual(true);
     expect(player.cards).toHaveLength(0);

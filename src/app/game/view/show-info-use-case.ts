@@ -30,7 +30,7 @@ const showAll = (game: Game): string => {
 Month: ${game.month.name}
 
 Objectives:
-${game.objectives.map((objective) => ` - ${objective.name}\n`).join("")}
+${game.objectives.map((objective) => ` - ${objective.type}\n`).join("")}
 Players:
 
 ${game.players

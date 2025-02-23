@@ -4,6 +4,7 @@ import type { Player } from "../player/player.ts";
 import { type GameTurnFlow } from "../game-flow/game-turn-flow.ts";
 import type { GameLog } from "../game-log/game-log.ts";
 import { chainHandlers, stepHandlers } from "./step-handlers.ts";
+import { checkObjectives } from "../objectives/check-objectives.ts";
 
 /**
  * A step is an atomic level of interaction with the game. A step could be
@@ -50,12 +51,14 @@ export type DiscardPlayerCardStep = { type: "discard_player_card"; player: Playe
 
 export type ResolveEpidemicStep = { type: "resolve_epidemic"; player: Player };
 
-export type StepResult =
-  | { type: "no_effect"; cause: string }
-  | {
-      type: "state_changed";
-      nextGameFlow?: GameTurnFlow;
-    };
+export type StepResult = { type: "no_effect"; cause: string } | ChangedStepResult;
+
+export type ChangedStepResult = {
+  type: "state_changed";
+  builtSupplyCentre?: boolean;
+  connectedCity?: boolean;
+  nextGameFlow?: GameTurnFlow;
+};
 
 export type StepType = Step["type"];
 
@@ -89,6 +92,7 @@ export const makeGameDriver = (game: Game, gameLog: GameLog): GameDriver => {
     takeStep: (step) => {
       const result = takeGameStep(game, step, gameLog);
 
+      // TODO this and other after step logic doesn't seem to be in the right place
       if (result.type !== "no_effect" && result.nextGameFlow) {
         game.turnFlow = result.nextGameFlow;
         gameLog(`Game flow moved to: "${game.turnFlow.type}"`);
@@ -122,12 +126,15 @@ export const takeGameStep = (game: Game, step: Step, gameLog: GameLog): StepResu
 
   const result: StepResult = handler({ game, gameLog, step });
 
+  // TODO missing abstraction for step result handling?
   if (result.type === "state_changed") {
     game.stepHistory.push(step);
     if (result.nextGameFlow) {
       game.turnFlow = result.nextGameFlow;
     }
   }
+
+  checkObjectives(game, gameLog, result);
 
   return result;
 };

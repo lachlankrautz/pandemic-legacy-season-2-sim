@@ -73,11 +73,22 @@ export const serializableGameSchema = Type.Object({
     }),
   ),
   objectives: Type.Array(
-    Type.Object({
-      name: Type.String(),
-      isCompleted: Type.Boolean(),
-      isMandatory: Type.Boolean(),
-    }),
+    Type.Union([
+      Type.Object({
+        type: Type.Literal("build_supply_centres"),
+        hasBuiltCount: Type.Number(),
+        mustBuildCount: Type.Number(),
+        isCompleted: Type.Boolean(),
+        isMandatory: Type.Boolean(),
+      }),
+      Type.Object({
+        type: Type.Literal("connect_cities"),
+        hasConnectedCount: Type.Number(),
+        mustConnectCount: Type.Number(),
+        isCompleted: Type.Boolean(),
+        isMandatory: Type.Boolean(),
+      }),
+    ]),
   ),
   month: Type.Object({
     name: Type.String(),
@@ -316,11 +327,7 @@ export const makeGameMapper = (
         turnFlow: turnFlowMapper.toActual(serializable.turnFlow),
         locations: locationMap,
         players: playerMap,
-        objectives: serializable.objectives.map((objective) => ({
-          name: objective.name,
-          isCompleted: objective.isCompleted,
-          isMandatory: objective.isMandatory,
-        })),
+        objectives: serializable.objectives,
         month: {
           name: serializable.month.name,
           supplies: serializable.month.supplies,
@@ -370,11 +377,7 @@ export const makeGameMapper = (
           turnOrder: player.turnOrder,
           cards: player.cards.map((card) => playerCardMapper.toSerializable(card)),
         })),
-        objectives: actual.objectives.map((objective) => ({
-          name: objective.name,
-          isCompleted: objective.isCompleted,
-          isMandatory: objective.isMandatory,
-        })),
+        objectives: actual.objectives,
         month: {
           name: actual.month.name,
           supplies: actual.month.supplies,

@@ -306,20 +306,24 @@ export const makeSerializableGame = (): SerializableGame => {
     players,
     objectives: [
       {
-        name: "create_3_supply_centres",
+        type: "build_supply_centres",
+        hasBuiltCount: 0,
+        mustBuildCount: 3,
         isCompleted: false,
         isMandatory: true,
       },
       {
-        name: "complete_2_searches",
+        type: "connect_cities",
+        hasConnectedCount: 0,
+        mustConnectCount: 2,
         isCompleted: false,
         isMandatory: false,
       },
-      {
-        name: "explore_1_region",
-        isCompleted: false,
-        isMandatory: false,
-      },
+      // {
+      //   type: "explore_1_region",
+      //   isCompleted: false,
+      //   isMandatory: false,
+      // },
     ],
     month: {
       name: "March",
