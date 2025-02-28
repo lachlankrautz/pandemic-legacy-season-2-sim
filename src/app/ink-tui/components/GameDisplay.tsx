@@ -1,11 +1,27 @@
 import React from "react";
 import { Box, Text, Newline } from "ink";
+import { type ForegroundColorName } from "chalk";
 import type { Game } from "../../game/game.ts";
 import type { Location } from "../../game/location/location.ts";
-import { type ForegroundColorName } from "chalk";
+import type { PlayerCard } from "../../game/cards/cards.ts";
 
 export type LocationTableProps = {
   locations: Location[];
+};
+
+const cardDisplayColour = (card: PlayerCard): ForegroundColorName => {
+  if (card.type !== "city") {
+    return "white";
+  }
+
+  switch (card.location.colour) {
+    case "black":
+      return "grey";
+    case "none":
+      return "white";
+    default:
+      return card.location.colour;
+  }
 };
 
 /**
@@ -100,7 +116,7 @@ const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode
             Cards:
             <Newline />
             {player.cards.map((card, index) => (
-              <Text key={index} color={card.type === "city" ? card.location.colour : "grey"}>
+              <Text key={index} color={cardDisplayColour(card)}>
                 - {card.displayName}
                 <Newline />
               </Text>
