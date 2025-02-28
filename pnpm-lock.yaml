@@ -20,6 +20,9 @@ importers:
       '@sinclair/typebox':
         specifier: ^0.34.22
         version: 0.34.22
+      chalk:
+        specifier: ^5.4.1
+        version: 5.4.1
       cli-table:
         specifier: ^0.3.11
         version: 0.3.11

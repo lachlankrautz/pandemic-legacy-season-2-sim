@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import MainMenu from "./MainMenu.tsx";
 import GamePlayer from "./GamePlayer.tsx";
 import Options from "./Options.tsx";
-import { Box, Text } from "ink";
+import { Box, Newline, Text } from "ink";
 import Bot from "./Bot.tsx";
 import { makeGame } from "../../game/start/new-game.ts";
 import { type GameDriver, makeGameDriver } from "../../game/step/game-steps.ts";
@@ -46,6 +46,7 @@ const App = (props: AppProps): React.ReactNode => {
   return (
     <>
       <Text key={"title"}>Pandemic Legacy Season 2</Text>
+      <Newline />
       <Box key={"page"}>{pageNode}</Box>
       <Text key={"footer"} dimColor={true}>
         esc,q to quit

@@ -49,6 +49,28 @@ describe("draw player card", () => {
     expect(result.nextGameFlow?.remainingCards).toEqual(1);
   });
 
+  it("adds the card to the players hand", () => {
+    const game = gameOnDrawPlayerCardsFactory.build(
+      { turnFlow: { remainingCards: 2 } },
+      {
+        transient: {
+          playerCardLocationNames: {
+            [LocationNames.CHICAGO]: 1,
+          },
+        },
+      },
+    );
+    const step = drawPlayerCardStepFactory.build({ player: game.turnFlow.player });
+    const gameLog = vi.fn();
+
+    const initialHandSize = game.turnFlow.player.cards.length;
+
+    const result = handleDrawPlayerCard({ game, step, gameLog });
+
+    expect(result.type).toEqual("state_changed");
+    expect(game.turnFlow.player.cards.length).toEqual(initialHandSize + 1);
+  });
+
   it("advances to infect cities after all cards are drawn", () => {
     const game = gameOnDrawPlayerCardsFactory.build(
       { turnFlow: { remainingCards: 1 } },

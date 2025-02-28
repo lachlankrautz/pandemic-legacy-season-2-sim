@@ -14,6 +14,8 @@ export const handleDrawPlayerCard: StepHandler<"draw_2_cards", "draw_player_card
     };
     return { type: "state_changed" };
   }
+
+  step.player.cards.push(playerCard);
   gameLog(`${step.player.name} received ${cardDisplayName(playerCard)} card`);
 
   const result: StepResult = {

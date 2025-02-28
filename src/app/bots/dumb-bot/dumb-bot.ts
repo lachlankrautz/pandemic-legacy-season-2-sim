@@ -18,7 +18,9 @@ export const playGame = (driver: GameDriver, logger: Logger): void => {
 
 export const playGameTick = (driver: GameDriver): void => {
   const game = driver.getGame();
-  driver.takeStep(makeStep(game, game.turnFlow.player));
+  if (game.state.type === "playing") {
+    driver.takeStep(makeStep(game, game.turnFlow.player));
+  }
 };
 
 const makeStep = (game: Game, player: Player): Step => {
@@ -74,7 +76,7 @@ const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player): Act
 };
 
 const makeRequiredStep = (_: Game, player: Player): Step | undefined => {
-  if (player.cards.length >= HAND_LIMIT) {
+  if (player.cards.length > HAND_LIMIT) {
     return {
       type: "discard_player_card",
       player,
