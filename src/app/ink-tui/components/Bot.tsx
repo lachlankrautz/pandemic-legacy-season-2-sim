@@ -26,7 +26,7 @@ const BotPlayer = ({ navigateBack, driver }: BotProps): React.ReactNode => {
   });
 
   return (
-    <Box key={"bot-driver"} flexDirection={"row"} height={40} width={120}>
+    <Box key={"bot-driver"} flexDirection={"row"}>
       <GameDisplay key={"display"} gameState={gameState}></GameDisplay>
     </Box>
   );

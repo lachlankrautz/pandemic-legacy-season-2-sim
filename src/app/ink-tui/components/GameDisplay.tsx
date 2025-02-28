@@ -12,14 +12,22 @@ export type LocationTableProps = {
  * A compareFn used to sort Locations first by plague, then supply,
  * then finally by name.
  */
-export const compareLocations = (a: Location, b: Location): number =>
-  a.plagueCubes - b.plagueCubes || a.supplyCubes - b.supplyCubes || a.name.localeCompare(b.name);
+export const compareLocations = (a: Location, b: Location): number => {
+  if (a.plagueCubes === b.plagueCubes) {
+    if (a.supplyCubes === b.supplyCubes) {
+      return a.name.localeCompare(b.name);
+    }
+
+    return a.supplyCubes - b.supplyCubes;
+  }
+  return a.plagueCubes - b.plagueCubes;
+};
 
 export const LocationTable = ({ locations }: LocationTableProps): React.ReactNode => {
   locations.sort(compareLocations).reverse();
   return (
-    <Box flexDirection="column" width="100%">
-      <Box>
+    <Box key="location-table" flexDirection="column" width="100%">
+      <Box key="headings">
         <Box width="80%">
           <Text>City</Text>
         </Box>
@@ -33,8 +41,8 @@ export const LocationTable = ({ locations }: LocationTableProps): React.ReactNod
         </Box>
       </Box>
 
-      {locations.map((location) => (
-        <Box key={location.name}>
+      {locations.map((location, index) => (
+        <Box key={index}>
           <Box width="80%">
             <Text>{location.name}</Text>
           </Box>
@@ -79,7 +87,8 @@ const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode
           width="25%"
           padding={1}
           margin={1}
-          borderStyle={game.turnFlow.player.name === player.name ? "bold" : undefined}
+          borderColor={game.turnFlow.player.name === player.name ? "white" : "grey"}
+          borderStyle="bold"
         >
           <Text key={player.name}>
             Name: {player.name}
