@@ -2,11 +2,12 @@ import React from "react";
 import { Box, Text, Newline } from "ink";
 import { type ForegroundColorName } from "chalk";
 import type { Game } from "../../game/game.ts";
-import type { Location } from "../../game/location/location.ts";
-import type { PlayerCard } from "../../game/cards/cards.ts";
+import { type Location, LocationNames } from "../../game/location/location.ts";
+import type { Deck, InfectionCard, PlayerCard } from "../../game/cards/cards.ts";
 
 export type LocationTableProps = {
   locations: Location[];
+  safeLocations: Set<string>;
 };
 
 const cardDisplayColour = (card: PlayerCard): ForegroundColorName => {
@@ -24,35 +25,53 @@ const cardDisplayColour = (card: PlayerCard): ForegroundColorName => {
   }
 };
 
-const locationHealthColour = (location: Location): ForegroundColorName => {
+const locationHealthColour = (location: Location, safeLocations: Set<string>): ForegroundColorName => {
+  if (location.type === "haven") {
+    return "white";
+  }
+
+  if (safeLocations.has(location.name)) {
+    return "grey";
+  }
+
   if (location.supplyCubes >= 3) {
     return "green";
   } else if (location.supplyCubes > 0) {
     return "yellow";
   } else if (location.plagueCubes === 0) {
-    return "yellowBright";
+    return "magenta";
   } else {
     return "red";
   }
 };
 
 /**
- * A compareFn used to sort Locations first by plague, then supply,
- * then finally by name.
+ * A compareFn used to sort Locations taking into account:
+ * - is the location in the injection deck
+ * - plague cubes
+ * - supply cubes
+ * - haven/city
+ * - name
  */
-export const compareLocations = (a: Location, b: Location): number => {
-  if (a.plagueCubes === b.plagueCubes) {
-    if (a.supplyCubes === b.supplyCubes) {
-      return a.name.localeCompare(b.name);
+export const compareLocations =
+  (safeLocations: Set<string>) =>
+  (a: Location, b: Location): number => {
+    if (!safeLocations.has(a.name) && !safeLocations.has(b.name)) {
+      if (a.plagueCubes === b.plagueCubes) {
+        if (a.supplyCubes === b.supplyCubes) {
+          return a.name.localeCompare(b.name);
+        }
+
+        return a.supplyCubes - b.supplyCubes;
+      }
+      return a.plagueCubes - b.plagueCubes;
+    } else {
+      return !safeLocations.has(a.name) ? 1 : -1;
     }
+  };
 
-    return a.supplyCubes - b.supplyCubes;
-  }
-  return a.plagueCubes - b.plagueCubes;
-};
-
-export const LocationTable = ({ locations }: LocationTableProps): React.ReactNode => {
-  locations.sort(compareLocations).reverse();
+export const LocationTable = ({ locations, safeLocations }: LocationTableProps): React.ReactNode => {
+  locations.sort(compareLocations(safeLocations)).reverse();
   return (
     <Box key="location-table" flexDirection="column" width="100%">
       <Box key="headings">
@@ -71,7 +90,7 @@ export const LocationTable = ({ locations }: LocationTableProps): React.ReactNod
             <Text>{Array.from({ length: location.supplyCubes }).map(() => "📦")}</Text>
           </Box>
           <Box width="60%">
-            <Text color={locationHealthColour(location)}>{location.name}</Text>
+            <Text color={locationHealthColour(location, safeLocations)}>{location.name}</Text>
           </Box>
         </Box>
       ))}
@@ -95,7 +114,18 @@ export type GameDisplayProps = {
   gameState: { game: Game };
 };
 
+/**
+ * Safe locations are "not in play"; they do not appear in the injection deck
+ * and do not need much protection.
+ */
+const getSafeLocations = (deck: Deck<InfectionCard>): Set<string> => {
+  const inPlay = new Set([...deck.drawPile, ...deck.discardPile].map((card) => card.location.name));
+  return new Set(Object.values(LocationNames).filter((name) => !inPlay.has(name)));
+};
+
 const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode => {
+  const safeLocations = getSafeLocations(game.infectionDeck);
+
   const playerCards = game.players
     .values()
     .toArray()
@@ -139,7 +169,7 @@ const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode
         {playerCards}
       </Box>
       <Newline />
-      <LocationTable locations={game.locations.values().toArray()}></LocationTable>
+      <LocationTable locations={game.locations.values().toArray()} safeLocations={safeLocations}></LocationTable>
       <Newline />
       <Box width="100%" key="logWindow">
         <Text color="grey">
