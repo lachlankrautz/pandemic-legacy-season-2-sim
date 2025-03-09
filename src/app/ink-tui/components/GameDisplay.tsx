@@ -75,21 +75,27 @@ export const LocationTable = ({ locations, safeLocations }: LocationTableProps):
   return (
     <Box key="location-table" flexDirection="column" width="100%">
       <Box key="headings">
-        <Box width="40%">
+        <Box width="30%">
           <Text>Supply/Plague</Text>
         </Box>
-        <Box width="60%">
+        <Box width="20%">
+          <Text>Players</Text>
+        </Box>
+        <Box width="50%">
           <Text>City</Text>
         </Box>
       </Box>
 
       {locations.map((location, index) => (
         <Box key={index}>
-          <Box width="40%">
+          <Box width="30%">
             <Text color="green">{Array.from({ length: location.plagueCubes }).map(() => "☣️")}</Text>
             <Text>{Array.from({ length: location.supplyCubes }).map(() => "📦")}</Text>
           </Box>
-          <Box width="60%">
+          <Box width="20%">
+            <Text>{location.players.map(() => "👤")}</Text>
+          </Box>
+          <Box width="50%">
             <Text color={locationHealthColour(location, safeLocations)}>{location.name}</Text>
           </Box>
         </Box>
