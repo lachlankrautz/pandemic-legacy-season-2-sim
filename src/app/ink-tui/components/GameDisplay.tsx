@@ -24,6 +24,18 @@ const cardDisplayColour = (card: PlayerCard): ForegroundColorName => {
   }
 };
 
+const locationHealthColour = (location: Location): ForegroundColorName => {
+  if (location.supplyCubes >= 3) {
+    return "green";
+  } else if (location.supplyCubes > 0) {
+    return "yellow";
+  } else if (location.plagueCubes === 0) {
+    return "yellowBright";
+  } else {
+    return "red";
+  }
+};
+
 /**
  * A compareFn used to sort Locations first by plague, then supply,
  * then finally by name.
@@ -44,31 +56,22 @@ export const LocationTable = ({ locations }: LocationTableProps): React.ReactNod
   return (
     <Box key="location-table" flexDirection="column" width="100%">
       <Box key="headings">
-        <Box width="80%">
+        <Box width="40%">
+          <Text>Supply/Plague</Text>
+        </Box>
+        <Box width="60%">
           <Text>City</Text>
-        </Box>
-
-        <Box width="20%">
-          <Text color={"gray"}>Supply</Text>
-        </Box>
-
-        <Box width="20%">
-          <Text color={"green"}>Plague</Text>
         </Box>
       </Box>
 
       {locations.map((location, index) => (
         <Box key={index}>
-          <Box width="80%">
-            <Text>{location.name}</Text>
+          <Box width="40%">
+            <Text color="green">{Array.from({ length: location.plagueCubes }).map(() => "☣️")}</Text>
+            <Text>{Array.from({ length: location.supplyCubes }).map(() => "📦")}</Text>
           </Box>
-
-          <Box width="20%">
-            <Text color={"gray"}>{location.supplyCubes}</Text>
-          </Box>
-
-          <Box width="20%">
-            <Text color={"green"}>{location.plagueCubes}</Text>
+          <Box width="60%">
+            <Text color={locationHealthColour(location)}>{location.name}</Text>
           </Box>
         </Box>
       ))}
