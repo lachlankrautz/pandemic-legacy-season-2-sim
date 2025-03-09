@@ -1,9 +1,9 @@
 import React from "react";
-import { Box, Text, Newline } from "ink";
+import { Box, Newline, Text } from "ink";
 import { type ForegroundColorName } from "chalk";
 import type { Game } from "../../game/game.ts";
-import { type Location, LocationNames } from "../../game/location/location.ts";
-import type { Deck, InfectionCard, PlayerCard } from "../../game/cards/cards.ts";
+import { getSafeLocations, type Location } from "../../game/location/location.ts";
+import type { PlayerCard } from "../../game/cards/cards.ts";
 import type { Player } from "../../game/player/player.ts";
 import { infectionRates } from "../../game/infection/infection.ts";
 
@@ -150,15 +150,6 @@ export type GameDisplayProps = {
   // Use a wrapper so a new object can be provided without altering the
   // actual game
   gameState: { game: Game };
-};
-
-/**
- * Safe locations are "not in play"; they do not appear in the injection deck
- * and do not need much protection.
- */
-const getSafeLocations = (deck: Deck<InfectionCard>): Set<string> => {
-  const inPlay = new Set([...deck.drawPile, ...deck.discardPile].map((card) => card.location.name));
-  return new Set(Object.values(LocationNames).filter((name) => !inPlay.has(name)));
 };
 
 export type PlayerBlockProps = {

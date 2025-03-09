@@ -1,6 +1,6 @@
 import type { Player } from "../player/player.ts";
 import type { Connection } from "../game.ts";
-import type { PlayerCard } from "../cards/cards.ts";
+import type { Deck, InfectionCard, PlayerCard } from "../cards/cards.ts";
 
 export type CityColour = "blue" | "yellow" | "black" | "none";
 
@@ -200,3 +200,12 @@ export const links = [
   [LocationNames.LIMA, LocationNames.BOGOTA],
   [LocationNames.LIMA, LocationNames.HARDHOME],
 ] as const satisfies [LocationName, LocationName][];
+
+/**
+ * Safe locations are "not in play"; they do not appear in the injection deck
+ * and do not need much protection.
+ */
+export const getSafeLocations = (deck: Deck<InfectionCard>): Set<string> => {
+  const inPlay = new Set([...deck.drawPile, ...deck.discardPile].map((card) => card.location.name));
+  return new Set(Object.values(LocationNames).filter((name) => !inPlay.has(name)));
+};

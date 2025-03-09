@@ -5,7 +5,8 @@ import { HAND_LIMIT } from "../../game/step/required-steps/required-steps.ts";
 import type { Player } from "../../game/player/player.ts";
 import { type GameOnType, isGameOnType } from "../../game/game-flow/game-turn-flow.ts";
 import type { Action } from "../../game/action/actions.ts";
-import type { PlayerCard } from "../../game/cards/cards.js";
+import type { PlayerCard } from "../../game/cards/cards.ts";
+import { getSafeLocations } from "../../game/location/location.ts";
 
 type CardTypeRank = {
   yellow: number;
@@ -80,6 +81,8 @@ const makeStep = (game: Game, player: Player): Step => {
 };
 
 const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player): Action => {
+  const safeLocations = getSafeLocations(game.infectionDeck);
+
   if (player.location.type === "haven") {
     const notHaven = player.location.connections
       .map((connection) => connection.location)
@@ -91,6 +94,23 @@ const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player): Act
         isFree: false,
         toLocationName: notHaven.name,
       };
+    }
+  }
+
+  // On the first action move somewhere that needs supplies more
+  if (game.turnFlow.remainingActions === 4) {
+    if (player.location.supplyCubes > 3) {
+      const moveCandidate = player.location.connections
+        .filter((connection) => connection.location.type !== "haven" && !safeLocations.has(connection.location.name))
+        .sort((a, b) => a.location.supplyCubes - b.location.supplyCubes)[0];
+
+      if (moveCandidate !== undefined) {
+        return {
+          type: "move",
+          isFree: false,
+          toLocationName: moveCandidate.location.name,
+        };
+      }
     }
   }
 
