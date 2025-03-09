@@ -169,7 +169,12 @@ const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode
     <Box key={"gameDisplay"} flexDirection="column" width="120">
       <Text key="incidents">
         Incidents: <Text color={incidentsColour(game.incidents)}>{game.incidents}</Text>
-        <Newline />
+      </Text>
+      <Text key="player-turn">Player Turn: {game.turnNumber}</Text>
+      <Text key="remaining-cards">Remaining player cards: {game.playerDeck.drawPile.length}</Text>
+      <Text key="supply-centres">
+        New supply centres:
+        {game.objectives.find((objective) => objective.type === "build_supply_centres")?.hasBuiltCount}
       </Text>
       <Box key={"players"} width="100%">
         {playerCards}

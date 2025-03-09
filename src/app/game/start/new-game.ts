@@ -302,6 +302,7 @@ export const makeSerializableGame = (): SerializableGame => {
       playerName: julian.name,
       remainingActions: TURN_ACTION_COUNT,
     },
+    turnNumber: 1,
     locations: Array.from(locationMap.values()),
     players,
     objectives: [

@@ -150,6 +150,7 @@ export const partialGame = Factory.define<Omit<Game, "turnFlow">, GameParams>(({
   const { lost, locationNames } = transientParams;
 
   return {
+    turnNumber: 1,
     locations: locationNames ? locationMapFactory.build(undefined, { transient: { locationNames } }) : new Map(),
     players: new Map(),
     objectives: [],

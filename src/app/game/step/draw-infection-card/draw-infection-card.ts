@@ -28,6 +28,7 @@ export const handleDrawInfectionCard: StepHandler<"infect_cities", "draw_infecti
       type: "exposure_check",
       player: nextPlayer,
     };
+    game.turnNumber++;
   } else {
     const remainingCards = game.turnFlow.remainingCards - 1;
     result.nextGameFlow = {

@@ -20,6 +20,7 @@ import { serializablePlayerMapFactory } from "./player-serialization-factories.t
 export const serializableGameFactory = Factory.define<SerializableGame>(({ params: { turnFlow } }) => {
   return {
     turnFlow: serializableGameTurnFlowFactory.build(turnFlow),
+    turnNumber: 1,
     // TODO shouldn't make everything by default
     locations: serializableLocationMapFactory.build().values().toArray(),
     players: serializablePlayerMapFactory.build().values().toArray(),
