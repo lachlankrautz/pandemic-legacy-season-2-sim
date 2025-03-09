@@ -5,6 +5,40 @@ import { HAND_LIMIT } from "../../game/step/required-steps/required-steps.ts";
 import type { Player } from "../../game/player/player.ts";
 import { type GameOnType, isGameOnType } from "../../game/game-flow/game-turn-flow.ts";
 import type { Action } from "../../game/action/actions.ts";
+import type { PlayerCard } from "../../game/cards/cards.js";
+
+type CardTypeRank = {
+  yellow: number;
+  blue: number;
+  black: number;
+  none: number;
+};
+
+/**
+ * Determine the order of cards to keep when discarding a card.
+ */
+export const compareCards = (cards: PlayerCard[]) => {
+  const cardTypeRank = cards.reduce(
+    (cardTypeRank: CardTypeRank, card) => {
+      if (card.type === "city") {
+        cardTypeRank[card.location.colour]++;
+      }
+      return cardTypeRank;
+    },
+    {
+      yellow: 0.1,
+      black: 0.2,
+      blue: 0.3,
+      none: 0,
+    },
+  );
+
+  return (a: PlayerCard, b: PlayerCard): number => {
+    const aRank = a.type === "city" ? cardTypeRank[a.location.colour] : -1;
+    const bRank = b.type === "city" ? cardTypeRank[b.location.colour] : -1;
+    return bRank - aRank;
+  };
+};
 
 export const playGame = (driver: GameDriver, logger: Logger): void => {
   const game = driver.getGame();
@@ -77,10 +111,11 @@ const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player): Act
 
 const makeRequiredStep = (_: Game, player: Player): Step | undefined => {
   if (player.cards.length > HAND_LIMIT) {
+    player.cards.sort(compareCards(player.cards));
     return {
       type: "discard_player_card",
       player,
-      cardIndex: 0,
+      cardIndex: player.cards.length - 1,
     };
   }
 

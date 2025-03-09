@@ -303,6 +303,8 @@ export const makeSerializableGame = (): SerializableGame => {
       remainingActions: TURN_ACTION_COUNT,
     },
     turnNumber: 1,
+    epidemics: 0,
+    totalEpidemics: playerDeck.drawPile.filter((card) => card.type === "epidemic").length,
     locations: Array.from(locationMap.values()),
     players,
     objectives: [
@@ -334,7 +336,7 @@ export const makeSerializableGame = (): SerializableGame => {
     playerDeck,
     infectionDeck,
     infectionRate: {
-      position: 2,
+      position: 1,
       cards: 2,
     },
     incidents: 0,

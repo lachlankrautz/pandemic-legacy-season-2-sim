@@ -13,6 +13,7 @@ export type EpidemicResult = {
 export const epidemic = (game: Game, gameLog: GameLog): EpidemicResult => {
   // Increase
   increaseGameInfectionRate(game, gameLog);
+  game.epidemics++;
 
   // Draw a card from the bottom
   const infectCard = game.infectionDeck.drawPile.shift();

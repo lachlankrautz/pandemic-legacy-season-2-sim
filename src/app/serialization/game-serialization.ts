@@ -49,6 +49,8 @@ export type SerializableInfectionCard = Static<typeof serializableInfectionCardS
 export const serializableGameSchema = Type.Object({
   turnFlow: serializableGameTurnFlowSchema,
   turnNumber: Type.Number(),
+  epidemics: Type.Number(),
+  totalEpidemics: Type.Number(),
   locations: Type.Array(
     Type.Object({
       name: Type.String(),
@@ -327,6 +329,8 @@ export const makeGameMapper = (
       const game: Game = {
         turnFlow: turnFlowMapper.toActual(serializable.turnFlow),
         turnNumber: serializable.turnNumber,
+        epidemics: serializable.epidemics,
+        totalEpidemics: serializable.totalEpidemics,
         locations: locationMap,
         players: playerMap,
         objectives: serializable.objectives,
@@ -362,6 +366,8 @@ export const makeGameMapper = (
       return {
         turnFlow: flowMapper.toSerializable(actual.turnFlow),
         turnNumber: actual.turnNumber,
+        epidemics: actual.epidemics,
+        totalEpidemics: actual.totalEpidemics,
         locations: Array.from(actual.locations.values()).map((location) => ({
           name: location.name,
           type: location.type,

@@ -144,6 +144,11 @@ const prepareGame =
 
     game.getPlayer = getMappedPlayer(game.players);
     game.getLocation = getMappedLocation(game.locations);
+
+    // Calculate total number of epidemics
+    game.totalEpidemics = [...game.playerDeck.drawPile, ...game.playerDeck.discardPile].filter(
+      (card) => card.type === "epidemic",
+    ).length;
   };
 
 export const partialGame = Factory.define<Omit<Game, "turnFlow">, GameParams>(({ transientParams }) => {
@@ -151,6 +156,8 @@ export const partialGame = Factory.define<Omit<Game, "turnFlow">, GameParams>(({
 
   return {
     turnNumber: 1,
+    epidemics: 0,
+    totalEpidemics: 0,
     locations: locationNames ? locationMapFactory.build(undefined, { transient: { locationNames } }) : new Map(),
     players: new Map(),
     objectives: [],

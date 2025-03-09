@@ -53,6 +53,8 @@ export type GameState =
 export type Game<TFlow extends GameTurnFlow = GameTurnFlow> = {
   turnFlow: TFlow;
   turnNumber: number;
+  epidemics: number;
+  totalEpidemics: number;
   locations: Map<string, Location>;
   players: Map<string, Player>;
   objectives: Objective[];

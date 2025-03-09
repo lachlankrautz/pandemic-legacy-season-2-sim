@@ -17,10 +17,18 @@ import { serializablePlayerMapFactory } from "./player-serialization-factories.t
 // TODO migrate the new game creation logic to here and reuse all
 //      the connectors etc
 
-export const serializableGameFactory = Factory.define<SerializableGame>(({ params: { turnFlow } }) => {
+export const serializableGameFactory = Factory.define<SerializableGame>(({ params: { turnFlow }, afterBuild }) => {
+  afterBuild((game) => {
+    game.totalEpidemics = [...game.playerDeck.drawPile, ...game.playerDeck.discardPile].filter(
+      (card) => card.type === "epidemic",
+    ).length;
+  });
+
   return {
     turnFlow: serializableGameTurnFlowFactory.build(turnFlow),
     turnNumber: 1,
+    epidemics: 0,
+    totalEpidemics: 0,
     // TODO shouldn't make everything by default
     locations: serializableLocationMapFactory.build().values().toArray(),
     players: serializablePlayerMapFactory.build().values().toArray(),

@@ -4,6 +4,8 @@ import { type ForegroundColorName } from "chalk";
 import type { Game } from "../../game/game.ts";
 import { type Location, LocationNames } from "../../game/location/location.ts";
 import type { Deck, InfectionCard, PlayerCard } from "../../game/cards/cards.ts";
+import type { Player } from "../../game/player/player.ts";
+import { infectionRates } from "../../game/infection/infection.ts";
 
 export type LocationTableProps = {
   locations: Location[];
@@ -70,6 +72,36 @@ export const compareLocations =
     }
   };
 
+type CardTypeRank = {
+  yellow: number;
+  blue: number;
+  black: number;
+  none: number;
+};
+
+export const compareCards = (cards: PlayerCard[]) => {
+  const cardTypeRank = cards.reduce(
+    (cardTypeRank: CardTypeRank, card) => {
+      if (card.type === "city") {
+        cardTypeRank[card.location.colour]++;
+      }
+      return cardTypeRank;
+    },
+    {
+      yellow: 0.1,
+      black: 0.2,
+      blue: 0.3,
+      none: 0,
+    },
+  );
+
+  return (a: PlayerCard, b: PlayerCard): number => {
+    const aRank = a.type === "city" ? cardTypeRank[a.location.colour] : -1;
+    const bRank = b.type === "city" ? cardTypeRank[b.location.colour] : -1;
+    return bRank - aRank;
+  };
+};
+
 export const LocationTable = ({ locations, safeLocations }: LocationTableProps): React.ReactNode => {
   locations.sort(compareLocations(safeLocations)).reverse();
   return (
@@ -129,61 +161,91 @@ const getSafeLocations = (deck: Deck<InfectionCard>): Set<string> => {
   return new Set(Object.values(LocationNames).filter((name) => !inPlay.has(name)));
 };
 
+export type PlayerBlockProps = {
+  player: Player;
+  currentPlayerName: string;
+};
+
+export const PlayerBlock = ({ player, currentPlayerName }: PlayerBlockProps): React.ReactNode => {
+  const sortedCards = [...player.cards].sort(compareCards(player.cards));
+  return (
+    <Box
+      width="25%"
+      padding={1}
+      margin={1}
+      borderColor={currentPlayerName === player.name ? "white" : "grey"}
+      borderStyle="bold"
+    >
+      <Text key={player.name}>
+        Name: {player.name}
+        <Newline />
+        Location: {player.location.name}
+        <Newline />
+        Supply: {player.supplyCubes}
+        <Newline />
+        Cards:
+        <Newline />
+        {sortedCards.map((card, index) => (
+          <Text key={index} color={cardDisplayColour(card)}>
+            - {card.displayName}
+            <Newline />
+          </Text>
+        ))}
+      </Text>
+    </Box>
+  );
+};
+
+const InfectionRatesDisplay = ({ ratePosition }: { ratePosition: number }): React.ReactNode => {
+  return (
+    <Box>
+      <Text key="title">Infection Rate: </Text>
+      {infectionRates.map((rate) =>
+        rate.position === ratePosition ? (
+          <Text color="green" key={rate.position}>
+            {rate.cards}&nbsp;
+          </Text>
+        ) : (
+          <Text key={rate.position} color="grey">
+            {rate.cards}&nbsp;
+          </Text>
+        ),
+      )}
+    </Box>
+  );
+};
+
 const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode => {
   const safeLocations = getSafeLocations(game.infectionDeck);
 
-  const playerCards = game.players
-    .values()
-    .toArray()
-    .map((player, index) => {
-      return (
-        <Box
-          key={index}
-          width="25%"
-          padding={1}
-          margin={1}
-          borderColor={game.turnFlow.player.name === player.name ? "white" : "grey"}
-          borderStyle="bold"
-        >
-          <Text key={player.name}>
-            Name: {player.name}
-            <Newline />
-            Location: {player.location.name}
-            <Newline />
-            Supply: {player.supplyCubes}
-            <Newline />
-            Cards:
-            <Newline />
-            {player.cards.map((card, index) => (
-              <Text key={index} color={cardDisplayColour(card)}>
-                - {card.displayName}
-                <Newline />
-              </Text>
-            ))}
-          </Text>
-        </Box>
-      );
-    });
-
   return (
     <Box key={"gameDisplay"} flexDirection="column" width="120">
+      <Text key="epidemics">
+        Epidemics: {game.epidemics}/{game.totalEpidemics}
+      </Text>
+      <InfectionRatesDisplay key="infectionRates" ratePosition={game.infectionRate.position}></InfectionRatesDisplay>
       <Text key="incidents">
         Incidents: <Text color={incidentsColour(game.incidents)}>{game.incidents}</Text>
       </Text>
       <Text key="player-turn">Player Turn: {game.turnNumber}</Text>
       <Text key="remaining-cards">Remaining player cards: {game.playerDeck.drawPile.length}</Text>
       <Text key="supply-centres">
-        New supply centres:
+        Created supply centres:
         {game.objectives.find((objective) => objective.type === "build_supply_centres")?.hasBuiltCount}
       </Text>
       <Box key={"players"} width="100%">
-        {playerCards}
+        {game.players
+          .values()
+          .toArray()
+          .map((player, index) => (
+            <PlayerBlock key={index} player={player} currentPlayerName={game.turnFlow.player.name}></PlayerBlock>
+          ))}
       </Box>
       <Newline />
       <LocationTable locations={game.locations.values().toArray()} safeLocations={safeLocations}></LocationTable>
       <Newline />
       <Box width="100%" key="logWindow">
-        <Text color="grey">
+        <Text>
           Logs:
           <Newline />
           {game.gameLog.slice(game.gameLog.length - 10).join("\n")}
