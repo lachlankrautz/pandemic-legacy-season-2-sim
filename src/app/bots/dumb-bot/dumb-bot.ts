@@ -54,7 +54,10 @@ export const playGame = (driver: GameDriver, logger: Logger): void => {
 export const playGameTick = (driver: GameDriver): void => {
   const game = driver.getGame();
   if (game.state.type === "playing") {
-    driver.takeStep(makeStep(game, game.turnFlow.player));
+    const result = driver.takeStep(makeStep(game, game.turnFlow.player));
+    if (result.type === "no_effect") {
+      throw new Error("bot took an action that had no effect");
+    }
   }
 };
 
@@ -130,19 +133,19 @@ const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player): Act
 };
 
 const makeRequiredStep = (_: Game, player: Player): Step | undefined => {
+  if (player.cards.some((card) => card.type === "epidemic")) {
+    return {
+      type: "resolve_epidemic",
+      player,
+    };
+  }
+
   if (player.cards.length > HAND_LIMIT) {
     player.cards.sort(compareCards(player.cards));
     return {
       type: "discard_player_card",
       player,
       cardIndex: player.cards.length - 1,
-    };
-  }
-
-  if (player.cards.some((card) => card.type === "epidemic")) {
-    return {
-      type: "resolve_epidemic",
-      player,
     };
   }
 

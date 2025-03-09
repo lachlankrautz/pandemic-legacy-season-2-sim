@@ -21,6 +21,13 @@ export const handleDiscardPlayerCard: StepHandler<TurnFlowType, "discard_player_
     };
   }
 
+  if (toDiscard.type === "epidemic") {
+    return {
+      type: "no_effect",
+      cause: "cannot discard an epidemic",
+    };
+  }
+
   player.cards = toKeep;
   game.playerDeck.discardPile.push(toDiscard);
   gameLog(`${player.name} discard ${toDiscard.displayName}`);

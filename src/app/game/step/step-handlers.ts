@@ -90,8 +90,8 @@ export const chainHandlers = (...handlers: ChainedStepHandler[]): StepHandler =>
 };
 
 export const stepHandlers = chainHandlers(
-  handleRequiredStep(mustDiscardExcessPlayerCards, handleDiscardPlayerCard),
   handleRequiredStep(mustPlayEpidemicCard, handleResolveEpidemic),
+  handleRequiredStep(mustDiscardExcessPlayerCards, handleDiscardPlayerCard),
   handleTurnFlowStep("exposure_check", "check_for_exposure", handleCheckForExposure),
   handleTurnFlowStep("take_4_actions", "player_action", handlePlayerAction),
   handleTurnFlowStep("draw_2_cards", "draw_player_card", handleDrawPlayerCard),
