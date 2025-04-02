@@ -4,11 +4,11 @@ import App from "./components/App.tsx";
 import type { Logger } from "../logging/logger.ts";
 
 export type TuiRunner = {
-  run: () => void;
+  run: (command?: "bot" | undefined) => void;
 };
 
 export const makeTuiRunner = (logger: Logger): TuiRunner => ({
-  run: (): void => {
-    render(<App logger={logger}></App>);
+  run: (command: "bot" | undefined): void => {
+    render(<App logger={logger} command={command}></App>);
   },
 });

@@ -45,23 +45,23 @@ export const playGame = (driver: GameDriver, logger: Logger): void => {
   const game = driver.getGame();
 
   while (game.state.type === "playing") {
-    driver.takeStep(makeStep(game, game.turnFlow.player));
+    driver.takeStep(makeStep(game, game.turnFlow.player, logger));
   }
 
   logger.info("Bot run finished");
 };
 
-export const playGameTick = (driver: GameDriver): void => {
+export const playGameTick = (driver: GameDriver, logger: Logger): void => {
   const game = driver.getGame();
   if (game.state.type === "playing") {
-    const result = driver.takeStep(makeStep(game, game.turnFlow.player));
+    const result = driver.takeStep(makeStep(game, game.turnFlow.player, logger));
     if (result.type === "no_effect") {
       throw new Error("bot took an action that had no effect");
     }
   }
 };
 
-const makeStep = (game: Game, player: Player): Step => {
+const makeStep = (game: Game, player: Player, logger: Logger): Step => {
   const requiredStep = makeRequiredStep(game, player);
   if (requiredStep !== undefined) {
     return requiredStep;
@@ -76,14 +76,14 @@ const makeStep = (game: Game, player: Player): Step => {
     return {
       type: "player_action",
       player,
-      action: makeActionStep(game, player),
+      action: makeActionStep(game, player, logger),
     };
   }
 
   throw new Error("not implemented", { cause: { game } });
 };
 
-const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player): Action => {
+const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player, logger: Logger): Action => {
   const safeLocations = getSafeLocations(game.infectionDeck);
 
   if (player.location.type === "haven") {
@@ -108,6 +108,10 @@ const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player): Act
         .sort((a, b) => a.location.supplyCubes - b.location.supplyCubes)[0];
 
       if (moveCandidate !== undefined) {
+        logger.info("moving to worse location", {
+          fromLocationWithSupply: player.location.supplyCubes,
+          toLocationWithSupply: moveCandidate.location.name,
+        });
         return {
           type: "move",
           isFree: false,

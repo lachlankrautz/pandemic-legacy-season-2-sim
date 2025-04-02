@@ -19,11 +19,12 @@ const newGameDriver = (logger: Logger): GameDriver => {
 
 export type AppProps = {
   logger: Logger;
+  command?: "bot" | undefined;
 };
 
-const App = (props: AppProps): React.ReactNode => {
-  const [page, navigate] = useState<Page>("main");
-  const [driver] = useState(() => newGameDriver(props.logger));
+const App = ({ command, logger }: AppProps): React.ReactNode => {
+  const [page, navigate] = useState<Page>(command || "main");
+  const [driver] = useState(() => newGameDriver(logger));
 
   let pageNode: React.ReactNode;
   switch (page) {
@@ -37,7 +38,7 @@ const App = (props: AppProps): React.ReactNode => {
       pageNode = <Options key={"options"} navigateBack={() => navigate("main")}></Options>;
       break;
     case "bot":
-      pageNode = <Bot key={"bot"} driver={driver} navigateBack={() => navigate("main")}></Bot>;
+      pageNode = <Bot key={"bot"} driver={driver} logger={logger} navigateBack={() => navigate("main")}></Bot>;
       break;
     default:
       throw new Error("Unknown page");

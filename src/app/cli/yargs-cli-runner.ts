@@ -53,8 +53,14 @@ export const makeYargsCliRunner = (
     .command(
       "play",
       "Boot up the game TUI",
-      (yargs) => yargs,
-      () => playTui().run(),
+      (yargs) =>
+        yargs.options({
+          b: {
+            alias: "bot",
+            description: "Start watching a bot",
+          },
+        }),
+      (args) => playTui().run(args.b ? "bot" : undefined),
     )
     .command(
       "start-game",
