@@ -9,7 +9,14 @@ import {
 import { type Connection, type Game, getEpidemicCardCount, TURN_ACTION_COUNT, type TurnOrder } from "../game.ts";
 import { shuffleArray } from "../../random/random.ts";
 import { chunkArray } from "../../../util/arrays.ts";
-import { type CityColour, links, type Location, type LocationName, LocationNames } from "../location/location.ts";
+import {
+  type CityColour,
+  links,
+  type Location,
+  type LocationName,
+  LocationNames,
+  StaticLocations,
+} from "../location/location.ts";
 import type { Deck } from "../cards/cards.ts";
 
 export const PlayerNames = {
@@ -23,6 +30,7 @@ type LocationOptions = Partial<Pick<Location, "supplyCubes" | "plagueCubes">>;
 
 const locationEntry = (
   name: LocationName,
+  coordinates: Location["coordinates"],
   type: Location["type"],
   colour: CityColour,
   options: LocationOptions = {},
@@ -30,6 +38,7 @@ const locationEntry = (
   name,
   {
     name,
+    coordinates,
     type,
     colour,
     supplyCubes: 0,
@@ -62,31 +71,41 @@ const newCityCard = (locationName: string): SerializablePlayerCard => {
 export const makeSerializableGame = (): SerializableGame => {
   const locationMap: Map<string, SerializableLocation> = new Map([
     // Havens
-    locationEntry(LocationNames.OCEAN_GATE, "haven", "none"),
-    locationEntry(LocationNames.GEIDI_PRIME, "haven", "none"),
-    locationEntry(LocationNames.HARDHOME, "haven", "none"),
-    locationEntry(LocationNames.COLUMBIA, "haven", "none"),
+    locationEntry(LocationNames.OCEAN_GATE, StaticLocations[LocationNames.OCEAN_GATE].coordinates, "haven", "none"),
+    locationEntry(LocationNames.GEIDI_PRIME, StaticLocations[LocationNames.GEIDI_PRIME].coordinates, "haven", "none"),
+    locationEntry(LocationNames.HARDHOME, StaticLocations[LocationNames.HARDHOME].coordinates, "haven", "none"),
+    locationEntry(LocationNames.COLUMBIA, StaticLocations[LocationNames.COLUMBIA].coordinates, "haven", "none"),
 
     // Ports
-    locationEntry(LocationNames.SAN_FRANCISCO, "port", "blue"),
-    locationEntry(LocationNames.WASHINGTON, "port", "blue"),
-    locationEntry(LocationNames.NEW_YORK, "port", "blue"),
-    locationEntry(LocationNames.JACKSONVILLE, "port", "blue"),
-    locationEntry(LocationNames.LONDON, "port", "blue"),
-    locationEntry(LocationNames.TRIPOLI, "port", "black"),
-    locationEntry(LocationNames.CAIRO, "port", "black"),
-    locationEntry(LocationNames.ISTANBUL, "port", "black"),
-    locationEntry(LocationNames.LIMA, "port", "yellow"),
-    locationEntry(LocationNames.BUENOS_AIRES, "port", "yellow"),
-    locationEntry(LocationNames.SAO_PAULO, "port", "yellow"),
-    locationEntry(LocationNames.LAGOS, "port", "yellow"),
+    locationEntry(
+      LocationNames.SAN_FRANCISCO,
+      StaticLocations[LocationNames.SAN_FRANCISCO].coordinates,
+      "port",
+      "blue",
+    ),
+    locationEntry(LocationNames.WASHINGTON, StaticLocations[LocationNames.WASHINGTON].coordinates, "port", "blue"),
+    locationEntry(LocationNames.NEW_YORK, StaticLocations[LocationNames.NEW_YORK].coordinates, "port", "blue"),
+    locationEntry(LocationNames.JACKSONVILLE, StaticLocations[LocationNames.JACKSONVILLE].coordinates, "port", "blue"),
+    locationEntry(LocationNames.LONDON, StaticLocations[LocationNames.LONDON].coordinates, "port", "blue"),
+    locationEntry(LocationNames.TRIPOLI, StaticLocations[LocationNames.TRIPOLI].coordinates, "port", "black"),
+    locationEntry(LocationNames.CAIRO, StaticLocations[LocationNames.CAIRO].coordinates, "port", "black"),
+    locationEntry(LocationNames.ISTANBUL, StaticLocations[LocationNames.ISTANBUL].coordinates, "port", "black"),
+    locationEntry(LocationNames.LIMA, StaticLocations[LocationNames.LIMA].coordinates, "port", "yellow"),
+    locationEntry(
+      LocationNames.BUENOS_AIRES,
+      StaticLocations[LocationNames.BUENOS_AIRES].coordinates,
+      "port",
+      "yellow",
+    ),
+    locationEntry(LocationNames.SAO_PAULO, StaticLocations[LocationNames.SAO_PAULO].coordinates, "port", "yellow"),
+    locationEntry(LocationNames.LAGOS, StaticLocations[LocationNames.LAGOS].coordinates, "port", "yellow"),
 
     // Inland cities
-    locationEntry(LocationNames.CHICAGO, "inland", "blue"),
-    locationEntry(LocationNames.ATLANTA, "inland", "blue"),
-    locationEntry(LocationNames.BOGOTA, "inland", "yellow"),
-    locationEntry(LocationNames.SANTIAGO, "inland", "yellow"),
-    locationEntry(LocationNames.KINSHASA, "inland", "yellow"),
+    locationEntry(LocationNames.CHICAGO, StaticLocations[LocationNames.CHICAGO].coordinates, "inland", "blue"),
+    locationEntry(LocationNames.ATLANTA, StaticLocations[LocationNames.ATLANTA].coordinates, "inland", "blue"),
+    locationEntry(LocationNames.BOGOTA, StaticLocations[LocationNames.BOGOTA].coordinates, "inland", "yellow"),
+    locationEntry(LocationNames.SANTIAGO, StaticLocations[LocationNames.SANTIAGO].coordinates, "inland", "yellow"),
+    locationEntry(LocationNames.KINSHASA, StaticLocations[LocationNames.KINSHASA].coordinates, "inland", "yellow"),
   ]);
 
   const getLocation = (locationName: string): SerializableLocation => {
