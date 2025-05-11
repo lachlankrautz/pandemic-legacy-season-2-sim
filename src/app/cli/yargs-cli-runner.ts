@@ -4,6 +4,8 @@ import type { SerializableStep } from "../serialization/step-serialization.ts";
 import type { Logger } from "../logging/logger.ts";
 import type { ShowInfo } from "../game/view/show-info-use-case.ts";
 import type { TuiRunner } from "../ink-tui/root.tsx";
+import { createServer } from "vite";
+import path from "node:path";
 
 export type CliRunner = {
   run(args: string[]): Promise<void>;
@@ -50,6 +52,24 @@ export const makeYargsCliRunner = (
     .middleware((args) => {
       checkDebug(args);
     }, true)
+    .command(
+      "web-app",
+      "Start a dev server for the web app",
+      (yargs) => yargs,
+      async () => {
+        const startVite = async () => {
+          const server = await createServer({
+            root: path.resolve(import.meta.dirname, "../view/react-gui"),
+            configFile: path.resolve(import.meta.dirname, "../../../vite.config.ts"),
+          });
+
+          await server.listen();
+          console.log("Vite dev server running at:", server.resolvedUrls?.local?.[0]);
+        };
+
+        startVite().catch(console.error);
+      },
+    )
     .command(
       "play",
       "Boot up the game TUI",

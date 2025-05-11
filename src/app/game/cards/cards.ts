@@ -60,7 +60,7 @@ export type UsingHandCards = {
   discardUsed: () => void;
 };
 
-export const useHandCards = (game: GameCardUse, selection: PlayerCardSelection): UsingHandCards => {
+export const consumeHandCards = (game: GameCardUse, selection: PlayerCardSelection): UsingHandCards => {
   const player = game.turnFlow.player;
 
   const [selected, remainder] = partition(player.cards, (_, index) => selection.has(index));

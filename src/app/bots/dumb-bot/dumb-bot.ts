@@ -61,7 +61,7 @@ export const playGameTick = (driver: GameDriver, logger: Logger): void => {
   }
 };
 
-const makeStep = (game: Game, player: Player, logger: Logger): Step => {
+export const makeStep = (game: Game, player: Player, logger: Logger): Step => {
   const requiredStep = makeRequiredStep(game, player);
   if (requiredStep !== undefined) {
     return requiredStep;

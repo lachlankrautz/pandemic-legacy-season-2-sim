@@ -54,6 +54,7 @@ export const serializableGameSchema = Type.Object({
   locations: Type.Array(
     Type.Object({
       name: Type.String(),
+      coordinates: Type.Tuple([Type.Number(), Type.Number()]),
       type: Type.Union([Type.Literal("haven"), Type.Literal("port"), Type.Literal("inland")]),
       colour: Type.Union([Type.Literal("blue"), Type.Literal("yellow"), Type.Literal("black"), Type.Literal("none")]),
       supplyCubes: Type.Number(),
@@ -272,6 +273,7 @@ export const makeGameMapper = (
       for (const location of serializable.locations) {
         locationMap.set(location.name, {
           name: location.name,
+          coordinates: location.coordinates,
           type: location.type,
           colour: location.colour,
           supplyCubes: location.supplyCubes,
@@ -374,6 +376,7 @@ export const makeGameMapper = (
           colour: location.colour,
           supplyCubes: location.supplyCubes,
           plagueCubes: location.plagueCubes,
+          coordinates: location.coordinates,
           connections: location.connections.map((connection) => ({
             type: connection.type,
             locationName: connection.location.name,

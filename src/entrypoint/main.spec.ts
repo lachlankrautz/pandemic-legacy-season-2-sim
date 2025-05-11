@@ -11,7 +11,7 @@ vi.mock("../bootstrap/bootstrap.ts", () => ({
 
 describe("main cli", () => {
   it("runs cli", async () => {
-    await import("../entrypoint/main.ts");
+    await import("./main.ts");
 
     expect(mockBootstrapCli).toHaveBeenCalled();
     expect(mockRun).toHaveBeenCalledWith(process.argv);

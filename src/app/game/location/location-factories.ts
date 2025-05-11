@@ -56,6 +56,7 @@ export const locationFactory = Factory.define<Location, LocationParams>(
     return np({
       name: staticLocation.name,
       type: staticLocation.type,
+      coordinates: staticLocation.coordinates,
       colour: staticLocation.colour,
       supplyCubes: 0,
       plagueCubes: 0,
