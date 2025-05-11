@@ -102,59 +102,63 @@ export const compareCards = (cards: PlayerCard[]) => {
   };
 };
 
-export const LocationTable = ({ locations, safeLocations }: LocationTableProps): React.ReactNode => {
-  locations.sort(compareLocations(safeLocations)).reverse();
-  return (
-    <Box key="location-table" flexDirection="column" width="100%">
-      <Box key="headings">
-        <Box width="20%">
-          <Text>Supply/Plague</Text>
-        </Box>
-        <Box width="10%">
-          <Text>Players</Text>
-        </Box>
-        <Box width="20%">
-          <Text>City</Text>
-        </Box>
-        <Box width="50%">
-          <Text>Adjacent</Text>
-        </Box>
-      </Box>
+type TableProps = {
+  colWidthsPercentage: number[];
+  headings: string[];
+  rows: React.ReactNode[][];
+};
 
-      {locations.map((location, index) => (
-        <Box key={index}>
-          <Box width="20%">
-            <Text color="green">{Array.from({ length: location.plagueCubes }).map(() => "☣️")}</Text>
-            <Text>{location.supplyCentre ? "🏥" : ""}</Text>
-            <Text>{Array.from({ length: location.supplyCubes }).map(() => "📦")}</Text>
+export const BoxTable = ({ colWidthsPercentage, headings, rows }: TableProps): React.ReactNode => {
+  return (
+    <Box flexDirection="column" width="100%">
+      <Box key="headings">
+        {headings.map((heading, colIndex) => (
+          <Box key={colIndex} width={`${colWidthsPercentage[colIndex]}%`}>
+            <Text>{heading}</Text>
           </Box>
-          <Box width="10%">
-            <Text>{location.players.map((player) => `👤${player.name.charAt(0)}`)}</Text>
-          </Box>
-          <Box width="20%">
-            <Text color={locationHealthColour(location, safeLocations)}>{location.name}</Text>
-          </Box>
-          <Box width="50%">
-            {location.connections.map((connection, i) => (
-              <Text key={i} color={locationHealthColour(connection.location, safeLocations)}>
-                {connection.location.name},&nbsp;
-              </Text>
-            ))}
-          </Box>
+        ))}
+      </Box>
+      {rows.map((row, rowIndex) => (
+        <Box key={rowIndex}>
+          {row.map((cell, colIndex) => (
+            <Box key={colIndex} width={`${colWidthsPercentage[colIndex]}%`}>
+              {cell}
+            </Box>
+          ))}
         </Box>
       ))}
     </Box>
   );
 };
 
-const incidentsColour = (incidents: number): ForegroundColorName => {
-  if (incidents > 5) {
-    return "red";
-  } else if (incidents > 2) {
-    return "yellow";
-  }
+export const LocationTable = ({ locations, safeLocations }: LocationTableProps): React.ReactNode => {
+  locations.sort(compareLocations(safeLocations)).reverse();
 
-  return "white";
+  return (
+    <BoxTable
+      key="location-table"
+      colWidthsPercentage={[20, 10, 20, 50]}
+      headings={["Supply/Plague", "Players", "City", "Adjacent"]}
+      rows={locations.map((location) => [
+        [
+          <Text key="plague-cubes" color="green">
+            {Array.from({ length: location.plagueCubes }).map(() => "☣️")}
+          </Text>,
+          <Text key="supply-centre">{location.supplyCentre ? "🏥" : ""}</Text>,
+          <Text key="supply-cubes">{Array.from({ length: location.supplyCubes }).map(() => "📦")}</Text>,
+        ],
+        <Text key="player-names">{location.players.map((player) => `👤${player.name.charAt(0)}`)}</Text>,
+        <Text key="location-names" color={locationHealthColour(location, safeLocations)}>
+          {location.name}
+        </Text>,
+        location.connections.map((connection, i) => (
+          <Text key={i} color={locationHealthColour(connection.location, safeLocations)}>
+            {connection.location.name},&nbsp;
+          </Text>
+        )),
+      ])}
+    ></BoxTable>
+  );
 };
 
 export type GameDisplayProps = {
@@ -217,24 +221,36 @@ const InfectionRatesDisplay = ({ ratePosition }: { ratePosition: number }): Reac
   );
 };
 
+const StatsTable = ({ game }: { game: Game }): React.ReactNode => {
+  return (
+    <Box>
+      <Box key="epidemics" width="100%">
+        <Text>
+          Epidemics: {game.epidemics}/{game.totalEpidemics}
+        </Text>
+      </Box>
+      <Box key="other">
+        <InfectionRatesDisplay key="infectionRates" ratePosition={game.infectionRate.position}></InfectionRatesDisplay>
+        <Text key="incidents">
+          Incidents: {Array.from({ length: 8 }).map((_, index) => (index < game.incidents ? "🟩" : "⬜"))}
+        </Text>
+        <Text key="player-turn">Player Turn: {game.turnNumber}</Text>
+        <Text key="remaining-cards">Remaining player cards: {game.playerDeck.drawPile.length}</Text>
+        <Text key="supply-centres">
+          Created supply centres:
+          {game.objectives.find((objective) => objective.type === "build_supply_centres")?.hasBuiltCount}
+        </Text>
+      </Box>
+    </Box>
+  );
+};
+
 const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode => {
   const safeLocations = getSafeLocations(game.infectionDeck);
 
   return (
-    <Box key={"gameDisplay"} flexDirection="column" width="120">
-      <Text key="epidemics">
-        Epidemics: {game.epidemics}/{game.totalEpidemics}
-      </Text>
-      <InfectionRatesDisplay key="infectionRates" ratePosition={game.infectionRate.position}></InfectionRatesDisplay>
-      <Text key="incidents">
-        Incidents: <Text color={incidentsColour(game.incidents)}>{game.incidents}</Text>
-      </Text>
-      <Text key="player-turn">Player Turn: {game.turnNumber}</Text>
-      <Text key="remaining-cards">Remaining player cards: {game.playerDeck.drawPile.length}</Text>
-      <Text key="supply-centres">
-        Created supply centres:
-        {game.objectives.find((objective) => objective.type === "build_supply_centres")?.hasBuiltCount}
-      </Text>
+    <Box flexDirection="column" key={"gameDisplay"} width="100%">
+      <StatsTable game={game}></StatsTable>
       <Box key={"players"} width="100%">
         {game.players
           .values()

@@ -102,7 +102,7 @@ const makeActionStep = (game: GameOnType<"take_4_actions">, player: Player, logg
 
   // On the first action move somewhere that needs supplies more
   if (game.turnFlow.remainingActions === 4) {
-    if (player.location.supplyCubes > 3) {
+    if (player.location.supplyCubes > 2) {
       const moveCandidate = player.location.connections
         .filter((connection) => connection.location.type !== "haven" && !safeLocations.has(connection.location.name))
         .sort((a, b) => a.location.supplyCubes - b.location.supplyCubes)[0];
