@@ -5,7 +5,8 @@ import type { Game } from "../../game/game.ts";
 import { getSafeLocations, type Location } from "../../game/location/location.ts";
 import type { PlayerCard } from "../../game/cards/cards.ts";
 import type { Player } from "../../game/player/player.ts";
-import { infectionRates } from "../../game/infection/infection.ts";
+import { BoxTable } from "./BoxTable.tsx";
+import { GameStatsTable } from "./GameStatsTable.tsx";
 
 export type LocationTableProps = {
   locations: Location[];
@@ -102,35 +103,6 @@ export const compareCards = (cards: PlayerCard[]) => {
   };
 };
 
-type TableProps = {
-  colWidthsPercentage: number[];
-  headings: string[];
-  rows: React.ReactNode[][];
-};
-
-export const BoxTable = ({ colWidthsPercentage, headings, rows }: TableProps): React.ReactNode => {
-  return (
-    <Box flexDirection="column" width="100%">
-      <Box key="headings">
-        {headings.map((heading, colIndex) => (
-          <Box key={colIndex} width={`${colWidthsPercentage[colIndex]}%`}>
-            <Text>{heading}</Text>
-          </Box>
-        ))}
-      </Box>
-      {rows.map((row, rowIndex) => (
-        <Box key={rowIndex}>
-          {row.map((cell, colIndex) => (
-            <Box key={colIndex} width={`${colWidthsPercentage[colIndex]}%`}>
-              {cell}
-            </Box>
-          ))}
-        </Box>
-      ))}
-    </Box>
-  );
-};
-
 export const LocationTable = ({ locations, safeLocations }: LocationTableProps): React.ReactNode => {
   locations.sort(compareLocations(safeLocations)).reverse();
 
@@ -202,55 +174,12 @@ export const PlayerBlock = ({ player, currentPlayerName }: PlayerBlockProps): Re
   );
 };
 
-const InfectionRatesDisplay = ({ ratePosition }: { ratePosition: number }): React.ReactNode => {
-  return (
-    <Box>
-      <Text key="title">Infection Rate: </Text>
-      {infectionRates.map((rate) =>
-        rate.position === ratePosition ? (
-          <Text color="green" key={rate.position}>
-            {rate.cards}&nbsp;
-          </Text>
-        ) : (
-          <Text key={rate.position} color="grey">
-            {rate.cards}&nbsp;
-          </Text>
-        ),
-      )}
-    </Box>
-  );
-};
-
-const StatsTable = ({ game }: { game: Game }): React.ReactNode => {
-  return (
-    <Box>
-      <Box key="epidemics" width="100%">
-        <Text>
-          Epidemics: {game.epidemics}/{game.totalEpidemics}
-        </Text>
-      </Box>
-      <Box key="other">
-        <InfectionRatesDisplay key="infectionRates" ratePosition={game.infectionRate.position}></InfectionRatesDisplay>
-        <Text key="incidents">
-          Incidents: {Array.from({ length: 8 }).map((_, index) => (index < game.incidents ? "🟩" : "⬜"))}
-        </Text>
-        <Text key="player-turn">Player Turn: {game.turnNumber}</Text>
-        <Text key="remaining-cards">Remaining player cards: {game.playerDeck.drawPile.length}</Text>
-        <Text key="supply-centres">
-          Created supply centres:
-          {game.objectives.find((objective) => objective.type === "build_supply_centres")?.hasBuiltCount}
-        </Text>
-      </Box>
-    </Box>
-  );
-};
-
 const GameDisplay = ({ gameState: { game } }: GameDisplayProps): React.ReactNode => {
   const safeLocations = getSafeLocations(game.infectionDeck);
 
   return (
     <Box flexDirection="column" key={"gameDisplay"} width="100%">
-      <StatsTable game={game}></StatsTable>
+      <GameStatsTable key="game-stats-table" game={game}></GameStatsTable>
       <Box key={"players"} width="100%">
         {game.players
           .values()

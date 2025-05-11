@@ -1,5 +1,5 @@
-import React from "react";
 import { render } from "ink";
+import React from "react";
 import App from "./components/App.tsx";
 import type { Logger } from "../logging/logger.ts";
 
