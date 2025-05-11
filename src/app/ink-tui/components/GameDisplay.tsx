@@ -56,7 +56,7 @@ const locationHealthColour = (location: Location, safeLocations: Set<string>): F
  * - haven/city
  * - name
  */
-export const compareLocations =
+const compareLocations =
   (safeLocations: Set<string>) =>
   (a: Location, b: Location): number => {
     if (!safeLocations.has(a.name) && !safeLocations.has(b.name)) {
@@ -80,7 +80,7 @@ type CardTypeRank = {
   none: number;
 };
 
-export const compareCards = (cards: PlayerCard[]) => {
+const compareCards = (cards: PlayerCard[]) => {
   const cardTypeRank = cards.reduce(
     (cardTypeRank: CardTypeRank, card) => {
       if (card.type === "city") {

@@ -1,6 +1,6 @@
 import { type Game } from "../game.ts";
 import type { StepResult } from "../step/game-steps.ts";
-import { type PlayerCardSelection, useHandCards } from "../cards/cards.ts";
+import { type PlayerCardSelection, consumeHandCards } from "../cards/cards.ts";
 import type { Player } from "../player/player.ts";
 import { isGameOnType } from "../game-flow/game-turn-flow.ts";
 import { getMappedLocation, type GetRequiredLocation } from "../location/location.ts";
@@ -103,7 +103,7 @@ export const makeSupplyCentre = (game: Game, cardSelection: PlayerCardSelection)
     };
   }
 
-  const { selected, discardUsed } = useHandCards(game, cardSelection);
+  const { selected, discardUsed } = consumeHandCards(game, cardSelection);
 
   const validCards = selected
     .filter((card) => card.type === "city")
