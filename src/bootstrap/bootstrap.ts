@@ -6,7 +6,7 @@ import type { SerializableStep } from "../app/serialization/step-serialization.t
 import { takeGameStepUseCase, takeSerializedGameStepUseCase } from "../app/game/step/take-game-step-use-case.ts";
 import { makeLogger, makeNullLogger } from "../app/logging/logger.ts";
 import { type ShowInfo, showInfoUseCase } from "../app/game/view/show-info-use-case.ts";
-import { makeTuiRunner } from "../app/ink-tui/root.tsx";
+import { makeTuiRunner } from "../app/view/ink-tui/root.tsx";
 import { runBotUseCase } from "../app/bots/run-bot-use-case.ts";
 
 /**

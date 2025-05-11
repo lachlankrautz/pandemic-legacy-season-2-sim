@@ -1,6 +1,6 @@
 import { it, describe, expect, vi } from "vitest";
 import { render } from "ink";
-import { makeLogger } from "../logging/logger.ts";
+import { makeLogger } from "../../logging/logger.ts";
 import { makeTuiRunner } from "./root.tsx";
 
 vi.mock("ink");

@@ -4,10 +4,10 @@ import GamePlayer from "./GamePlayer.tsx";
 import Options from "./Options.tsx";
 import { Box, Newline, Text } from "ink";
 import Bot from "./Bot.tsx";
-import { makeGame } from "../../game/start/new-game.ts";
-import { type GameDriver, makeGameDriver } from "../../game/step/game-steps.ts";
-import { makeGameLog } from "../../game/game-log/game-log.ts";
-import { type Logger } from "../../logging/logger.ts";
+import { makeGame } from "../../../game/start/new-game.ts";
+import { type GameDriver, makeGameDriver } from "../../../game/step/game-steps.ts";
+import { makeGameLog } from "../../../game/game-log/game-log.ts";
+import { type Logger } from "../../../logging/logger.ts";
 
 export type Page = "main" | "game" | "options" | "bot";
 

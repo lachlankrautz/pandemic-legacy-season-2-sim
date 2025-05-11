@@ -1,7 +1,7 @@
 import { render } from "ink";
 import React from "react";
 import App from "./components/App.tsx";
-import type { Logger } from "../logging/logger.ts";
+import type { Logger } from "../../logging/logger.ts";
 
 export type TuiRunner = {
   run: (command?: "bot" | undefined) => void;

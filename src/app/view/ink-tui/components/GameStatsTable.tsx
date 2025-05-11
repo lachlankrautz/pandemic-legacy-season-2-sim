@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Text } from "ink";
-import type { Game } from "../../game/game.ts";
-import { infectionRates } from "../../game/infection/infection.ts";
+import type { Game } from "../../../game/game.ts";
+import { infectionRates } from "../../../game/infection/infection.ts";
 import { BoxForm } from "./BoxForm.tsx";
 
 const InfectionRatesDisplay = ({ ratePosition }: { ratePosition: number }): React.ReactNode => {

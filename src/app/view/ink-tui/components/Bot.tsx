@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Box, useInput } from "ink";
-import type { GameDriver } from "../../game/step/game-steps.ts";
+import type { GameDriver } from "../../../game/step/game-steps.ts";
 import GameDisplay from "./GameDisplay.tsx";
-import { playGameTick } from "../../bots/dumb-bot/dumb-bot.ts";
-import type { Logger } from "../../logging/logger.js";
+import { playGameTick } from "../../../bots/dumb-bot/dumb-bot.ts";
+import type { Logger } from "../../../logging/logger.ts";
 
 export type BotProps = {
   navigateBack: () => void;

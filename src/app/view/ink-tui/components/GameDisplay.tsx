@@ -1,10 +1,10 @@
 import React from "react";
 import { Box, Newline, Text } from "ink";
 import { type ForegroundColorName } from "chalk";
-import type { Game } from "../../game/game.ts";
-import { getSafeLocations, type Location } from "../../game/location/location.ts";
-import type { PlayerCard } from "../../game/cards/cards.ts";
-import type { Player } from "../../game/player/player.ts";
+import type { Game } from "../../../game/game.ts";
+import { getSafeLocations, type Location } from "../../../game/location/location.ts";
+import type { PlayerCard } from "../../../game/cards/cards.ts";
+import type { Player } from "../../../game/player/player.ts";
 import { BoxTable } from "./BoxTable.tsx";
 import { GameStatsTable } from "./GameStatsTable.tsx";
 

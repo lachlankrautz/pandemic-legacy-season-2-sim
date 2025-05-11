@@ -2,9 +2,9 @@ import { it, describe, expect, vi } from "vitest";
 import React from "react";
 import { render } from "ink-testing-library";
 import Bot from "./Bot.tsx";
-import { makeGameDriver } from "../../game/step/game-steps.ts";
-import { makeGame } from "../../game/start/new-game.ts";
-import { makeNullLogger } from "../../logging/logger.js";
+import { makeGameDriver } from "../../../game/step/game-steps.ts";
+import { makeGame } from "../../../game/start/new-game.ts";
+import { makeNullLogger } from "../../../logging/logger.ts";
 
 describe("bot", () => {
   it("runs a game", () => {

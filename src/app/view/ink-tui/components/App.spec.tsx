@@ -1,7 +1,7 @@
 import { it, describe, expect } from "vitest";
 import React from "react";
 import { render } from "ink-testing-library";
-import { makeLogger } from "../../logging/logger.ts";
+import { makeLogger } from "../../../logging/logger.ts";
 import App from "./App.tsx";
 
 describe("app", () => {
