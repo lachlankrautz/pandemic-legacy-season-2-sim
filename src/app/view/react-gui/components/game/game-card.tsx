@@ -1,4 +1,3 @@
-import React from "react";
 import { CityPlayerCard, EventPlayerCard, PlayerCard } from "../../../../game/cards/cards.ts";
 import { cn } from "../../lib/utils.ts";
 import { ComponentProps } from "react";

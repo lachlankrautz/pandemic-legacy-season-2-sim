@@ -1,4 +1,3 @@
-import React from "react";
 import { Player } from "../../../../game/player/player.ts";
 import { UserRound } from "lucide-react";
 

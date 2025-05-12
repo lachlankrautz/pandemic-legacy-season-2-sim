@@ -1,4 +1,3 @@
-import React from "react";
 import { Player } from "../../../../game/player/player.ts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card.tsx";
 import { GameCardCard } from "./game-card.tsx";

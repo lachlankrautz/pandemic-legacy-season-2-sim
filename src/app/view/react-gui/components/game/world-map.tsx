@@ -1,4 +1,3 @@
-import React from "react";
 import { useMemo } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { Location } from "../../../../game/location/location.ts";

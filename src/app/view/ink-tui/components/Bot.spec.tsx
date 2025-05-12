@@ -1,5 +1,4 @@
 import { it, describe, expect, vi } from "vitest";
-import React from "react";
 import { render } from "ink-testing-library";
 import Bot from "./Bot.tsx";
 import { makeGameDriver } from "../../../game/step/game-steps.ts";

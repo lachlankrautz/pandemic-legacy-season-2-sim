@@ -1,4 +1,3 @@
-import React from "react";
 import { Game } from "../../../../game/game.ts";
 import { Progress } from "../ui/progress.tsx";
 import { infectionRates } from "../../../../game/infection/infection.ts";

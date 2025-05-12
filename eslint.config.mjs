@@ -21,6 +21,7 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   reactPlugin.configs.flat.recommended,
+  reactPlugin.configs.flat["jsx-runtime"],
   reactHooks.configs["recommended-latest"],
   {
     ...reactRefresh.configs.recommended,

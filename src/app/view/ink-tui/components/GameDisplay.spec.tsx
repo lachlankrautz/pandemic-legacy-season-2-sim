@@ -1,5 +1,4 @@
 import { it, describe, expect } from "vitest";
-import React from "react";
 import { render } from "ink-testing-library";
 import GameDisplay from "./GameDisplay.tsx";
 import { makeGame } from "../../../game/start/new-game.ts";

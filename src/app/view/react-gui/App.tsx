@@ -1,4 +1,3 @@
-import React from "react";
 import { PlayerCard } from "./components/game/player-card.tsx";
 import { WorldMap } from "./components/game/world-map.tsx";
 import { GameStateOverview } from "./components/game/game-state-overview.tsx";
